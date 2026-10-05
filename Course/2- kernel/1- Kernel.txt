@@ -1,0 +1,561 @@
+================================================================================
+                    COURS : LE NOYAU (KERNEL)
+================================================================================
+
+================================================================================
+1. INTRODUCTION AU NOYAU
+================================================================================
+
+Le noyau (kernel) est le composant central d'un système d'exploitation. Il agit
+comme un intermédiaire entre le matériel et les logiciels applicatifs.
+
+Définition (OSTEP Chapter 6) :
+- Le noyau est le cœur du système d'exploitation
+- Il gère les ressources matérielles et logicielles
+- Il fournit des services aux programmes utilisateurs
+- Il assure la sécurité et la stabilité du système
+
+Rôles principaux (Silberschatz Chapter 2) :
+- Gestion de la mémoire (allocation, protection, pagination)
+- Gestion des processus (création, ordonnancement, synchronisation)
+- Gestion des périphériques (pilotes, entrées/sorties)
+- Gestion des systèmes de fichiers
+- Gestion de la sécurité et des droits d'accès
+- Gestion des interruptions et des appels système
+
+================================================================================
+2. MODÈLES DE NOYAUX
+================================================================================
+
+2.1 NOYAU MONOLITHIQUE (Monolithic Kernel)
+------------------------------------------
+Caractéristiques (Tanenbaum Chapter 1, OSTEP Chapter 6) :
+- Tous les services du noyau s'exécutent dans le même espace d'adressage
+- Communication directe entre les composants (appels de fonction)
+- Performance élevée (pas de changement de contexte)
+- Complexité élevée
+- Un bug peut planter tout le système
+
+Exemples :
+- Linux (architecture monolithique avec modules chargeables)
+- UNIX traditionnel (System V, BSD)
+- MS-DOS (noyau très simple)
+
+Référence : Linux Kernel Documentation - Kernel Design
+
+Avantages :
+- Performance optimale
+- Communication simple entre composants
+- Moins de surcharge système
+
+Inconvénients :
+- Difficile à maintenir et à étendre
+- Moins stable (un crash affecte tout le système)
+- Sécurité réduite (tout le code s'exécute en mode noyau)
+
+2.2 MICROKERNEL (Microkernel)
+-----------------------------
+Caractéristiques (Tanenbaum Chapter 1, Jochen Liedtke - Microkernel Research) :
+- Seuls les services essentiels dans le noyau (IPC, ordonnancement de base)
+- La plupart des services en espace utilisateur (pilotes, systèmes de fichiers)
+- Communication via IPC (Inter-Process Communication)
+- Plus modulaire et plus sûr
+- Performance réduite (plus de changements de contexte)
+
+Exemples :
+- Minix 3 (créé par Andrew Tanenbaum, microkernel éducatif)
+- QNX (microkernel temps réel utilisé dans l'automobile)
+- GNU Hurd (microkernel basé sur Mach)
+- L4 (microkernel de recherche)
+
+Référence : Minix 3 Design Documentation
+
+Avantages :
+- Plus stable (les pilotes ne peuvent pas planter le noyau)
+- Plus modulaire et extensible
+
+
+- Meilleure sécurité (séparation des privilèges)
+- Plus facile à maintenir
+
+Inconvénients :
+- Performance réduite (surcharge IPC)
+- Complexité de conception
+- Plus de mémoire utilisée
+
+2.3 NOYAU HYBRIDE (Hybrid Kernel)
+--------------------------------
+Caractéristiques (Windows Internals - Mark Russinovich) :
+- Combine les approches monolithique et microkernel
+- Services critiques dans le noyau
+- Services moins critiques en espace utilisateur
+- Équilibre entre performance et modularité
+
+Exemples :
+- Windows NT (kernel hybride avec services en espace noyau)
+- macOS XNU (hybride basé sur Mach)
+- Linux moderne (monolithique avec modules chargeables dynamiques)
+
+Référence : Windows Internals Part 1, Chapter 2
+
+Avantages :
+- Bon compromis performance/modularité
+- Flexibilité dans l'architecture
+
+Inconvénients :
+- Complexité de conception
+- Peut hériter des inconvénients des deux modèles
+
+2.4 EXOKERNEL
+-------------
+Caractéristiques (Engler et al. - Exokernel: An Operating System Architecture) :
+- Noyau minimaliste qui ne fournit que l'abstraction matérielle
+- Les applications gèrent elles-mêmes les ressources
+- Séparation stricte entre protection et gestion
+- Performance maximale pour des applications spécialisées
+
+Exemples :
+- XOK (MIT Exokernel)
+- Nemesis (University of Cambridge)
+- Xo (système exokernel de recherche)
+
+Référence : "Exokernel: An Operating System Architecture for Application-Level Resource Management" - SOSP 1995
+
+Avantages :
+- Performance extrême
+- Flexibilité maximale pour les applications
+
+Inconvénients :
+- Complexité pour les développeurs d'applications
+- Moins de sécurité (applications plus proches du matériel)
+
+2.5 AUTRES MODÈLES
+------------------
+- Noyau modulaire : Monolithique avec modules chargeables dynamiquement
+- Nano/Picokernel : Version extrême du microkernel
+- Multikernel : Plusieurs noyaux coopérants sur différents cœurs
+- Unikernel : Noyau et application fusionnés en une seule image
+
+================================================================================
+3. GESTION DE LA MÉMOIRE
+================================================================================
+
+3.1 ESPACES D'ADRESSAGE
+------------------------
+- Espace d'adressage physique : Mémoire RAM réelle
+- Espace d'adressage virtuel : Abstraction pour chaque processus
+- MMU (Memory Management Unit) : Traduit les adresses virtuelles en physiques
+
+3.2 MÉCANISMES DE PROTECTION
+-----------------------------
+Segmentation (Intel SDM Volume 3A, Chapter 3) :
+- Division de la mémoire en segments (code, données, pile)
+- Protection par des descripteurs de segments
+- Utilisation de la GDT (Global Descriptor Table) et LDT (Local Descriptor Table)
+- Principalement utilisée en mode protégé 32-bit
+
+Pagination (Intel SDM Volume 3A, Chapter 4) :
+- Division de la mémoire en pages (généralement 4 Ko)
+- Tables de pages pour la traduction d'adresses
+- Protection au niveau de la page (lecture/écriture/exécution)
+- Meilleure gestion de la mémoire virtuelle
+- Pagination 4 niveaux en x86_64 (PML4 → PDPT → PDT → PT)
+
+Référence : OSTEP Chapter 13 - The Abstraction of Address Spaces
+
+3.3 MÉMOIRE VIRTUELLE
+---------------------
+Concept (OSTEP Chapter 18, Silberschatz Chapter 9) :
+- Illusion d'une mémoire plus grande que la RAM physique
+- Utilisation du swap (fichier d'échange sur disque)
+- Pagination à la demande (pages chargées uniquement quand nécessaires)
+- Protection entre processus (chaque processus a son espace virtuel)
+
+Algorithmes de remplacement de pages (Tanenbaum Chapter 3) :
+- FIFO (First In, First Out) - simple mais non optimal
+- LRU (Least Recently Used) - bonne approximation de l'optimal
+- Clock algorithm - approximation efficace du LRU (utilisé dans Linux)
+- Working set model - basé sur la localité temporelle
+
+Problèmes :
+- Thrashing : Trop de swapping, dégradation des performances
+- Fragmentation : Espace mémoire fragmenté
+
+Référence : Linux Memory Management Documentation
+
+3.4 ALLOCATION DE MÉMOIRE
+--------------------------
+Stratégies :
+- Bitmap : Table de bits pour suivre les pages libres
+- Buddy allocation : Allocation par blocs de tailles puissances de 2
+- Structures d'arbre : Arbres binaires, B-trees
+- Slab allocator : Optimisé pour les objets de même taille
+
+================================================================================
+4. GESTION DES PROCESSUS
+================================================================================
+
+4.1 CONCEPTS DE BASE
+--------------------
+Processus :
+- Programme en cours d'exécution
+- Possède son propre espace d'adressage
+- A un état (running, ready, blocked)
+- A des ressources (fichiers ouverts, mémoire, etc.)
+
+Thread (fil d'exécution) :
+- Unité d'exécution au sein d'un processus
+- Partage l'espace d'adressage du processus
+- Chaque thread a sa propre pile et registres
+- Communication plus facile entre threads d'un même processus
+
+4.2 ORDONNANCEMENT (SCHEDULING)
+--------------------------------
+Algorithmes classiques (OSTEP Chapter 7, Silberschatz Chapter 6) :
+- FIFO (First In, First Out) - non préemptif, simple
+- Round Robin : Tourniquet avec quantum de temps (typiquement 10-100ms)
+- Priority Scheduling : Basé sur la priorité (problème de famine possible)
+- Multilevel Feedback Queue : Plusieurs files avec priorités dynamiques
+
+Algorithmes modernes :
+- CFS (Completely Fair Scheduler) - Linux (basé sur Red-Black Tree)
+- O(1) scheduler - Linux (ancien, basé sur des files de priorité)
+- Windows scheduler : Priorités dynamiques avec boost
+- Real-time scheduling : EDF (Earliest Deadline First), RMS (Rate Monotonic)
+
+Référence : Linux CFS Documentation - Documentation/scheduler/sched-design.txt
+
+4.3 SYNCHRONISATION
+-------------------
+Problèmes (OSTEP Chapter 26-30, Silberschatz Chapter 7-8) :
+- Race conditions : Accès concurrent aux données partagées
+- Deadlocks : Interblocages (processus attendant mutuellement)
+- Conditions de Coffman : 4 conditions nécessaires pour un deadlock
+- Starvation : Famine (un processus n'obtient jamais la ressource)
+
+Mécanismes :
+- Mutex : Exclusion mutuelle (utilisés dans Linux kernel)
+- Sémaphores : Compteurs pour synchronisation (Dijkstra, 1965)
+- Moniteurs : Abstraction de haut niveau (Hoare, 1974)
+- Barriers : Synchronisation de groupes de threads
+- Spinlocks : Attente active (pour multiprocesseur, Linux kernel)
+
+Référence : Linux Kernel Locking Documentation
+
+================================================================================
+5. INTERRUPTIONS ET APPELS SYSTÈME
+================================================================================
+
+5.1 INTERRUPTIONS
+-----------------
+Types (Intel SDM Volume 3A, Chapter 5) :
+- Interruptions matérielles (IRQ) : Provenant des périphériques
+- Interruptions logicielles : Générées par le processeur (INT n)
+- Exceptions : Erreurs (division par zéro, page fault, etc.)
+- NMI (Non-Maskable Interrupt) : Interruption non masquable
+
+Gestion :
+- IDT (Interrupt Descriptor Table) : Table des descripteurs d'interruption
+- ISR (Interrupt Service Routine) : Gestionnaire d'interruption
+- PIC (8259A) / APIC (Advanced Programmable Interrupt Controller)
+- Sauvegarde du contexte, traitement, restauration du contexte
+
+Référence : OSDev Wiki - Interrupts, Intel SDM Volume 3A Chapter 5
+
+5.2 APPELS SYSTÈME (SYSTEM CALLS)
+----------------------------------
+Définition (OSTEP Chapter 5, Silberschatz Chapter 2) :
+- Interface entre les programmes utilisateurs et le noyau
+- Permet aux applications de demander des services privilégiés
+- Change de mode utilisateur vers mode noyau
+
+Types d'appels système courants (POSIX standard) :
+- Gestion de processus : fork, exec, exit, wait (POSIX.1)
+- Gestion de fichiers : open, read, write, close (POSIX.1)
+- Gestion de mémoire : mmap, brk (POSIX.1)
+- Communication : pipe, socket, shm (POSIX.1)
+- Information : stat, getpid, time (POSIX.1)
+
+Mécanisme :
+- Instruction spéciale (INT 0x80 sur x86 32-bit, SYSCALL/SYSRET sur x86_64)
+- Passage de paramètres via registres (System V AMD64 ABI)
+- Vérification des permissions
+- Exécution en mode noyau
+- Retour au mode utilisateur avec résultat
+
+Référence : Linux System Call Table, POSIX.1-2017 Standard
+
+================================================================================
+6. GESTION DES PÉRIPHÉRIQUES
+================================================================================
+
+6.1 PILOTES (DRIVERS)
+----------------------
+Définition :
+- Programmes qui permettent au noyau de communiquer avec le matériel
+- S'exécutent en mode noyau (généralement)
+- Peuvent être intégrés au noyau ou modules chargeables
+
+Types :
+- Pilotes de caractères : Communication octet par octet (clavier, souris)
+- Pilotes de blocs : Communication par blocs (disque dur)
+- Pilotes réseau : Cartes réseau
+- Pilotes graphiques : Cartes graphiques
+
+6.2 BUS D'ENTRÉES/SORTIES
+-------------------------
+- Ports d'E/S (I/O ports) : Communication via instructions IN/OUT
+- Memory-mapped I/O : Périphériques mappés en mémoire
+- DMA (Direct Memory Access) : Transferts directs sans intervention CPU
+- Interruptions pour signaler la fin des opérations
+
+6.3 PROTOCOLES MATÉRIELS
+-------------------------
+- ATA/ATAPI/SATA : Disques durs
+- AHCI : Interface SATA avancée
+- NVMe : Disques SSD modernes
+- USB : Universal Serial Bus
+- PCI/PCIe : Périphériques internes
+- ACPI : Gestion de l'énergie et configuration
+
+================================================================================
+7. SYSTÈMES DE FICHIERS
+================================================================================
+
+7.1 CONCEPTS
+------------
+- Fichier : Unité de stockage de données
+- Répertoire : Conteneur de fichiers et sous-répertoires
+- Système de fichiers : Organisation logique du stockage
+- Montage : Attachement d'un système de fichiers à l'arborescence
+
+7.2 TYPES DE SYSTÈMES DE FICHIERS
+---------------------------------
+- FAT : File Allocation Table (simple, compatible, Microsoft)
+- Ext2/Ext3/Ext4 : Systèmes de fichiers Linux (open source)
+- NTFS : New Technology File System (Windows, Microsoft)
+- APFS/HFS+ : Systèmes de fichiers macOS (Apple)
+- ZFS : Système de fichiers avancé (Sun Microsystems/Oracle)
+
+Référence : "The Design of the UNIX File System" - McKusick et al., 1984
+
+7.3 OPÉRATIONS FONDAMENTALES
+----------------------------
+- Création, lecture, écriture, suppression de fichiers
+- Navigation dans les répertoires
+- Gestion des permissions (rwx)
+- Verrouillage de fichiers
+- Journalisation (pour la robustesse)
+
+================================================================================
+8. SÉCURITÉ ET PROTECTION
+================================================================================
+
+8.1 MODES D'EXÉCUTION
+----------------------
+- Mode utilisateur (User Mode) : Restrictions, accès limité
+- Mode noyau (Kernel Mode) : Accès complet au matériel
+- Anneaux de protection (x86) : Ring 0 (noyau) à Ring 3 (utilisateur)
+
+8.2 MÉCANISMES DE SÉCURITÉ
+---------------------------
+- Séparation des espaces d'adressage
+- Contrôle d'accès basé sur les permissions
+- Authentification des utilisateurs
+- Audit et journalisation
+- Signature de code (Secure Boot)
+
+8.3 VULNÉRABILITÉS
+------------------
+- Buffer overflows : Dépassement de tampon
+- Race conditions : Conditions de course
+- Privilege escalation : Élévation de privilèges
+- Kernel panics : Arrêt du système en cas d'erreur critique
+
+================================================================================
+9. DÉMARRAGE DU SYSTÈME (BOOT PROCESS)
+================================================================================
+
+Étapes du démarrage :
+1. BIOS/UEFI : Initialisation matérielle
+2. Bootloader : Chargement du noyau (GRUB, LILO, Limine)
+3. Initialisation du noyau :
+   - Configuration du matériel
+   - Mise en place de la pagination
+   - Initialisation de la GDT/IDT
+   - Démarrage de l'ordonnanceur
+4. Montage du système de fichiers racine
+5. Lancement du premier processus (init/systemd)
+6. Démarrage des services et de l'interface utilisateur
+
+================================================================================
+10. ARCHITECTURES MATÉRIELLES
+================================================================================
+
+10.1 x86/x86-64
+---------------
+Modes (Intel SDM Volume 3A, Chapter 2) :
+- Real Mode (16-bit) : Mode de démarrage, 1 MiB d'adressage
+- Protected Mode (32-bit) : Mode principal, segmentation, paging
+- Long Mode (64-bit) : Extension 64-bit, pagination 4 niveaux
+
+Registres généraux : EAX, EBX, ECX, EDX, ESI, EDI, EBP, ESP (32-bit)
+Registres étendus : RAX, RBX, RCX, RDX, RSI, RDI, RBP, RSP, R8-R15 (64-bit)
+Registres de segment : CS, DS, SS, ES, FS, GS
+Pagination : 32-bit (2 niveaux), 64-bit (4 niveaux avec PML4)
+
+Référence : Intel SDM Volume 3A, AMD Architecture Programmer's Manual Volume 2
+
+10.2 ARM
+--------
+- Architectures ARMv7, ARMv8
+- Modes privilégiés
+- MMU et pagination
+- Très utilisé dans les mobiles et systèmes embarqués
+
+10.3 RISC-V
+-----------
+- Architecture open-source
+- Simplicité et modularité
+- Modes machine, superviseur, utilisateur
+- En croissance pour les systèmes d'exploitation
+
+================================================================================
+11. DÉVELOPPEMENT D'UN NOYAU
+================================================================================
+
+11.1 OUTILS NÉCESSAIRES
+-----------------------
+- Compilateur croisé (cross-compiler) : i686-elf-gcc, x86_64-elf-gcc
+- Assembleur : NASM, GAS
+- Linker : LD
+- Émulateur : QEMU, Bochs
+- Debugger : GDB
+- Système de build : Make, CMake
+
+11.2 ÉTAPES DU DÉVELOPPEMENT
+-----------------------------
+1. Bootloader minimal ou utilisation d'un bootloader existant
+2. Noyau minimal ("Hello World" en mode noyau)
+3. Gestion de la mémoire (pagination)
+4. Gestion des interruptions (IDT, ISR)
+5. Pilotes de base (clavier, écran)
+6. Gestion des processus
+7. Système de fichiers
+8. Interface utilisateur (shell)
+
+11.3 DÉFIS COMMUNS
+-------------------
+- Manque de bibliothèque standard
+- Débogage difficile (pas de OS sous-jacent)
+- Gestion complexe du matériel
+- Documentation matérielle parfois indisponible
+- Portabilité entre architectures
+
+================================================================================
+12. RESSOURCES POUR L'APPRENTISSAGE
+================================================================================
+
+Sources académiques et standards :
+----------------------------------
+OSTEP (Operating Systems: Three Easy Pieces) :
+- Site officiel : https://ostep.org/
+- Livre gratuit en ligne, référence académique majeure
+- Couvre : virtualisation, concurrence, persistance
+- Chapitres pertinents : Introduction, Virtualization, Concurrency
+
+Tanenbaum - Modern Operating Systems (4th edition) :
+- Référence classique dans l'enseignement académique
+- Couvre tous les aspects des systèmes d'exploitation
+- Disponible chez Pearson
+
+Silberschatz, Galvin, Gagne - Operating System Concepts (The "Dinosaur Book") :
+- Livre de référence universitaire
+- 10ème édition, couvre les concepts fondamentaux
+- Disponible chez Wiley
+
+Documentation officielle des constructeurs :
+-------------------------------------------
+Intel SDM (Software Developer Manuals) :
+- https://software.intel.com/content/www/us/en/develop/articles/intel-sdm.html
+- Volume 3A: System Programming Guide
+- Couvre : mode protégé, pagination, interruptions, virtualisation
+
+AMD Architecture Programmer's Manual :
+- https://developer.amd.com/resources/developer-guides-manuals/
+- Volume 2: System Programming
+- Couvre : x86-64, paging, virtualisation
+
+ARM Architecture Reference Manual :
+- https://developer.arm.com/documentation/
+- ARMv7-A/R Architecture Reference Manual
+- ARMv8-A Architecture Reference Manual
+
+Communauté OSDev :
+------------------
+OSDev.org : https://www.osdev.org/
+- Wiki complet : https://wiki.osdev.org/
+- Forum actif : https://forum.osdev.org/
+- Tutoriels "Bare Bones" et "Meaty Skeleton"
+- Articles détaillés sur chaque aspect du développement
+
+Projets open source à étudier :
+-------------------------------
+Linux Kernel :
+- https://www.kernel.org/
+- Documentation : https://www.kernel.org/doc/html/latest/
+- Source de référence pour un noyau monolithique moderne
+
+Minix 3 :
+- https://www.minix3.org/
+- Microkernel éducatif créé par Andrew Tanenbaum
+- Architecture modulaire, excellent pour l'apprentissage
+
+Redox OS :
+- https://www.redox-os.org/
+- Noyau écrit en Rust, inspiré de UNIX
+- Documentation et code source accessibles
+
+ToaruOS :
+- https://github.com/klange/toaruos
+- Noyau hobbyiste avec interface graphique
+- Code commenté et éducatif
+
+Ressources spécifiques par sujet :
+----------------------------------
+Gestion de la mémoire :
+- "The Linux Memory Manager" (documentation Linux)
+- "Understanding the Linux Virtual Memory Manager" (Mel Gorman)
+- OSTEP Chapter 13: The Abstraction of Address Spaces
+
+Processus et ordonnancement :
+- OSTEP Chapter 7: CPU Scheduling
+- Linux Completely Fair Scheduler documentation
+- "Linux Kernel Development" Chapter 4: Process Management
+
+Interruptions et appels système :
+- Intel SDM Volume 3A, Chapter 5: Interrupt and Exception Handling
+- Linux kernel documentation on syscalls
+- OSDev Wiki: Interrupts
+
+Systèmes de fichiers :
+- "The Design of the UNIX File System" (Marshall Kirk McKusick)
+- OSTEP Chapter 36: File System Implementation
+- Ext4 documentation : https://ext4.wiki.kernel.org/
+
+================================================================================
+CONCLUSION
+================================================================================
+
+Le développement d'un noyau est un domaine complexe mais fascinant qui nécessite
+une compréhension profonde du matériel et des concepts fondamentaux des systèmes
+d'exploitation. C'est un excellent exercice pour apprendre la programmation bas
+niveau, l'architecture des ordinateurs et la conception de systèmes complexes.
+
+Commencez petit, progressez étape par étape, et n'ayez pas peur des erreurs -
+elles font partie du processus d'apprentissage. La communauté OSDev est là pour
+vous aider !
+
+================================================================================
+FIN DU COURS
+================================================================================

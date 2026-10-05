@@ -1,0 +1,757 @@
+================================================================================
+                        OSDev.org - DONNEES IMPORTANTES
+================================================================================
+
+Site web principal : https://www.osdev.org/
+Wiki : https://wiki.osdev.org/
+Forums : https://forum.osdev.org/
+
+Ce fichier contient les informations essentielles recueillies sur le site
+OSDev.org pour le développement de systèmes d'exploitation.
+
+================================================================================
+PARTIE 1 : INTRODUCTION AU DEVELOPPEMENT DE SYSTEMES D'EXPLOITATION
+================================================================================
+
+1.1 Qu'est-ce qu'un système d'exploitation ?
+---------------------------------------------
+Un système d'exploitation est un logiciel qui contrôle le fonctionnement d'un
+ordinateur et de ses ressources. Ses fonctions majeures incluent :
+- Gérer la mémoire et les autres ressources système
+- Imposer des politiques de sécurité et d'accès
+- Planifier et multiplexer les processus et threads
+- Lancer et fermer dynamiquement les programmes utilisateurs
+- Fournir une interface utilisateur basique et une interface de programmation
+  d'applications (API)
+
+Un système d'exploitation n'est PAS :
+- Le matériel informatique
+- Une application spécifique (éditeur de texte, navigateur, jeu)
+- Une suite d'utilitaires (comme les outils GNU)
+- Un environnement de développement
+- Une interface graphique (bien que de nombreux OS en incluent une)
+
+1.2 Qu'est-ce qu'un noyau (Kernel) ?
+-------------------------------------
+Le noyau est la partie invisible d'un OS qui permet à tous les autres programmes
+de s'exécuter. Il gère :
+- Les événements matériels (interruptions)
+- Les appels système (demandés par les programmes utilisateurs)
+- L'accès aux ressources
+
+Les gestionnaires d'interruptions (ISR) récupèrent par exemple le numéro de la
+touche pressée et le convertissent en caractère.
+
+Les appels système sont initiés par les programmes pour ouvrir des fichiers,
+lancer d'autres programmes, etc. Chaque gestionnaire doit vérifier les arguments
+puis effectuer l'opération interne.
+
+La plupart des programmes utilisateurs n'émettent pas directement d'appels
+système, mais utilisent une bibliothèque standard qui s'occupe de formater les
+arguments et de générer l'appel système.
+
+Le noyau définit généralement des abstractions comme : fichiers, processus,
+sockets, répertoires, etc.
+
+1.3 Qu'est-ce qu'un shell ?
+----------------------------
+Un shell est un programme spécial qui offre à l'utilisateur une interface avec
+l'ordinateur. Son rôle est de :
+- Permettre à l'utilisateur de sélectionner un programme à lancer
+- Permettre des opérations triviales sur le stockage local (lister, copier,
+  déplacer des fichiers)
+
+Pour accomplir ces actions, le shell peut devoir émettre de nombreux appels
+système.
+
+Les fonctionnalités modernes des shells incluent :
+- Auto-complétion
+- Insertion de caractères
+- Historique des commandes
+- Défilement
+- Scripting (Bash, DOS batch, etc.)
+
+1.4 Pourquoi développer un OS ?
+--------------------------------
+- Avoir un contrôle complet sur la machine
+- Recherche (projets académiques)
+- Remplacer les OS existants (manque de fonctionnalités)
+- Parce que c'est amusant (programmation bas niveau)
+
+1.5 Erreurs courantes des débutants
+-----------------------------------
+Voir : https://wiki.osdev.org/Beginner_Mistakes
+
+================================================================================
+PARTIE 2 : GUIDE DE DEMARRAGE
+================================================================================
+
+2.1 Vérité dure
+---------------
+Le développement d'un OS est l'une des tâches les plus difficiles en
+informatique. Il nécessite :
+- Une grande patience
+- Une conception de code soignée
+- Peu de "gratification instantanée" par rapport au développement de jeux ou
+  de scripts web
+
+2.2 Responsabilité
+-------------------
+Dans le design d'un OS, il faut éviter le code inefficace. Le code critique
+peut être appelé des milliers de fois par seconde, il faut enlever tout
+surcharge possible.
+
+2.3 Environnement de développement
+----------------------------------
+
+**Outil nécessaires :**
+- Binutils : Outils fondamentaux pour la manipulation de fichiers objets
+- GCC : Collection de compilateurs GNU (C, C++, Fortran, Ada)
+- Make : Pour automatiser le processus de build
+- Grep et sed : Pour les recherches et remplacements
+- Diffutils : Pour montrer les différences entre fichiers
+- Perl ou Python : Langages de scripting
+- Assembleur : NASM, GAS, etc.
+- Éditeur de texte
+
+**GNU/Linux (recommandé) :**
+- La plupart des outils GNU sont déjà présents
+- Éditeurs : Vim, Emacs, KDevelop, Geany, gedit, etc.
+- Distributions recommandées : Ubuntu, Fedora, Linux Mint
+
+**Windows :**
+- Utiliser Cygwin, MinGW ou MSYS2
+- Windows Subsystem for Linux (WSL) est une excellente option
+- Éditeurs : Notepad++, Visual Studio
+
+**MacOS :**
+- Compatible POSIX, tous les outils habituels sont disponibles
+- Installer XCode Command Line Tools avec "xcode-select --install"
+
+2.4 Test de l'OS
+-----------------
+Voir : https://wiki.osdev.org/Testing
+- Environnements physiques et émulés
+
+2.5 Protection du code
+-----------------------
+Utiliser un système de contrôle de version :
+- Git (GitHub, Bitbucket)
+- Subversion
+- Mercurial
+- Bazaar
+
+2.6 Compilateur croisé (Cross-Compiler)
+----------------------------------------
+**OBLIGATOIRE** pour développer un OS. Un compilateur croisé cible une
+architecture différente de celle de la machine hôte.
+
+Pour x86 32-bit : cible i686-elf
+Pour x86 64-bit : cible x86_64-elf
+
+Voir : https://wiki.osdev.org/GCC_Cross-Compiler
+
+================================================================================
+PARTIE 3 : CONCEPTS CLES DU DESIGN
+================================================================================
+
+3.1 Modèles de noyau
+--------------------
+- Monolithic Kernel (Noyau monolithique)
+- Microkernel (Noyau micro)
+- Exokernel et modèles apparentés
+- Modular Kernel (Noyau modulaire)
+- Hybrid Kernel (Noyau hybride)
+- Nano/Picokernel
+- Cache Kernel
+- Virtualizing Kernel
+- Megalithic Kernel
+- Multikernel
+
+3.2 Modèles de tâches
+----------------------
+- Monotasking Systems (Systèmes monophasiques)
+- Multitasking Systems (Systèmes multiprogrammés)
+- Real-Time Systems (Systèmes temps réel)
+
+3.3 Gestion de la mémoire
+--------------------------
+Voir Partie 4 pour plus de détails.
+
+3.4 Appels système
+-------------------
+- x86 System Calls (SYSENTER)
+- ARM System Calls
+
+3.5 Planification (Scheduling)
+-------------------------------
+- Processes and Threads
+- Context Switching
+- Scheduling Algorithms
+- Multiprocessor Scheduling
+- Blocking Process
+
+3.6 Synchronisation des processus
+----------------------------------
+- Synchronization Primitives (Sémaphores, mutexes, spinlocks)
+- Signals
+
+3.7 Communication inter-processus (IPC)
+----------------------------------------
+- Message Passing
+- Shared Memory
+- Remote Procedure Call
+
+================================================================================
+PARTIE 4 : GESTION DE LA MEMOIRE
+================================================================================
+
+4.1 Espaces d'adressage
+------------------------
+
+**Espace d'adressage physique :**
+- Adresses directes utilisées pour accéder à une location réelle dans la RAM
+- Chaque exécutable doit utiliser du code PIC (Position-Independent Code) ou
+  venir avec des tables de rélocation
+- Pas de protection entre processus
+- Prone à la fragmentation mémoire
+
+**Espace d'adressage virtuel :**
+- Permis par les MMU (Memory Management Units)
+- Une adresse virtuelle peut être mappée à n'importe quelle adresse physique
+- Chaque processus peut avoir son propre espace d'adressage (démarrant à 0x0)
+- Résout le problème de fragmentation
+- Protection entre processus
+
+4.2 Systèmes de traduction mémoire
+-----------------------------------
+
+**Segmentation :**
+- Utilisée sur x86 en mode protégé
+- Sépare la mémoire en segments via les registres de segment : CS, DS, SS, ES, FS, GS
+- Moins courante dans les systèmes modernes
+
+**Paging (pagination) :**
+- Approche traditionnelle de la mémoire virtuelle
+- Sépare la mémoire physique en blocs (pages)
+- Mappe les adresses virtuelles aux adresses physiques page par page
+- Géré par la MMU
+- Performance impact faible
+
+4.3 Paging en détail
+---------------------
+
+**32-bit Paging :**
+- Deux niveaux de tables : Page Directory (PD) et Page Table (PT)
+- Chaque table contient 1024 entrées de 4 octets (4 KiB par table)
+- Adresse virtuelle divisée en 3 parties :
+  - Bits 22-31 : Index de l'entrée du Page Directory
+  - Bits 12-21 : Index de l'entrée du Page Table
+  - Bits 0-11 : Offset dans la page
+
+**Entrées du Page Directory (PDE) :**
+- PAT : Page Attribute Table
+- G : Global (ne pas invalider le TLB)
+- PS : Page Size (4 MiB si set, 4 KiB sinon)
+- D : Dirty (page écrite)
+- A : Accessed (page lue)
+- PCD : Cache Disable
+- PWT : Write-Through
+- U/S : User/Supervisor
+- R/W : Read/Write
+- P : Present (page en mémoire physique)
+
+**64-bit Paging :**
+- Quatre niveaux de tables : PML5, PML4, PDPT, PD, PT
+- Adresses virtuelles de 48 bits (256 TiB) ou 57 bits (128 PiB)
+- Nouveaux bits : XD (Execute Disable), PK (Protection Key)
+
+**Activation du paging :**
+```assembly
+; 32-bit
+mov eax, page_directory
+mov cr3, eax
+mov eax, cr0
+or eax, 0x80000001
+mov cr0, eax
+```
+
+**64-bit :**
+- Activer PAE (bit 5 de CR4)
+- Activer LME (bit 8 de EFER)
+- Charger CR3 avec PML4
+- Activer paging (bit 31 de CR0)
+
+4.4 Mémoire virtuelle
+----------------------
+- Lorsque la mémoire physique est épuisée, les pages non utilisées sont
+  écrites sur le disque (fichier de swap)
+- Cela libère de la mémoire physique
+- Risque de "thrashing" si trop de pages sont échangées
+- Basé sur l'hypothèse du "working set" (un processus n'a besoin que d'un
+  sous-ensemble de sa mémoire à un moment donné)
+
+4.5 Allocation de mémoire
+--------------------------
+- Bitmaps
+- Buddy allocation
+- Structures d'arbre
+- Files/Stacks
+
+================================================================================
+PARTIE 5 : INTERRUPTIONS
+================================================================================
+
+5.1 Types d'interruptions
+--------------------------
+
+**Exceptions :**
+- Générées interne par le CPU
+- Alertent le noyau d'une situation nécessitant son attention
+- Exemples : Double Fault, Page Fault, General Protection Fault
+
+**Interrupt Request (IRQ) ou Interruptions Matérielles :**
+- Générées par les périphériques
+- Signales via le pin #INTR du CPU
+- Deux types :
+  - IRQ Lines (Pin-based) : Routées statiquement via un PIC
+  - Message Signaled Interrupts : Signalées par écriture en mémoire
+
+**Interruptions Logicielles (Software Interrupt) :**
+- Signalées par le logiciel
+- Utilisées pour les appels système
+- Sur x86 : instruction "INT"
+- Exemple : Unix utilise le vecteur 0x80
+
+5.2 Programmable Interrupt Controller (PIC)
+--------------------------------------------
+- Deux PICs en cascade sur la plupart des systèmes
+- Master PIC (8 entrées) + Slave PIC (8 entrées)
+- Slave connecté à l'entrée #2 du Master
+- Total : 15 IRQs utilisables (IRQ 2 réservé pour la cascade)
+
+**IRQs standards ISA :**
+| IRQ | Description |
+|-----|-------------|
+| 0   | Programmable Interrupt Timer |
+| 1   | Clavier |
+| 2   | Cascade (non utilisé) |
+| 3   | COM2 |
+| 4   | COM1 |
+| 5   | LPT2 |
+| 6   | Disquette |
+| 7   | LPT1 / Spurious |
+| 8   | Horloge CMOS RTC |
+| 9   | Libre / SCSI / NIC |
+| 10  | Libre / SCSI / NIC |
+| 11  | Libre / SCSI / NIC |
+| 12  | Souris PS/2 |
+| 13  | FPU / Coprocesseur |
+| 14  | Disque dur ATA Primaire |
+| 15  | Disque dur ATA Secondaire |
+
+5.3 Interrupt Descriptor Table (IDT)
+-------------------------------------
+- Table fournie par l'OS contenant les gestionnaires d'interruptions
+- Up to 256 entrées sur x86
+- Chaque entrée pointe vers un Interrupt Service Routine (ISR)
+
+5.4 Programmation des interruptions
+------------------------------------
+Étapes :
+1. Réserver de l'espace pour l'IDT
+2. Indiquer au CPU où se trouve l'IDT (instruction lidt)
+3. Reconfigurer le PIC (remapper les IRQs)
+4. Écrire les handlers ISR
+5. Placer les adresses des handlers dans l'IDT
+6. Activer les interruptions dans le masque du PIC
+
+**Acknowledge d'une interruption :**
+```assembly
+mov al, 20h
+out 20h, al        ; pour le Master PIC
+out A0h, al        ; pour le Slave PIC (si nécessaire)
+```
+
+================================================================================
+PARTIE 6 : MATERIEL
+================================================================================
+
+6.1 CPU
+--------
+
+**x86 - Modes d'exécution :**
+- Real Mode (Mode réel) : 16-bit, 1 MiB de mémoire
+- Protected Mode (Mode protégé) : 32-bit, segmentation, protection
+- Virtual 8086 Mode (Mode virtuel 8086) : Simulation de real mode
+- x86-64 (Long Mode) : 64-bit, paging étendu
+
+**x86 - Registres :**
+- Registres généraux : EAX, EBX, ECX, EDX
+- Registres d'adressage : ESI, EDI, EBP, ESP
+- Registres de segment : CS, DS, SS, ES, FS, GS
+- Registres de contrôle : CR0, CR2, CR3, CR4
+
+**ARM :**
+- ARM Overview
+- Raspberry Pi Bare Bones
+
+**Autres architectures :**
+- PowerPC
+- MIPS
+- Sparc
+- RISC-V
+- ESA/390
+
+6.2 Mémoire
+------------
+- Detecting Memory (x86)
+- A20 Line (pour accéder à plus de 1 MiB)
+
+6.3 IRQs et Exceptions
+-----------------------
+- IDT (Interrupt Descriptor Table)
+- ISR (Interrupt Service Routines)
+- PIC (Programmable Interrupt Controller)
+- APIC (Advanced Programmable Interrupt Controller)
+- NMI (Non Maskable Interrupt)
+
+6.4 Horloges et Timers
+-----------------------
+- HPET (High Precision Event Timer)
+- APIC timer
+- PIT (Programmable Interval Timer)
+- CMOS / RTC (Real-Time Clock)
+
+6.5 Vidéo
+----------
+- VGA Resources / VGA Hardware
+- Printing To Screen (Mode texte)
+- Text Mode Cursor
+- Linear Framebuffer
+- VGA Fonts
+- VBE (VESA BIOS Extensions)
+- BGA (Bochs VBE Extensions)
+
+6.6 Audio
+----------
+- PC Speaker
+- Intel High Definition Audio
+
+6.7 Stockage
+-------------
+- ATA (Disques durs)
+- ATAPI (CD-ROM)
+- AHCI (SATA)
+- NVMe
+- Floppy Disk Controller
+
+6.8 Entrée/Sortie
+------------------
+- PS/2 Keyboard
+- Mouse Input
+- Serial Ports (RS-232)
+
+6.9 Bus
+--------
+- PCI
+- PCI Express
+- USB
+
+6.10 UEFI
+----------
+- Remplace le BIOS traditionnel
+- Prend en charge les tampons de pixels (au lieu de VGA texte)
+- Voir : https://wiki.osdev.org/UEFI
+
+6.11 ACPI
+----------
+- Advanced Configuration and Power Interface
+- RSDP, AML
+
+6.12 Réseau
+------------
+- RTL8139, RTL8169
+- Intel 8254x, Intel Ethernet i217
+- Ne2000
+- AMD PCnet
+- 3c90x
+- 802.11 (WiFi)
+
+================================================================================
+PARTIE 7 : OUTILS
+================================================================================
+
+7.1 Bootloaders
+----------------
+- GRUB (GNU GRUB)
+- Limine
+- LILO
+- XOSL
+- System Commander
+- Boot Magic
+- Rolling Your Own Bootloader
+
+7.2 Compilateurs
+-----------------
+- GCC (GNU Compiler Collection)
+  - Cygwin, MinGW, Dev-C++, DJGPP
+  - GCC Cross-Compiler
+- Watcom C/C++
+- Visual Studio / Visual C++
+- TCC (Tiny C Compiler)
+- Smaller C
+
+7.3 Assembleurs
+----------------
+- GAS (GNU Assembler)
+- NASM (The Netwide Assembler)
+- FASM (Flat Assembler)
+- YASM
+
+7.4 Linkers
+------------
+- LD (GNU Linker)
+- Link Archiver (GNU ar)
+- Mold (Modern Linker)
+
+7.5 Émulateurs
+---------------
+- QEMU (très recommandé)
+- Bochs
+- VMware
+- VirtualBox
+- SimICS
+
+7.6 Outils de gestion d'images de disque
+-----------------------------------------
+- Disk Images
+- Loopback Device (Linux)
+- hdiutil (MacOS)
+- Windows Tools
+
+================================================================================
+PARTIE 8 : TUTORIEL BARE BONES (OS Minimal)
+================================================================================
+
+8.1 Objectif
+-------------
+Créer un noyau minimal pour x86 32-bit qui peut être booté avec GRUB.
+
+8.2 Outils nécessaires
+-----------------------
+- GCC Cross-Compiler (cible i686-elf)
+- GNU Assembler (GAS) ou NASM
+- GNU Linker (LD)
+- GRUB (Bootloader)
+- QEMU (pour tester)
+
+8.3 Fichiers nécessaires
+-------------------------
+1. boot.s : Point d'entrée du noyau (en assembleur)
+2. kernel.c : Routines du noyau (en C)
+3. linker.ld : Script de linkage
+
+8.4 En-tête Multiboot
+----------------------
+GRUB utilise le standard Multiboot pour charger le noyau. L'en-tête contient :
+- MAGIC : 0x1BADB002
+- FLAGS : ALIGN | MEMINFO
+- CHECKSUM : -(MAGIC + FLAGS)
+
+8.5 Code d'initialisation (boot.s)
+-----------------------------------
+```assembly
+.set ALIGN,    1<<0
+.set MEMINFO,  1<<1
+.set FLAGS,    ALIGN | MEMINFO
+.set MAGIC,    0x1BADB002
+.set CHECKSUM, -(MAGIC + FLAGS)
+
+.section .multiboot
+.align 4
+.long MAGIC
+.long FLAGS
+.long CHECKSUM
+
+.section .bss
+.align 16
+stack_bottom:
+.skip 16384  # 16 KiB de pile
+stack_top:
+
+.section .text
+.global _start
+.type _start, @function
+_start:
+    mov $stack_top, %esp
+    call kernel_main
+    cli
+1:  hlt
+    jmp 1b
+.size _start, . - _start
+```
+
+8.6 Kernel en C
+----------------
+Utilise le mode texte VGA (adresse 0xB8000) pour afficher du texte.
+
+Couleurs VGA :
+| Valeur | Couleur |
+|--------|---------|
+| 0      | Noir |
+| 1      | Bleu |
+| 2      | Vert |
+| 3      | Cyan |
+| 4      | Rouge |
+| 5      | Magenta |
+| 6      | Brun |
+| 7      | Gris clair |
+| 8      | Gris foncé |
+| 9      | Bleu clair |
+| 10     | Vert clair |
+| 11     | Cyan clair |
+| 12     | Rouge clair |
+| 13     | Magenta clair |
+| 14     | Brun clair |
+| 15     | Blanc |
+
+8.7 Script de linkage (linker.ld)
+-----------------------------------
+```ld
+ENTRY(_start)
+
+SECTIONS
+{
+    . = 0xC0000000;
+
+    .text : ALIGN(4K)
+    {
+        *(.multiboot)
+        *(.text)
+    }
+
+    .rodata : ALIGN(4K)
+    {
+        *(.rodata)
+    }
+
+    .data : ALIGN(4K)
+    {
+        *(.data)
+    }
+
+    .bss : ALIGN(4K)
+    {
+        *(COMMON)
+        *(.bss)
+    }
+}
+```
+
+8.8 Compilation
+----------------
+```bash
+i686-elf-as boot.s -o boot.o
+i686-elf-gcc -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+i686-elf-ld -T linker.ld boot.o kernel.o -o myos.bin -nostdlib
+```
+
+8.9 Création d'une image bootable
+----------------------------------
+```bash
+mkdir -p isodir/boot/grub
+cp myos.bin isodir/boot/myos.bin
+cat > isodir/boot/grub/grub.cfg << EOF
+menuentry "My OS" {
+    multiboot /boot/myos.bin
+}
+EOF
+grub-mkrescue -o myos.iso isodir
+```
+
+8.10 Test avec QEMU
+--------------------
+```bash
+qemu-system-i386 -cdrom myos.iso
+```
+
+================================================================================
+PARTIE 9 : FORMATS EXECUTABLES ET SYSTEMES DE FICHIERS
+================================================================================
+
+9.1 Formats exécutables
+------------------------
+
+**64-bit :**
+- ELF (Executable and Linkable Format)
+- PE (Portable Executable)
+- COFF (Common Object File Format)
+
+**32-bit :**
+- ELF
+- PE
+- COFF
+
+**16-bit :**
+- COM
+- MZ
+- NE
+
+9.2 Systèmes de fichiers
+-------------------------
+- FAT (File Allocation Table)
+- Ext2 (Second Extended File System)
+- SFS (Simple File System)
+- NTFS (New Technology File System)
+
+================================================================================
+PARTIE 10 : RESSOURCES
+================================================================================
+
+10.1 Livres
+-----------
+Voir : https://wiki.osdev.org/Books
+
+10.2 Articles académiques
+--------------------------
+Voir : https://wiki.osdev.org/Academic_Papers
+
+10.3 Ressources générales
+--------------------------
+- https://wiki.osdev.org/Resources
+- https://wiki.osdev.org/Assembly
+- https://wiki.osdev.org/Chip_Numbers,_Acronyms_and_Things
+
+10.4 Documentation CPU
+-----------------------
+- Intel Software Developer Manuals
+- AMD Architecture Programmer's Manual
+
+================================================================================
+PARTIE 11 : BONNES PRATIQUES
+================================================================================
+
+11.1 Ordre de développement
+----------------------------
+Voir : https://wiki.osdev.org/What_Order_Should_I_Make_Things_In%3F
+
+11.2 Licence
+-------------
+Voir : https://wiki.osdev.org/Licensing
+
+11.3 Comment poser des questions
+---------------------------------
+Voir : https://wiki.osdev.org/How_To_Ask_Questions
+
+11.4 Meaty Skeleton
+--------------------
+Un squelette plus complet après Bare Bones :
+https://wiki.osdev.org/Meaty_Skeleton
+
+================================================================================
+FIN DU DOCUMENT
+================================================================================
+
+Dernière mise à jour : Juin 2026
+Source : https://wiki.osdev.org/

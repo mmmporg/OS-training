@@ -1,0 +1,556 @@
+https://www.osdev.org/
+https://wiki.osdev.org/
+https://forum.osdev.org/
+OSDev.org
+OS Development Wiki
+OSDev Wiki
+200k+ posts
+752 articles
+système d'exploitation
+noyau
+shell
+GUI
+Desktop Environment
+Window Manager
+Widget Library
+gestion de mémoire
+ressources système
+sécurité
+accès
+planification
+multiplexage
+processus
+threads
+programmes utilisateurs
+interface utilisateur
+API
+bibliothèque standard
+interruptions
+appels système
+abstractions
+fichiers
+sockets
+répertoires
+auto-complétion
+historique des commandes
+scripting
+Bash
+DOS batch
+contrôle complet
+recherche
+projets académiques
+programmation bas niveau
+Beginner Mistakes
+patience
+conception de code
+gratification instantanée
+Binutils
+GCC
+GNU Compiler Collection
+Make
+Grep
+sed
+Diffutils
+Perl
+Python
+assembleur
+éditeur de texte
+GNU/Linux
+Vim
+Emacs
+KDevelop
+Geany
+gedit
+Ubuntu
+Fedora
+Linux Mint
+Windows
+Cygwin
+MinGW
+MSYS2
+Windows Subsystem for Linux
+WSL
+Notepad++
+Visual Studio
+MacOS
+POSIX
+XCode Command Line Tools
+xcode-select --install
+système de contrôle de version
+Git
+GitHub
+Bitbucket
+Subversion
+Mercurial
+Bazaar
+compilateur croisé
+cross-compiler
+i686-elf
+x86_64-elf
+GCC Cross-Compiler
+Monolithic Kernel
+Noyau monolithique
+Microkernel
+Noyau micro
+Exokernel
+Modular Kernel
+Noyau modulaire
+Hybrid Kernel
+Noyau hybride
+Nano/Picokernel
+Cache Kernel
+Virtualizing Kernel
+Megalithic Kernel
+Multikernel
+Monotasking Systems
+Systèmes monophasiques
+Multitasking Systems
+Systèmes multiprogrammés
+Real-Time Systems
+Systèmes temps réel
+x86 System Calls
+SYSENTER
+ARM System Calls
+Processes and Threads
+Context Switching
+Scheduling Algorithms
+Multiprocessor Scheduling
+Blocking Process
+Synchronization Primitives
+Sémaphores
+mutexes
+spinlocks
+Signals
+Message Passing
+Shared Memory
+Remote Procedure Call
+Espace d'adressage physique
+Espace d'adressage virtuel
+MMU
+Memory Management Unit
+PIC
+Position-Independent Code
+fragmentation mémoire
+protection entre processus
+Segmentation
+Paging
+pagination
+Page Directory
+PD
+Page Table
+PT
+PDE
+Page Directory Entry
+PTE
+Page Table Entry
+PAT
+Page Attribute Table
+G
+Global
+TLB
+PS
+Page Size
+D
+Dirty
+A
+Accessed
+PCD
+Cache Disable
+PWT
+Write-Through
+U/S
+User/Supervisor
+R/W
+Read/Write
+P
+Present
+PML5
+PML4
+PDPT
+Page Directory Pointer Table
+PAE
+Physical Address Extension
+XD
+Execute Disable
+PK
+Protection Key
+EFER
+LME
+Long Mode Enable
+CR0
+CR2
+CR3
+CR4
+mémoire virtuelle
+swap
+fichier de swap
+thrashing
+working set
+bitmaps
+buddy allocation
+structures d'arbre
+files
+stacks
+interruptions
+exceptions
+IRQ
+Interrupt Request
+Interruptions Matérielles
+Interruptions Logicielles
+Software Interrupt
+INT
+Double Fault
+Page Fault
+General Protection Fault
+PIC
+Programmable Interrupt Controller
+Master PIC
+Slave PIC
+cascade
+IRQ 0
+Programmable Interrupt Timer
+IRQ 1
+Clavier
+IRQ 2
+Cascade
+IRQ 3
+COM2
+IRQ 4
+COM1
+IRQ 5
+LPT2
+IRQ 6
+Disquette
+IRQ 7
+LPT1
+Spurious
+IRQ 8
+Horloge CMOS RTC
+IRQ 9
+Libre
+SCSI
+NIC
+IRQ 10
+IRQ 11
+IRQ 12
+Souris PS/2
+IRQ 13
+FPU
+Coprocesseur
+IRQ 14
+Disque dur ATA Primaire
+IRQ 15
+Disque dur ATA Secondaire
+IDT
+Interrupt Descriptor Table
+ISR
+Interrupt Service Routines
+lidt
+cli
+sti
+IRET
+x86
+Real Mode
+Mode réel
+16-bit
+1 MiB
+Protected Mode
+Mode protégé
+32-bit
+Virtual 8086 Mode
+Mode virtuel 8086
+x86-64
+Long Mode
+64-bit
+EAX
+EBX
+ECX
+EDX
+ESI
+EDI
+EBP
+ESP
+CS
+DS
+SS
+ES
+FS
+GS
+ARM
+Raspberry Pi
+PowerPC
+MIPS
+Sparc
+RISC-V
+ESA/390
+Detecting Memory
+A20 Line
+APIC
+Advanced Programmable Interrupt Controller
+NMI
+Non Maskable Interrupt
+HPET
+High Precision Event Timer
+APIC timer
+PIT
+Programmable Interval Timer
+CMOS
+RTC
+Real-Time Clock
+VGA
+Video Graphics Array
+VGA Resources
+VGA Hardware
+Printing To Screen
+Mode texte
+Text Mode Cursor
+Linear Framebuffer
+VGA Fonts
+VBE
+VESA BIOS Extensions
+BGA
+Bochs VBE Extensions
+PC Speaker
+Intel High Definition Audio
+ATA
+ATAPI
+AHCI
+SATA
+NVMe
+Floppy Disk Controller
+PS/2 Keyboard
+Mouse Input
+Serial Ports
+RS-232
+PCI
+PCI Express
+USB
+UEFI
+BIOS
+ACPI
+Advanced Configuration and Power Interface
+RSDP
+AML
+RTL8139
+RTL8169
+Intel 8254x
+Intel Ethernet i217
+Ne2000
+AMD PCnet
+3c90x
+802.11
+WiFi
+GRUB
+GNU GRUB
+Limine
+LILO
+XOSL
+System Commander
+Boot Magic
+Rolling Your Own Bootloader
+Watcom C/C++
+Visual C++
+TCC
+Tiny C Compiler
+Smaller C
+GAS
+GNU Assembler
+NASM
+The Netwide Assembler
+FASM
+Flat Assembler
+YASM
+LD
+GNU Linker
+Link Archiver
+GNU ar
+Mold
+QEMU
+Bochs
+VMware
+VirtualBox
+SimICS
+Disk Images
+Loopback Device
+hdiutil
+Windows Tools
+Bare Bones
+Meaty Skeleton
+Multiboot
+MAGIC
+0x1BADB002
+FLAGS
+ALIGN
+MEMINFO
+CHECKSUM
+_start
+kernel_main
+VGA_MEMORY
+0xB8000
+VGA_WIDTH
+80
+VGA_HEIGHT
+25
+VGA_COLOR_BLACK
+0
+VGA_COLOR_BLUE
+1
+VGA_COLOR_GREEN
+2
+VGA_COLOR_CYAN
+3
+VGA_COLOR_RED
+4
+VGA_COLOR_MAGENTA
+5
+VGA_COLOR_BROWN
+6
+VGA_COLOR_LIGHT_GREY
+7
+VGA_COLOR_DARK_GREY
+8
+VGA_COLOR_LIGHT_BLUE
+9
+VGA_COLOR_LIGHT_GREEN
+10
+VGA_COLOR_LIGHT_CYAN
+11
+VGA_COLOR_LIGHT_RED
+12
+VGA_COLOR_LIGHT_MAGENTA
+13
+VGA_COLOR_LIGHT_BROWN
+14
+VGA_COLOR_WHITE
+15
+ELF
+Executable and Linkable Format
+PE
+Portable Executable
+COFF
+Common Object File Format
+COM
+MZ
+NE
+FAT
+File Allocation Table
+Ext2
+Second Extended File System
+SFS
+Simple File System
+NTFS
+New Technology File System
+Livres
+Articles académiques
+Intel Software Developer Manuals
+AMD Architecture Programmer's Manual
+Licensing
+How To Ask Questions
+What Order Should I Make Things In?
+GCC Cross-Compiler
+Required Knowledge
+Getting Started
+Tutorials
+FAQ
+Languages
+Inline Assembly
+Object Files
+Boot Sequence
+Diskless Booting
+Global Descriptor Table
+GDT Tutorial
+Getting Keyboard Input
+PS2 Keyboard
+Troubleshooting
+Testing
+Unit Testing
+Kernel Debugging
+Going Further on x86
+Creating an Operating System
+Code Management
+Compiler
+Making a Compiler
+Code Generation and Optimization Techniques
+Implementing Conditional Statements And Loops
+Tail Recursion and Tail Call Optimization
+Memory management
+Memory Allocation
+Page Frame Allocation
+Memory Management Unit
+File Management
+File Systems
+Processes and Threads
+Scheduling
+Synchronization
+Signals
+Message Passing
+Shared Memory
+Remote Procedure Call
+Books
+Academic Papers
+Assembly
+Chip Numbers
+Acronyms
+Bootloader
+Calling Conventions
+System V ABI
+Cross-Compiler Successful Builds
+Porting GCC to your OS
+Visual C++ Runtime
+Other Compilers
+Opcode syntax
+Assemblers
+Linkers
+Emulators
+Hardware
+Register Machine Model of Computation
+Memory Architecture
+Instruction Set Architecture
+CISC
+RISC
+Execution Architecture
+Multiprocessing Architecture
+IA32 Architecture Family
+Model Specific Registers
+MSRs
+Detecting CPU Speed
+CPU Bugs
+SSE
+Where Can I Find Information About Ports
+CPU Registers
+x86
+x86-64
+S390
+Kernel Barebones
+Program Status Word
+PSA Mapping
+z/OS DataSet FileSystem
+ZDSFS
+Batch I/O Channel SubSystem
+Command SubSystem
+ARM Overview
+Raspberry Pi Bare Bones
+Detecting Memory (x86)
+I Can't Get Interrupts Working
+IDT problems
+Interrupt Service Routines
+Non Maskable Interrupt
+OPIC
+Accelerated Graphic Cards
+Native Intel graphics
+Detecting Colour and Monochrome Monitors
+Kernel Stdio Theory
+Video Signals And Timing
+Sound
+Plug-and-Play
+PNP Calls In Protected Mode
+PCI Express
+Universal Serial Bus
+Broken UEFI implementations
+Network Hardware
+Non-x86 Development
+Executable File Types
+FAT Details
+Ext2 Details
+SFS Details
+NTFS Details

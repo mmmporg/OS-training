@@ -1,0 +1,504 @@
+================================================================================
+                OSDEV DESIGN DATA - STRUCTURE EN ARBRE
+================================================================================
+
+Sources : 
+1. Operating System Concepts (Silberschatz, Gagne, Galvin) - UIC CS Course Notes
+2. StudyRaid - Operating System Design and Implementation
+3. Principles of Operating System - Tau University Lecture Notes
+
+================================================================================
+
+Principles de Conception
+├── Modularité
+│   ├── Décomposition en composants indépendants
+│   ├── Interface bien définie
+│   └── Avantages : maintenance, testabilité, réutilisabilité
+├── Abstraction
+│   ├── Cacher les détails d'implémentation
+│   └── Exemples : FS, pilotes, mémoire virtuelle
+├── Stratification (Layering)
+│   ├── Couches hiérarchiques
+│   ├── Couche N utilise Couche N-1
+│   └── Couches typiques : Hardware → Kernel → Pilotes → FS → API → Apps
+├── Efficacité
+│   ├── Utilisation CPU
+│   ├── Utilisation mémoire
+│   └── Débit I/O
+├── Fiabilité
+│   ├── Stabilité
+│   ├── Tolérance aux fautes
+│   └── Récupération automatique
+├── Extensibilité
+│   ├── Ajout de fonctionnalités
+│   └── Sans casser les existantes
+└── Sécurité
+    ├── Protection des ressources
+    ├── Authentification
+    └── Contrôle d'accès
+
+================================================================================
+
+Critères d'Évaluation
+├── Performance
+│   ├── Temps de réponse
+│   ├── Débit
+│   ├── Utilisation CPU/mémoire
+│   └── Latence
+├── Fiabilité
+│   ├── Temps entre pannes
+│   ├── Récupération automatique
+│   └── Tolerance aux fautes
+├── Sécurité
+│   ├── Protection contre attaques
+│   ├── Isolation des processus
+│   └── Chiffrement
+├── Extensibilité
+│   └── Facilité d'ajout de fonctionnalités
+├── Portabilité
+│   └── Fonctionnement sur différentes architectures
+└── Maintainabilité
+    ├── Facilité de modification
+    └── Débogage
+
+================================================================================
+
+Architectures de Noyau
+├── Monolithique
+│   ├── Toutes fonctions dans un espace
+│   ├── Avantages : performance, simplicité
+│   ├── Inconvénients : volumineux, peu modulaire
+│   └── Exemples : Linux, DOS, BSD
+├── En Couches (Layered)
+│   ├── Organisation hiérarchique
+│   ├── Avantages : simplicité, testabilité
+│   ├── Inconvénients : perte de performance, rigidité
+│   └── Exemples : THE OS, MULTICS
+├── Microkernel
+│   ├── Fonctions essentielles dans le noyau
+│   │   ├── Planification processus
+│   │   ├── Gestion mémoire bas niveau
+│   │   ├── IPC
+│   │   └── Gestion interruptions
+│   ├── Services en espace utilisateur
+│   │   ├── Système de fichiers
+│   │   ├── Pilotes
+│   │   └── Réseau
+│   ├── Avantages : modularité, sécurité, fiabilité
+│   ├── Inconvénients : performance réduite, complexité
+│   └── Exemples : MINIX, Mach, QNX
+├── Hybride
+│   ├── Combinaison monolithique + microkernel
+│   ├── Services critiques dans le noyau
+│   └── Exemples : Windows NT/2000/XP/Vista/7/8/10
+├── Exokernel
+│   ├── Noyau = allocation de ressources
+│   ├── Applications gèrent leurs ressources
+│   └── Exemples : Exokernel, Nemesis
+└── Modulaire
+    ├── Chargement dynamique de modules
+    ├── Interface standardisée
+    └── Exemples : Linux
+
+================================================================================
+
+Gestion des Processus
+├── Modèle de Processus
+│   ├── Processus vs Thread
+│   │   ├── Processus : unité d'allocation des ressources
+│   │   └── Thread : unité de scheduling
+│   ├── Process Control Block (PCB)
+│   │   ├── PID
+│   │   ├── État
+│   │   ├── Registres CPU
+│   │   ├── Allocation mémoire
+│   │   ├── Descripteurs de fichiers
+│   │   └── Priorité
+│   └── États du processus
+│       ├── Nouveau (New)
+│       ├── Prêt (Ready)
+│       ├── En cours d'exécution (Running)
+│       ├── Bloqué (Blocked)
+│       └── Terminé (Terminated)
+├── Algorithmes de Planification
+│   ├── Planification de base
+│   │   ├── FCFS (First-Come First-Served)
+│   │   │   ├── Principe : premiers arrivés premiers servis
+│   │   │   ├── Avantages : simple, équitable
+│   │   │   └── Inconvénients : effet convoyage
+│   │   ├── SJF (Shortest Job First)
+│   │   │   ├── Principe : priorité au processus le plus court
+│   │   │   ├── Avantages : temps d'attente minimal
+│   │   │   └── Inconvénients : connaissance du temps d'exécution, famine
+│   │   ├── SRTF (Shortest Remaining Time First)
+│   │   │   └── Version préemptive de SJF
+│   │   ├── RR (Round Robin)
+│   │   │   ├── Principe : quantum de temps fixe
+│   │   │   ├── Avantages : temps de réponse rapide
+│   │   │   └── Inconvénients : dépend du quantum
+│   │   └── Scheduling par Priorité
+│   │       ├── Principe : priorité la plus haute d'abord
+│   │       └── Solution famine : Vîllesse (Aging)
+│   ├── Files d'attente à plusieurs niveaux
+│   │   ├── Multilevel Queue
+│   │   │   └── Classes de processus avec algorithmes différents
+│   │   └── Multilevel Feedback Queue
+│   │       └── Processus peuvent passer entre classes
+│   └── Planification temps réel
+│       ├── RMS (Rate Monotonic Scheduling)
+│       │   ├── Priorité proportionnelle à la fréquence
+│       │   └── Formule : Σ(utilisation) ≤ n(2^(1/n) - 1)
+│       ├── EDF (Earliest Deadline First)
+│       │   ├── Priorité à la date d'échéance la plus proche
+│       │   └── Optimal : Σ(utilisation) ≤ 1
+│       └── LLF (Least Laxity First)
+│           └── Priorité au moins de laxité
+├── Synchronisation des Processus
+│   ├── Problèmes de concurrence
+│   │   ├── Race Conditions
+│   │   ├── Deadlock (Interblocage)
+│   │   └── Priority Inversion (Inversion de priorité)
+│   ├── Primitives de synchronisation
+│   │   ├── Mutex (Mutual Exclusion)
+│   │   │   └── Opérations : lock(), unlock()
+│   │   ├── Sémaphore
+│   │   │   ├── Opérations : P(), V()
+│   │   │   ├── Binaire (0 ou 1) = Mutex
+│   │   │   └── De comptage (> 1)
+│   │   ├── Moniteur
+│   │   │   ├── Structure de données + procédures
+│   │   │   ├── Mutual exclusion automatique
+│   │   │   └── Variables de condition
+│   │   ├── Spinlock
+│   │   │   └── Boucle active jusqu'à obtention
+│   │   └── Barrière (Barrier)
+│   │       └── Tous les processus doivent atteindre le point
+│   └── Problèmes classiques
+│       ├── Producteur-Consommateur
+│       ├── Readers-Writers
+│       └── Dîner des philosophes
+└── Communication Inter-Processus (IPC)
+    ├── Mémoire partagée (Shared Memory)
+    │   ├── Région de mémoire accessible à plusieurs processus
+    │   └── Nécessite synchronisation
+    ├── Passage de messages (Message Passing)
+    │   ├── Synchrones
+    │   └── Asynchrones
+    ├── Pipes
+    │   └── Tube unidirectionnel entre processus liés
+    ├── Files de messages (Message Queues)
+    │   └── Messages organisés en files
+    ├── Sockets
+    │   └── Communication réseau
+    └── Signaux (Signals)
+        ├── SIGINT
+        ├── SIGTERM
+        └── SIGKILL
+
+================================================================================
+
+Gestion de la Mémoire
+├── Organisation de la Mémoire
+│   ├── Hiérarchie mémoire
+│   │   ├── Registres CPU (ns)
+│   │   ├── Cache L1/L2/L3 (ns-μs)
+│   │   ├── RAM (μs)
+│   │   ├── Disque dur (ms)
+│   │   └── Stockage secondaire (min)
+│   └── Principe de localité
+│       ├── Localité temporelle
+│       └── Localité spatiale
+├── Allocation de Mémoire Continue
+│   ├── Stratégies d'allocation
+│   │   ├── First Fit (Premier ajustement)
+│   │   ├── Best Fit (Meilleur ajustement)
+│   │   ├── Worst Fit (Pire ajustement)
+│   │   └── Next Fit (Suivant ajustement)
+│   └── Défragmentation
+│       └── Compaction
+├── Allocation de Mémoire Non Continue
+│   ├── Paging
+│   │   ├── Pages (taille fixe)
+│   │   ├── Frames
+│   │   └── Table de pages
+│   ├── Segmentation
+│   │   ├── Segments (taille variable)
+│   │   └── Table de segments
+│   └── Paging + Segmentation
+├── Mémoire Virtuelle
+│   ├── Principe : extension de la RAM par le disque
+│   ├── Swap
+│   ├── Défaut de page (Page Fault)
+│   ├── Algorithmes de remplacement de pages
+│   │   ├── FIFO
+│   │   ├── LRU (Least Recently Used)
+│   │   ├── Optimal (OPT)
+│   │   ├── MRU (Most Recently Used)
+│   │   ├── Clock
+│   │   ├── Second Chance
+│   │   └── Enhanced Clock
+│   ├── Algorithmes d'allocation de cadres
+│   │   ├── Allocation égale
+│   │   ├── Allocation proportionnelle
+│   │   └── Allocation basée sur la demande
+│   └── Thrashing
+│       └── Phénomène de sur-échange
+└── Allocation de Mémoire Dynamique
+    ├── Buddy System
+    ├── Bitmap
+    ├── Liste chaînée
+    └── Slab Allocation
+
+================================================================================
+
+Système de Fichiers
+├── Concepts Fondamentaux
+│   ├── Abstraction fichier
+│   ├── Propriétés d'un fichier
+│   │   ├── Nom, Taille, Dates, Propriétaire, Permissions, Type
+│   │   └── Inode (Index Node)
+│   └── Structure de répertoires
+│       ├── Arborescence hiérarchique
+│       ├── Répertoire racine
+│       └── Répertoire courant/parent
+├── Organisation du Stockage
+│   ├── Disques durs
+│   │   ├── Secteurs
+│   │   └── Temps d'accès
+│   └── Allocation de fichiers
+│       ├── Allocation continue
+│       ├── Allocation chaînée
+│       ├── Allocation par table d'allocation (FAT)
+│       └── Allocation indexée (Inode)
+├── Stratégies de Placement
+│   ├── Placement séquentiel
+│   ├── Placement par zone
+│   └── Placement optimisé
+├── Algorithmes de Scheduling Disque
+│   ├── FCFS
+│   ├── SSTF (Shortest Seek Time First)
+│   ├── SCAN (Elevator)
+│   ├── C-SCAN
+│   └── C-LOOK
+├── Cache de Disque
+│   ├── Algorithmes de remplacement
+│   │   ├── LRU
+│   │   ├── LFU
+│   │   └── FIFO
+│   └── Write-back vs Write-through
+└── Sécurité des Fichiers
+    ├── Permissions Unix (rwx)
+    ├── Chmod
+    ├── ACLs
+    └── Chiffrement
+
+================================================================================
+
+Gestion d'Entrée/Sortie
+├── Concepts Fondamentaux
+│   ├── Périphériques I/O
+│   │   ├── Bloqués (disques)
+│   │   ├── Caractères (clavier)
+│   │   └── Réseau
+│   └── Modes de transfert
+│       ├── Polling
+│       ├── Interrupts
+│       ├── DMA (Direct Memory Access)
+│       └── PIO (Programmed I/O)
+├── Architecture du Sous-système I/O
+│   ├── Couches
+│   │   ├── Interface utilisateur
+│   │   ├── Système de fichiers
+│   │   ├── Gestionnaire de périphériques
+│   │   ├── Pilotes de périphériques
+│   │   └── Contrôleurs matériels
+│   └── Pilotes de périphériques
+│       ├── Pilotes de caractères
+│       ├── Pilotes de blocs
+│       └── Pilotes réseau
+├── Buffering
+│   ├── Buffer simple
+│   ├── Double buffering
+│   ├── Circular buffering
+│   └── Cache
+└── Spooling
+    └── File d'attente pour périphériques partagés
+
+================================================================================
+
+Interblocage (Deadlock)
+├── Concepts Fondamentaux
+│   ├── Définition
+│   └── Conditions nécessaires (Coffman)
+│       ├── Mutual Exclusion
+│       ├── Hold and Wait
+│       ├── No Preemption
+│       └── Circular Wait
+├── Détection
+│   └── Graph d'allocation de ressources
+├── Prévention
+│   ├── Violer Mutual Exclusion
+│   ├── Violer Hold and Wait
+│   ├── Violer No Preemption
+│   └── Violer Circular Wait
+├── Évitement
+│   └── Algorithme du banquier (Banker's Algorithm)
+│       ├── État courant
+│       ├── État sûr
+│       └── Complexité : O(n²*m)
+└── Gestion
+    ├── Ignorer
+    ├── Détection + Récupération
+    │   ├── Termination de processus
+    │   └── Préemption de ressources
+    ├── Prévention
+    └── Évitement
+
+================================================================================
+
+Sécurité et Protection
+├── Mécanismes de Protection
+│   ├── Modes d'exécution
+│   │   ├── Mode noyau (Kernel mode)
+│   │   └── Mode utilisateur (User mode)
+│   ├── Anneaux de protection
+│   │   └── Anneau 0 (noyau) à Anneau 3 (utilisateur)
+│   ├── Tables de protection
+│   │   ├── GDT (Global Descriptor Table)
+│   │   └── LDT (Local Descriptor Table)
+│   └── Paging avec protection
+│       ├── U/S (User/Supervisor)
+│       ├── R/W (Read/Write)
+│       └── XD (Execute Disable)
+├── Contrôle d'Accès
+│   ├── DAC (Discretionary Access Control)
+│   ├── MAC (Mandatory Access Control)
+│   ├── RBAC (Role-Based Access Control)
+│   └── ABAC (Attribute-Based Access Control)
+├── Authentification
+│   ├── Mot de passe
+│   │   ├── Hashage
+│   │   ├── Sel (Salt)
+│   │   └── Algorithmes : bcrypt, scrypt, Argon2
+│   ├── Clés publiques/privées
+│   ├── Certificats numériques
+│   ├── Biométrie
+│   └── Tokens
+└── Vulnérabilités
+    ├── Buffer overflow
+    ├── Race conditions
+    ├── SQL injection
+    ├── XSS (Cross-site scripting)
+    └── Privilege escalation
+
+================================================================================
+
+Virtualisation
+├── Concepts Fondamentaux
+│   ├── Machines virtuelles (VM)
+│   └── Types de virtualisation
+│       ├── Virtualisation complète
+│       ├── Virtualisation par conteneur
+│       └── Virtualisation de bureau
+├── Hyperviseurs
+│   ├── Type 1 (Bare-metal)
+│   │   └── Exemples : VMware ESX, Xen, KVM
+│   └── Type 2 (Hosted)
+│       └── Exemples : VirtualBox, VMware Workstation
+├── Paravirtualisation
+│   └── Exemples : Xen
+├── Hardware-Assisted
+│   ├── Intel VT-x
+│   └── AMD-V
+└── Conteneurs
+    ├── Docker
+    └── LXC
+
+================================================================================
+
+Systèmes Distribués
+├── Concepts Fondamentaux
+│   ├── Caractéristiques
+│   │   ├── Hétérogénéité
+│   │   ├── Tolérance aux fautes
+│   │   ├── Concurrence
+│   │   ├── Manque de synchronisation globale
+│   │   └── Latence variable
+│   └── Architectures
+│       ├── Client-serveur
+│       ├── Pair-à-pair (P2P)
+│       └── À trois niveaux
+├── Services Distribués
+│   ├── Service de noms
+│   │   ├── DNS
+│   │   └── LDAP
+│   ├── Service de temps
+│   │   └── NTP
+│   ├── Service de réplication
+│   └── Service de consensus
+│       ├── Paxos
+│       └── Raft
+└── Tolérance aux Fautes
+    ├── Types de fautes
+    │   ├── Faute de crash
+    │   ├── Faute omissive
+    │   └── Faute byzantine
+    └── Modèles
+        ├── Crash-stop
+        └── Byzantin
+
+================================================================================
+
+Systèmes Temps Réel
+├── Concepts Fondamentaux
+│   ├── RTOS
+│   └── Types
+│       ├── Temps réel dur (Hard RT)
+│       └── Temps réel mou (Soft RT)
+├── Caractéristiques
+│   ├── Prévisibilité
+│   ├── Basse latence
+│   ├── Scheduling préemptif
+│   └── Gestion de mémoire statique
+├── Algorithmes de Scheduling
+│   ├── RMS
+│   ├── EDF
+│   ├── LLF
+│   └── Fixed Priority
+└── RTOS Populaires
+    ├── FreeRTOS
+    ├── QNX
+    ├── VxWorks
+    ├── RT-Linux
+    └── μC/OS
+
+================================================================================
+
+Bonnes Pratiques
+├── Ordre de Développement
+│   ├── Bootloader
+│   ├── Gestion bas niveau
+│   ├── Gestion de mémoire
+│   ├── Gestion de processus
+│   ├── Synchronisation
+│   ├── Système de fichiers
+│   ├── Pilotes de périphériques
+│   └── Interface utilisateur
+├── Tests et Validation
+│   ├── Tests unitaires
+│   ├── Tests d'intégration
+│   ├── Tests de performance
+│   ├── Tests de stress
+│   └── Tests de sécurité
+├── Documentation
+│   ├── Documentation technique
+│   ├── Documentation utilisateur
+│   └── Documentation API
+└── Licence
+    ├── GPL
+    ├── MIT
+    └── BSD
+
+================================================================================
+FIN DU DOCUMENT
+================================================================================

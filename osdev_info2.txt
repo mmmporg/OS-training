@@ -1,0 +1,534 @@
+================================================================================
+                    OSDev DATA - STRUCTURE EN ARBRE
+================================================================================
+
+OSDev.org
+├── Site Web : https://www.osdev.org/
+├── Wiki : https://wiki.osdev.org/
+├── Forums : https://forum.osdev.org/
+├── Informations
+│   ├── OSDev Wiki
+│   ├── OS Development Wiki
+│   ├── 200k+ posts
+│   └── 752 articles
+└── Conseils Débutants
+    ├── Beginner Mistakes
+    ├── patience
+    ├── conception de code
+    └── gratification instantanée
+
+================================================================================
+
+Concepts Fondamentaux
+├── Système d'Exploitation
+│   ├── Fonctions
+│   │   ├── gestion de mémoire
+│   │   ├── ressources système
+│   │   ├── sécurité
+│   │   ├── accès
+│   │   ├── planification
+│   │   ├── multiplexage
+│   │   ├── interface utilisateur
+│   │   └── API
+│   ├── Noyau
+│   │   ├── Modèles de Noyau
+│   │   │   ├── Monolithic Kernel / Noyau monolithique
+│   │   │   ├── Microkernel / Noyau micro
+│   │   │   ├── Exokernel
+│   │   │   ├── Modular Kernel / Noyau modulaire
+│   │   │   ├── Hybrid Kernel / Noyau hybride
+│   │   │   ├── Nano/Picokernel
+│   │   │   ├── Cache Kernel
+│   │   │   ├── Virtualizing Kernel
+│   │   │   ├── Megalithic Kernel
+│   │   │   └── Multikernel
+│   │   ├── Appels Système
+│   │   │   ├── x86 System Calls (SYSENTER)
+│   │   │   └── ARM System Calls
+│   │   └── Abstractions
+│   │       ├── fichiers
+│   │       ├── sockets
+│   │       └── répertoires
+│   ├── Shell
+│   │   ├── Fonctionnalités
+│   │   │   ├── auto-complétion
+│   │   │   ├── historique des commandes
+│   │   │   └── scripting
+│   │   └── Types
+│   │       ├── Bash
+│   │       └── DOS batch
+│   └── GUI
+│       ├── Desktop Environment
+│       ├── Window Manager
+│       └── Widget Library
+├── Gestion de Ressources
+│   ├── Mémoire
+│   │   ├── Adressage
+│   │   │   ├── Espace d'adressage physique
+│   │   │   └── Espace d'adressage virtuel
+│   │   ├── MMU (Memory Management Unit)
+│   │   ├── Protection
+│   │   │   ├── PIC (Position-Independent Code)
+│   │   │   ├── fragmentation mémoire
+│   │   │   └── protection entre processus
+│   │   ├── Segmentation
+│   │   ├── Paging (pagination)
+│   │   │   ├── Structures 32-bit
+│   │   │   │   ├── Page Directory (PD)
+│   │   │   │   ├── Page Table (PT)
+│   │   │   │   ├── Page Directory Entry (PDE)
+│   │   │   │   └── Page Table Entry (PTE)
+│   │   │   ├── Structures 64-bit
+│   │   │   │   ├── PML5
+│   │   │   │   ├── PML4
+│   │   │   │   ├── PDPT (Page Directory Pointer Table)
+│   │   │   │   ├── PD
+│   │   │   │   └── PT
+│   │   │   ├── Bits de Page
+│   │   │   │   ├── PAT (Page Attribute Table)
+│   │   │   │   ├── G (Global / TLB)
+│   │   │   │   ├── PS (Page Size)
+│   │   │   │   ├── D (Dirty)
+│   │   │   │   ├── A (Accessed)
+│   │   │   │   ├── PCD (Cache Disable)
+│   │   │   │   ├── PWT (Write-Through)
+│   │   │   │   ├── U/S (User/Supervisor)
+│   │   │   │   ├── R/W (Read/Write)
+│   │   │   │   ├── P (Present)
+│   │   │   │   ├── PAE (Physical Address Extension)
+│   │   │   │   ├── XD (Execute Disable)
+│   │   │   │   └── PK (Protection Key)
+│   │   │   ├── Registres Contrôle
+│   │   │   │   ├── CR0
+│   │   │   │   ├── CR2
+│   │   │   │   ├── CR3
+│   │   │   │   ├── CR4
+│   │   │   │   ├── EFER
+│   │   │   │   └── LME (Long Mode Enable)
+│   │   │   └── Mémoire Virtuelle
+│   │   │       ├── swap / fichier de swap
+│   │   │       ├── thrashing
+│   │   │       └── working set
+│   │   └── Allocation
+│   │       ├── bitmaps
+│   │       ├── buddy allocation
+│   │       ├── structures d'arbre
+│   │       ├── files
+│   │       └── stacks
+│   ├── Processus & Threads
+│   │   ├── processus
+│   │   ├── threads
+│   │   ├── programmes utilisateurs
+│   │   ├── bibliothèque standard
+│   │   ├── Context Switching
+│   │   ├── Planification (Scheduling)
+│   │   │   ├── Scheduling Algorithms
+│   │   │   ├── Multiprocessor Scheduling
+│   │   │   └── Blocking Process
+│   │   ├── Synchronisation
+│   │   │   ├── Synchronization Primitives
+│   │   │   ├── Sémaphores
+│   │   │   ├── mutexes
+│   │   │   ├── spinlocks
+│   │   │   └── Signals
+│   │   └── IPC (Communication Inter-Processus)
+│   │       ├── Message Passing
+│   │       ├── Shared Memory
+│   │       └── Remote Procedure Call
+│   └── Modèles de Tâches
+│       ├── Monotasking Systems / Systèmes monophasiques
+│       ├── Multitasking Systems / Systèmes multiprogrammés
+│       └── Real-Time Systems / Systèmes temps réel
+└── Interruptions
+    ├── Types
+    │   ├── Exceptions
+    │   │   ├── Double Fault
+    │   │   ├── Page Fault
+    │   │   └── General Protection Fault
+    │   ├── IRQ (Interrupt Request / Interruptions Matérielles)
+    │   └── Logiciels (Software Interrupt / INT)
+    ├── PIC (Programmable Interrupt Controller)
+    │   ├── Master PIC
+    │   ├── Slave PIC
+    │   ├── cascade
+    │   └── IRQs Standards (ISA)
+    │       ├── IRQ 0 : Programmable Interrupt Timer
+    │       ├── IRQ 1 : Clavier
+    │       ├── IRQ 2 : Cascade
+    │       ├── IRQ 3 : COM2
+    │       ├── IRQ 4 : COM1
+    │       ├── IRQ 5 : LPT2
+    │       ├── IRQ 6 : Disquette
+    │       ├── IRQ 7 : LPT1 / Spurious
+    │       ├── IRQ 8 : Horloge CMOS RTC
+    │       ├── IRQ 9 : Libre / SCSI / NIC
+    │       ├── IRQ 10 : Libre / SCSI / NIC
+    │       ├── IRQ 11 : Libre / SCSI / NIC
+    │       ├── IRQ 12 : Souris PS/2
+    │       ├── IRQ 13 : FPU / Coprocesseur
+    │       ├── IRQ 14 : Disque dur ATA Primaire
+    │       └── IRQ 15 : Disque dur ATA Secondaire
+    ├── APIC (Advanced Programmable Interrupt Controller)
+    │   └── APIC timer
+    ├── NMI (Non Maskable Interrupt)
+    ├── IDT (Interrupt Descriptor Table)
+    │   ├── lidt
+    │   └── ISR (Interrupt Service Routines)
+    │       ├── cli
+    │       ├── sti
+    │       └── IRET
+    └── OPIC
+
+================================================================================
+
+Environnements de Développement
+├── GNU/Linux
+│   ├── Distributions
+│   │   ├── Ubuntu
+│   │   ├── Fedora
+│   │   └── Linux Mint
+│   └── Éditeurs
+│       ├── Vim
+│       ├── Emacs
+│       ├── KDevelop
+│       ├── Geany
+│       └── gedit
+├── Windows
+│   ├── Outils
+│   │   ├── Cygwin
+│   │   ├── MinGW
+│   │   ├── MSYS2
+│   │   └── Windows Subsystem for Linux (WSL)
+│   └── Éditeurs
+│       ├── Notepad++
+│       └── Visual Studio
+└── MacOS
+    ├── POSIX
+    └── XCode Command Line Tools (xcode-select --install)
+
+================================================================================
+
+Outils
+├── Compilateurs
+│   ├── GCC (GNU Compiler Collection)
+│   │   └── GCC Cross-Compiler
+│   ├── Watcom C/C++
+│   ├── Visual C++
+│   │   └── Visual C++ Runtime
+│   ├── TCC (Tiny C Compiler)
+│   ├── Smaller C
+│   └── Cross-compiler
+│       ├── i686-elf
+│       └── x86_64-elf
+├── Assembleurs
+│   ├── GAS (GNU Assembler)
+│   ├── NASM (The Netwide Assembler)
+│   ├── FASM (Flat Assembler)
+│   └── YASM
+├── Linkers
+│   ├── LD (GNU Linker)
+│   ├── Link Archiver (GNU ar)
+│   └── Mold
+├── Bootloaders
+│   ├── GRUB (GNU GRUB)
+│   ├── Limine
+│   ├── LILO
+│   ├── XOSL
+│   ├── System Commander
+│   ├── Boot Magic
+│   └── Rolling Your Own Bootloader
+├── Émulateurs
+│   ├── QEMU
+│   ├── Bochs
+│   ├── VMware
+│   ├── VirtualBox
+│   └── SimICS
+├── Outils de Gestion d'Images
+│   ├── Disk Images
+│   ├── Loopback Device
+│   ├── hdiutil
+│   └── Windows Tools
+├── VCS (Système de Contrôle de Version)
+│   ├── Git
+│   │   ├── GitHub
+│   │   └── Bitbucket
+│   ├── Subversion
+│   ├── Mercurial
+│   └── Bazaar
+└── Outils Utilitaires
+    ├── Binutils
+    ├── Make
+    ├── Grep
+    ├── sed
+    ├── Diffutils
+    ├── Perl
+    └── Python
+
+================================================================================
+
+Matériel
+├── CPU
+│   ├── x86
+│   │   ├── Modes d'Exécution
+│   │   │   ├── Real Mode (Mode réel) - 16-bit, 1 MiB
+│   │   │   ├── Protected Mode (Mode protégé) - 32-bit
+│   │   │   ├── Virtual 8086 Mode (Mode virtuel 8086)
+│   │   │   └── x86-64 / Long Mode - 64-bit
+│   │   ├── Registres Généraux
+│   │   │   ├── EAX
+│   │   │   ├── EBX
+│   │   │   ├── ECX
+│   │   │   ├── EDX
+│   │   │   ├── ESI
+│   │   │   ├── EDI
+│   │   │   ├── EBP
+│   │   │   └── ESP
+│   │   ├── Registres de Segment
+│   │   │   ├── CS
+│   │   │   ├── DS
+│   │   │   ├── SS
+│   │   │   ├── ES
+│   │   │   ├── FS
+│   │   │   └── GS
+│   │   └── Architecture
+│   │       ├── IA32 Architecture Family
+│   │       ├── Model Specific Registers (MSRs)
+│   │       ├── Detecting CPU Speed
+│   │       ├── CPU Bugs
+│   │       └── SSE
+│   ├── ARM
+│   │   ├── ARM Overview
+│   │   └── Raspberry Pi
+│   ├── Autres Architectures
+│   │   ├── PowerPC
+│   │   ├── MIPS
+│   │   ├── Sparc
+│   │   ├── RISC-V
+│   │   ├── ESA/390
+│   │   └── S390
+│   └── Architecture Générale
+│       ├── Register Machine Model of Computation
+│       ├── Memory Architecture
+│       ├── Instruction Set Architecture
+│       │   ├── CISC
+│       │   └── RISC
+│       ├── Execution Architecture
+│       └── Multiprocessing Architecture
+├── Mémoire
+│   ├── Detecting Memory
+│   └── A20 Line
+├── Horloges & Timers
+│   ├── HPET (High Precision Event Timer)
+│   ├── PIT (Programmable Interval Timer)
+│   └── CMOS / RTC (Real-Time Clock)
+├── Vidéo
+│   ├── VGA (Video Graphics Array)
+│   │   ├── VGA Resources
+│   │   ├── VGA Hardware
+│   │   ├── Printing To Screen
+│   │   ├── Mode texte
+│   │   ├── Text Mode Cursor
+│   │   ├── Linear Framebuffer
+│   │   └── VGA Fonts
+│   ├── VBE (VESA BIOS Extensions)
+│   ├── BGA (Bochs VBE Extensions)
+│   └── Graphiques Avancées
+│       ├── Accelerated Graphic Cards
+│       └── Native Intel graphics
+├── Audio
+│   ├── PC Speaker
+│   ├── Intel High Definition Audio
+│   └── Sound
+├── Stockage
+│   ├── ATA / ATAPI
+│   ├── AHCI / SATA
+│   ├── NVMe
+│   └── Floppy Disk Controller
+├── Entrée/Sortie
+│   ├── PS/2 Keyboard
+│   ├── Mouse Input
+│   └── Serial Ports (RS-232)
+├── Bus
+│   ├── PCI
+│   ├── PCI Express
+│   └── USB
+├── Firmware
+│   ├── UEFI
+│   │   └── Broken UEFI implementations
+│   └── BIOS
+├── ACPI
+│   ├── Advanced Configuration and Power Interface
+│   ├── RSDP
+│   └── AML
+└── Réseau
+    ├── RTL8139
+    ├── RTL8169
+    ├── Intel 8254x
+    ├── Intel Ethernet i217
+    ├── Ne2000
+    ├── AMD PCnet
+    ├── 3c90x
+    └── 802.11 (WiFi)
+
+================================================================================
+
+Tutoriels
+├── Bare Bones
+│   ├── Multiboot
+│   │   ├── MAGIC : 0x1BADB002
+│   │   ├── FLAGS
+│   │   ├── ALIGN
+│   │   ├── MEMINFO
+│   │   └── CHECKSUM
+│   ├── Points d'Entrée
+│   │   ├── _start
+│   │   └── kernel_main
+│   └── VGA
+│       ├── VGA_MEMORY : 0xB8000
+│       ├── VGA_WIDTH : 80
+│       ├── VGA_HEIGHT : 25
+│       └── Couleurs
+│           ├── VGA_COLOR_BLACK : 0
+│           ├── VGA_COLOR_BLUE : 1
+│           ├── VGA_COLOR_GREEN : 2
+│           ├── VGA_COLOR_CYAN : 3
+│           ├── VGA_COLOR_RED : 4
+│           ├── VGA_COLOR_MAGENTA : 5
+│           ├── VGA_COLOR_BROWN : 6
+│           ├── VGA_COLOR_LIGHT_GREY : 7
+│           ├── VGA_COLOR_DARK_GREY : 8
+│           ├── VGA_COLOR_LIGHT_BLUE : 9
+│           ├── VGA_COLOR_LIGHT_GREEN : 10
+│           ├── VGA_COLOR_LIGHT_CYAN : 11
+│           ├── VGA_COLOR_LIGHT_RED : 12
+│           ├── VGA_COLOR_LIGHT_MAGENTA : 13
+│           ├── VGA_COLOR_LIGHT_BROWN : 14
+│           └── VGA_COLOR_WHITE : 15
+└── Meaty Skeleton
+
+================================================================================
+
+Formats
+├── Exécutables
+│   ├── 64-bit
+│   │   ├── ELF (Executable and Linkable Format)
+│   │   ├── PE (Portable Executable)
+│   │   └── COFF (Common Object File Format)
+│   ├── 32-bit
+│   │   ├── ELF
+│   │   ├── PE
+│   │   └── COFF
+│   └── 16-bit
+│       ├── COM
+│       ├── MZ
+│       └── NE
+└── Systèmes de Fichiers
+    ├── FAT (File Allocation Table)
+    │   └── FAT Details
+    ├── Ext2 (Second Extended File System)
+    │   └── Ext2 Details
+    ├── SFS (Simple File System)
+    │   └── SFS Details
+    └── NTFS (New Technology File System)
+        └── NTFS Details
+
+================================================================================
+
+Ressources
+├── Documentation CPU
+│   ├── Intel Software Developer Manuals
+│   └── AMD Architecture Programmer's Manual
+├── Livres
+├── Articles Académiques
+├── Wiki Categories
+│   ├── Required Knowledge
+│   ├── Getting Started
+│   ├── Tutorials
+│   ├── FAQ
+│   ├── Languages
+│   │   ├── Inline Assembly
+│   │   └── Opcode syntax
+│   ├── Object Files
+│   ├── Boot Sequence
+│   ├── Diskless Booting
+│   ├── Global Descriptor Table
+│   │   └── GDT Tutorial
+│   ├── Getting Keyboard Input
+│   │   └── PS2 Keyboard
+│   ├── Troubleshooting
+│   │   ├── Testing
+│   │   ├── Unit Testing
+│   │   └── Kernel Debugging
+│   ├── Going Further on x86
+│   ├── Creating an Operating System
+│   ├── Code Management
+│   ├── Compiler
+│   │   ├── Making a Compiler
+│   │   ├── Code Generation and Optimization Techniques
+│   │   ├── Implementing Conditional Statements And Loops
+│   │   └── Tail Recursion and Tail Call Optimization
+│   ├── Memory management
+│   │   ├── Memory Allocation
+│   │   ├── Page Frame Allocation
+│   │   └── Memory Management Unit
+│   ├── File Management
+│   │   └── File Systems
+│   ├── Processes and Threads
+│   ├── Scheduling
+│   ├── Synchronization
+│   ├── Signals
+│   ├── Message Passing
+│   ├── Shared Memory
+│   ├── Remote Procedure Call
+│   ├── Books
+│   ├── Academic Papers
+│   ├── Assembly
+│   ├── Chip Numbers
+│   ├── Acronyms
+│   ├── Bootloader
+│   ├── Calling Conventions
+│   │   └── System V ABI
+│   ├── Cross-Compiler Successful Builds
+│   ├── Porting GCC to your OS
+│   ├── Other Compilers
+│   ├── Assemblers
+│   ├── Linkers
+│   ├── Emulators
+│   ├── Hardware
+│   ├── Where Can I Find Information About Ports
+│   ├── CPU Registers
+│   │   ├── x86
+│   │   └── x86-64
+│   ├── S390
+│   │   ├── Kernel Barebones
+│   │   ├── Program Status Word
+│   │   ├── PSA Mapping
+│   │   ├── z/OS DataSet FileSystem (ZDSFS)
+│   │   ├── Batch I/O Channel SubSystem
+│   │   └── Command SubSystem
+│   ├── ARM Overview
+│   │   └── Raspberry Pi Bare Bones
+│   ├── Detecting Memory (x86)
+│   ├── I Can't Get Interrupts Working
+│   │   ├── IDT problems
+│   │   └── Interrupt Service Routines
+│   ├── Non Maskable Interrupt
+│   ├── Detecting Colour and Monochrome Monitors
+│   ├── Kernel Stdio Theory
+│   ├── Video Signals And Timing
+│   ├── Plug-and-Play
+│   │   └── PNP Calls In Protected Mode
+│   ├── PCI Express
+│   ├── Universal Serial Bus
+│   ├── Network Hardware
+│   ├── Non-x86 Development
+│   └── Executable File Types
+└── Bonnes Pratiques
+    ├── Licensing
+    ├── How To Ask Questions
+    └── What Order Should I Make Things In?
+
+================================================================================
+
+FIN DU DOCUMENT
+================================================================================

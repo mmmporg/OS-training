@@ -1,0 +1,272 @@
+@startuml Seed_OS_Kernel_Architecture
+' ===============================================================================
+' Seed Kernel Architecture & Algorithm Specification (UML)
+' Target OS: Game Engine-as-an-OS (Exokernel / Modular Monolithic Low Latency x86_64)
+' Architecture: Strict Top-Down Hierarchy, No Cyclic Dependencies, Fast-Path HAL Direct GPU/DMA
+' ===============================================================================
+
+skinparam backgroundColor #1e1e2e
+skinparam handwritten false
+skinparam defaultFontName "Courier"
+skinparam classAttributeIconSize 0
+
+skinparam package {
+    BackgroundColor #2a2a3c
+    BorderColor #89b4fa
+    FontColor #cdd6f4
+}
+
+skinparam class {
+    BackgroundColor #313244
+    BorderColor #f5e0dc
+    FontColor #cdd6f4
+    HeaderBackgroundColor #45475a
+}
+
+skinparam component {
+    BackgroundColor #313244
+    BorderColor #a6e3a1
+    FontColor #cdd6f4
+}
+
+header Seed Kernel OS Architecture
+title Algorithme et Architecture Complète du Noyau Seed (Game Engine-as-an-OS) - Fast-Path HAL & Monolithique Modulaire
+
+' ===============================================================================
+' COUCHE 1 : ESPACE UTILISATEUR (RING 3 - USER SPACE / MOTEUR DE JEU & IDE)
+' ===============================================================================
+package "Espace Utilisateur (Ring 3 - Game Engine & Asset Pipeline)" #1e1e2e {
+    
+    class GameEngineApp {
+        - uint32_t active_scene_id
+        - bool is_running
+        + initEngine() : void
+        + runMainLoop() : void
+        + submitRenderGraph(RenderGraph* graph) : void
+        + dispatchAudioStream(int16_t* pcm, uint32_t len) : void
+    }
+
+    class RenderGraphPipeline {
+        - uint32_t pass_count
+        - uint32_t current_backbuffer_idx
+        + buildFramePasses() : void
+        + executeDirectBlit(void* vram_fastpath) : void
+        + swapChainPresent() : void
+    }
+
+    class AssetStreamManager {
+        - uint32_t loaded_assets_count
+        + streamMeshToVRAM(uint64_t asset_id) : void
+        + streamTextureZeroCopy(uint64_t tex_id) : void
+        + loadLevelData(const char* path) : void
+    }
+
+    class TaskJobGraph {
+        - uint32_t pending_jobs
+        + pushJob(void (*job_func)(void*), void* data) : void
+        + syncWaitAll() : void
+    }
+
+    GameEngineApp *-- RenderGraphPipeline
+    GameEngineApp *-- AssetStreamManager
+    GameEngineApp *-- TaskJobGraph
+}
+
+' ===============================================================================
+' CANAL FAST-PATH HAL DIRECT & INTERFACE APPELS SYSTÈME (RING 3 -> RING 0)
+' ===============================================================================
+package "Passerelle Inter-Anneaux & Canal Direct Fast-Path (Bypass IPC)" #232534 {
+    
+    interface "FastPath_GPU_DirectChannel" as FastPathGPU {
+        + direct_vram_ptr : uint32_t*
+        + zero_copy_bar_addr : uint64_t
+        + direct_swap_buffers() : void
+        --
+        * Zéro latence IPC / Zero-Copy Memory
+        * Mappé via Huge Pages 1 GiB en Ring 3
+    }
+
+    interface "FastPath_Audio_DMAChannel" as FastPathAudio {
+        + ring_buffer_ptr : int16_t*
+        + cursor_atomic_head : atomic_uint32_t
+        + cursor_atomic_tail : atomic_uint32_t
+        --
+        * DMA Audio circulaire sans verrou
+    }
+
+    interface "System_Call_Gateway" as SyscallGateway {
+        + sys_task_yield() : void
+        + sys_alloc_dma_pages(count) : void*
+        + sys_io_dispatch(cmd_t) : int
+        --
+        * IA-32e SYSCALL / SYSRET (Fast Ring Transition)
+    }
+}
+
+' ===============================================================================
+' COUCHE 2 : ESPACE NOYAU (RING 0 - CORE KERNEL MONOLITHIQUE MODULAIRE)
+' ===============================================================================
+package "Espace Noyau (Ring 0 - Core Kernel Subsystems)" #2a2a3c {
+
+    class RealTimeWorkStealingScheduler {
+        - uint32_t active_cpu_cores
+        - LockFreeRingQueue core_queues[64]
+        + initScheduler(uint32_t cpu_count) : void
+        + scheduleTask(Task* task, uint8_t cpu_affinity) : void
+        + onAPICGameTick() : void
+        + contextSwitch(ThreadContext* next) : void
+    }
+
+    class LockFreeRingQueue {
+        - Task* ring_buffer[1024]
+        - atomic_uint32_t head
+        - atomic_uint32_t tail
+        + push(Task* task) : bool
+        + pop() : Task*
+        + steal() : Task*
+    }
+
+    class PhysicalMemoryManager {
+        - uint64_t* frame_bitmap
+        - uint64_t total_frames
+        - uint64_t free_frames
+        + pmm_init(multiboot_mmap) : void
+        + pmm_alloc_frame() : uint64_t
+        + pmm_free_frame(uint64_t addr) : void
+    }
+
+    class VirtualMemoryManager {
+        - uint64_t* kernel_pml4
+        + vmm_init() : void
+        + vmm_map_huge_page_1gb(virt, phys, flags) : void
+        + vmm_map_page_4kb(virt, phys, flags) : void
+        + vmm_map_fastpath_vram(virt_user, phys_vram) : void
+    }
+
+    class InterruptAPICManager {
+        + idt_init() : void
+        + lapic_init() : void
+        + ioapic_init() : void
+        + setupGameTickTimer(uint32_t hz_1000) : void
+        + sendEOI() : void
+    }
+
+    RealTimeWorkStealingScheduler *-- LockFreeRingQueue
+}
+
+' ===============================================================================
+' COUCHE 3 : COUCHE D'ABSTRACTION MATÉRIELLE DIRECTE & PILOTES (HAL & DRIVERS)
+' ===============================================================================
+package "Couche HAL & Pilotes Matériels Dédiés (Ring 0 HAL)" #181825 {
+
+    class DirectGPU_HAL {
+        - uint64_t vram_phys_base
+        - uint32_t width, height, pitch
+        - uint32_t* front_buffer
+        - uint32_t* back_buffer
+        + initGOP_VBE(multiboot_info* mb) : void
+        + exportFastPathToUserSpace() : void*
+        + hardwareVBlankSync() : void
+    }
+
+    class DirectAudioDMA_HAL {
+        - int16_t* dma_buffer_phys
+        - uint32_t buffer_size_bytes
+        + initSoundHardware() : void
+        + exportAudioDMAPath() : void*
+        + onDMABufferHalfComplete() : void
+    }
+
+    class StandardIO_HAL {
+        + ps2_init() : void
+        + nvme_init() : void
+        + acpi_parse_madt() : void
+        + pci_scan_devices() : void
+    }
+}
+
+' ===============================================================================
+' COUCHE 4 : COUCHE ASSEMBLEUR BAS NIVEAU (BOOTSTRAP & MATÉRIEL CRITIQUE NASM x86_64)
+' ===============================================================================
+package "Couche Assembleur Critiques (NASM x86_64 - Bootstrap & Ring 0 Setup)" #11111b {
+    
+    component [boot.asm] as BootASM <<ASM 32-bit Multiboot2>> {
+        note right of BootASM
+            - En-tête Multiboot2 (Magic: 0xE85250D6)
+            - Stack 32-bit (16 KB) & CLI
+            - Appel setup_paging() & enter_long_mode()
+        end note
+    }
+
+    component [paging.asm] as PagingASM <<ASM IA-32e 4-Level Paging>> {
+        note right of PagingASM
+            - Construction PML4 & PDPE avec Huge Pages 1 GiB
+            - Mapping direct identité 2GB + VRAM GPU Zero-Latency
+        end note
+    }
+
+    component [gdt.asm] as GdtASM <<ASM 64-bit GDT & TSS>> {
+        note right of GdtASM
+            - Null Descriptor (0x00)
+            - Kernel Code (0x08), Kernel Data (0x10)
+            - User Code (0x18), User Data (0x20), TSS (0x28)
+        end note
+    }
+
+    component [transition.asm] as TransitionASM <<ASM Long Mode Far Jump>> {
+        note right of TransitionASM
+            - CPUID Long Mode Check (EDX bit 29)
+            - CR4.PAE=1, CR3=PML4, MSR EFER.LME=1, CR0.PG=1
+            - Far Jump jmp 0x08:long_mode_start
+        end note
+    }
+
+    component [isr_stubs.asm] as ISRStubs <<ASM Fast Interrupt ISR>> {
+        note right of ISRStubs
+            - Sauvegarde contextes registre (pusha64/popa64)
+            - Routage APIC EOI et retour iretq
+        end note
+    }
+
+    component [kernel.asm] as KernelASM <<ASM Entry Point>> {
+        note right of KernelASM
+            - Stack Align RSP 16-byte (64 KB Kernel Stack)
+            - Saut direct vers C/C++ kernel_main()
+        end note
+    }
+}
+
+' ===============================================================================
+' FLUX D'EXÉCUTION UNIDIRECTIONNEL & CONNEXIONS FAST-PATH SANS CYCLE
+' ===============================================================================
+
+' 1. Flux Bootstrap Matériel (Bottom-Up à l'initialisation)
+BootASM --> PagingASM : 1. Configure Huge Pages 1GB
+BootASM --> GdtASM : 2. Charge GDT 64-bit (Kernel + User)
+BootASM --> TransitionASM : 3. Active Long Mode (CR3, MSR, CR0)
+TransitionASM --> KernelASM : 4. Far Jump 64-bit
+KernelASM --> PhysicalMemoryManager : 5. Init PMM Frame Allocator
+KernelASM --> VirtualMemoryManager : 6. Init VMM IA-32e Paging
+KernelASM --> InterruptAPICManager : 7. Init IDT & APIC Timer 1000Hz
+KernelASM --> DirectGPU_HAL : 8. Init GPU GOP/VRAM Direct
+KernelASM --> DirectAudioDMA_HAL : 9. Init Audio DMA Ring
+KernelASM --> StandardIO_HAL : 10. Scan PCI / NVMe / ACPI
+
+' 2. Fast-Path Bypass & Syscalls (Hiérarchie Unidirectionnelle sans cycle)
+GameEngineApp --> SyscallGateway : Appels Système (Syscall/Sysret)
+RenderGraphPipeline --> FastPathGPU : Fast-Path Direct VRAM Blit (Zéro IPC)
+AssetStreamManager --> FastPathGPU : Direct Asset Texture Streaming
+GameEngineApp --> FastPathAudio : Direct Audio DMA Circular Buffer
+TaskJobGraph --> RealTimeWorkStealingScheduler : Jobs dispatchés sur les queues lock-free
+
+' 3. Couche Noyau vers HAL
+VirtualMemoryManager --> DirectGPU_HAL : Mappe Framebuffer VRAM en 1GB Huge Pages
+RealTimeWorkStealingScheduler --> InterruptAPICManager : Synchronisé sur APIC Timer 1000Hz (Game Tick)
+SyscallGateway --> RealTimeWorkStealingScheduler : Traite les requêtes Ring 0
+FastPathGPU ..> DirectGPU_HAL : Canal direct partagé
+FastPathAudio ..> DirectAudioDMA_HAL : Canal direct partagé
+
+' 4. Interruption ISR vers Dispatcher
+ISRStubs --> InterruptAPICManager : Dispatche interruptions matérielles
+
+@enduml

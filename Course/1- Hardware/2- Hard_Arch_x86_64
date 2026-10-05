@@ -1,0 +1,1533 @@
+================================================================================
+COURS ARCHITECTURE x86_64 : ZOOM SUR L'ARCHITECTURE AMD64/IA-32e
+================================================================================
+
+Ce cours est un approfondissement de l'architecture x86_64, conçu comme extension
+du cours général sur l'architecture hardware. Il est orienté développement de
+noyau (comme le noyau Seed) et intègre tous les concepts nécessaires pour
+comprendre et développer un système d'exploitation 64 bits moderne.
+
+================================================================================
+PARTIE 1 : HISTORIQUE ET EVOLUTION DE x86_64
+================================================================================
+
+1.1 Historique
+--------------
+- 2003 : AMD sort l'Opteron, premier processeur x86 64 bits (AMD64)
+- 2004 : Intel adopte l'architecture sous le nom EM64T puis Intel 64
+- IA-32e : Nom officiel pour l'extension 64 bits de l'architecture IA-32
+- Compatible descendante : exécution de code 32 bits, 16 bits et même 8 bits
+
+1.2 Caractéristiques clés
+--------------------------
+- 64 bits : Registres généraux 64 bits (RAX, RBX, RCX, RDX, RSI, RDI, RBP, RSP)
+- Registres supplémentaires : R8 à R15 (8 nouveaux registres généraux)
+- Registres SSE supplémentaires : XMM8 à XMM15
+- Mode Long : Mode d'exécution principal 64 bits
+- Paging IA-32e : 4 niveaux de tables de pages (PML4 → PDPT → PDT → PT)
+- Adressage physique étendu : Jusqu'à 1 To de RAM (2^40) ou plus
+- Adressage virtuel : 48 bits (256 To d'espace d'adressage)
+- Rip-relative addressing : Nouveau mode d'adressage PC-relative
+- Syscall/Sysret : Instructions dédiées pour appels système rapides
+
+1.3 Comparaison x86 (32 bits) vs x86_64 (64 bits)
+--------------------------------------------------
+
+| Caractéristique       | x86 (IA-32)              | x86_64 (IA-32e)          |
+|-----------------------|---------------------------|---------------------------|
+| Registres généraux    | 8 (EAX, EBX, ..., EDI)   | 16 (RAX, RBX, ..., R15)  |
+| Taille registres      | 32 bits                   | 64 bits                   |
+| Adressage virtuel     | 32 bits (4 Go)            | 48 bits (256 To)          |
+| Adressage physique    | 32 bits (4 Go) ou PAE    | Jusqu'à 52 bits           |
+| Niveaux paging        | 2 (32-bit) ou 3 (PAE)    | 4 niveaux (PML4)          |
+| Segmentation          | Utilisée intensément     | Désactivée en Long Mode  |
+| Appels système        | int 0x80, sysenter       | syscall/sysret           |
+| Conventions d'appel   | cdecl, stdcall           | System V AMD64 ABI       |
+| Pile                  | Alignement 4 octets       | Alignement 16 octets      |
+
+================================================================================
+PARTIE 2 : MODES D'EXECUTION DE x86_64
+================================================================================
+
+2.1 Les 4 modes d'IA-32e
+-------------------------
+Le processeur x86_64 possède 4 modes d'exécution :
+
+┌─────────────────────────────────────────────────────────────────────────────────┐
+│ Real Mode (16 bits) → Protected Mode (32 bits) → Long Mode (64 bits)            │
+│                                                          ↓                        │
+│                                               Compatibility Mode (32 bits)        │
+└─────────────────────────────────────────────────────────────────────────────────┘
+
+Notes :
+- Le Compatibility Mode existe UNIQUEMENT à l'intérieur du Long Mode
+- Votre noyau utilisera principalement le Long Mode 64 bits
+- Le Compatibility Mode est utile pour exécuter des applications 32 bits sur un OS 64 bits
+
+2.1.1 Real Mode
+---------------
+- Mode de démarrage initial (16 bits)
+- 1 Mo d'adressage physique maximum
+- Pas de protection mémoire
+- Utilisé seulement pour le bootloader
+- Limite : 64 Ko par segment
+
+2.1.2 Protected Mode (32 bits)
+-------------------------------
+- Mode 32 bits principal sur x86 classique
+- Segmentation active (CS, DS, ES, SS, FS, GS)
+- Protection 4 anneaux (CPL 0-3)
+- Paging optionnel (32 bits ou PAE)
+
+2.1.3 Compatibility Mode (32 bits dans Long Mode)
+--------------------------------------------------
+- Permet d'exécuter du code 32 bits en Long Mode
+- Segmentation toujours présente
+- Paging IA-32e active (4 niveaux)
+- Registres toujours 64 bits, mais utilisation 32 bits
+- Utile pour exécuter des applications 32 bits sur OS 64 bits
+
+2.1.4 Long Mode (64 bits)
+--------------------------
+- Mode principal de l'architecture x86_64
+- Segmentation désactivée (sauf FS et GS)
+- Paging obligatoire (IA-32e, 4 niveaux)
+- Registres 64 bits (RAX, RBX, ..., R15)
+- Instructions 64 bits disponibles
+- Conventions d'appel System V AMD64 ABI
+
+2.2 Passage Real Mode → Protected Mode → Long Mode
+---------------------------------------------------
+Séquence complète pour amorcer un noyau :
+
+1. Real Mode → Protected Mode (32 bits)
+   - Désactiver les interruptions (CLI)
+   - Activer l'A20 Line
+   - Charger la GDT (LGDT)
+   - Activer le bit PE (Protection Enable) dans CR0
+   - Far jump pour vider le prefetch queue
+
+2. Protected Mode (32 bits) → Long Mode
+   - Vérifier la disponibilité du Long Mode (CPUID)
+   - Activer PAE (CR4.PAE = 1)
+   - Configurer CR3 avec l'adresse de la PML4
+   - Activer LME (Long Mode Enable) dans EFER MSR
+   - Activer la pagination (CR0.PG = 1)
+   - Far jump avec sélecteur CS 64 bits
+
+Exemple de code assembleur (transistion) :
+
+bits 32
+enter_long_mode:
+    ; Vérifier support Long Mode via CPUID
+    mov eax, 0x80000001
+    cpuid
+    test edx, (1 << 29)        ; Bit LM dans EDX
+    jz .no_long_mode
+
+    ; Activer PAE
+    mov eax, cr4
+    or eax, (1 << 5)           ; PAE bit
+    mov cr4, eax
+
+    ; Configurer CR3 avec PML4
+    mov eax, pml4_table
+    mov cr3, eax
+
+    ; Activer LME dans EFER
+    mov ecx, 0xC0000080        ; EFER MSR
+    rdmsr
+    or eax, (1 << 8)           ; LME bit
+    wrmsr
+
+    ; Activer pagination
+    mov eax, cr0
+    or eax, (1 << 31)          ; PG bit
+    mov cr0, eax
+
+    ; Far jump en 64 bits
+    jmp CODE64_SEL:long_mode_start
+
+.no_long_mode:
+    hlt
+
+================================================================================
+PARTIE 3 : REGISTRES x86_64
+================================================================================
+
+3.1 Registres généraux 64 bits
+------------------------------
+Les 16 registres généraux :
+
+| Registre 64 bits | 32 bits | 16 bits | 8 bits (low) | Usage traditionnel    |
+|------------------|---------|---------|--------------|-----------------------|
+| RAX              | EAX     | AX      | AL/AH        | Accumulateur          |
+| RBX              | EBX     | BX      | BL/BH        | Base                  |
+| RCX              | ECX     | CX      | CL/CH        | Compteur              |
+| RDX              | EDX     | DX      | DL/DH        | Données               |
+| RSI              | ESI     | SI      | SIL          | Source Index          |
+| RDI              | EDI     | DI      | DIL          | Destination Index     |
+| RBP              | EBP     | BP      | BPL          | Base Pointer          |
+| RSP              | ESP     | SP      | SPL          | Stack Pointer         |
+| R8               | R8D     | R8W     | R8B          | Général (nouveau)     |
+| R9               | R9D     | R9W     | R9B          | Général (nouveau)     |
+| R10              | R10D    | R10W    | R10B         | Général (nouveau)     |
+| R11              | R11D    | R11W    | R11B         | Général (nouveau)     |
+| R12              | R12D    | R12W    | R12B         | Général (nouveau)     |
+| R13              | R13D    | R13W    | R13B         | Général (nouveau)     |
+| R14              | R14D    | R14W    | R14B         | Général (nouveau)     |
+| R15              | R15D    | R15W    | R15B         | Général (nouveau)     |
+
+3.2 Registres de segment
+------------------------
+En Long Mode :
+- CS : Toujours utilisé pour le privilege level (CPL)
+- DS, ES, SS : Ignorés (base = 0, limit = max)
+- FS, GS : Toujours utilisés (base configurable via MSR)
+
+Registres de segment 64 bits :
+- CS : Code Segment (CPL 0 pour kernel, CPL 3 pour user)
+- DS : Data Segment (ignoré en Long Mode)
+- SS : Stack Segment (ignoré en Long Mode)
+- ES : Extra Segment (ignoré en Long Mode)
+- FS : Utilisé pour Thread Local Storage (TLS)
+- GS : Utilisé pour Kernel Data Area (KDA)
+
+3.3 Registres RIP (Instruction Pointer)
+---------------------------------------
+- RIP : 64-bit Instruction Pointer
+- EIP : 32-bit (compatibilité)
+- IP : 16-bit (compatibilité)
+- Rip-relative addressing : Nouveau mode d'adressage
+
+3.4 Registres de drapeaux (RFLAGS)
+-----------------------------------
+| Bit | Nom | Description |
+|-----|-----|-------------|
+| 0 | CF | Carry Flag |
+| 2 | PF | Parity Flag |
+| 4 | AF | Auxiliary Carry |
+| 6 | ZF | Zero Flag |
+| 7 | SF | Sign Flag |
+| 8 | TF | Trap Flag |
+| 9 | IF | Interrupt Enable Flag |
+| 10 | DF | Direction Flag |
+| 11 | OF | Overflow Flag |
+| 12-13 | IOPL | I/O Privilege Level |
+| 14 | NT | Nested Task |
+| 16 | RF | Resume Flag |
+| 17 | VM | Virtual 8086 Mode |
+| 18 | AC | Alignment Check |
+| 19 | VIF | Virtual Interrupt Flag |
+| 20 | VIP | Virtual Interrupt Pending |
+| 21 | ID | Identification Flag |
+
+3.5 Registres de contrôle (CR0-CR8)
+------------------------------------
+
+3.5.1 CR0
+---------
+| Bit | Nom | Description |
+|-----|-----|-------------|
+| 0 | PE | Protection Enable (1=Protected Mode) |
+| 1 | MP | Monitor Coprocessor |
+| 2 | EM | Emulation |
+| 3 | TS | Task Switched |
+| 4 | ET | Extension Type |
+| 5 | NE | Numeric Error |
+| 16 | WP | Write Protect |
+| 18 | AM | Alignment Mask |
+| 29 | NW | Not Write-through |
+| 30 | CD | Cache Disable |
+| 31 | PG | Paging Enable |
+
+3.5.2 CR2
+---------
+- Contient l'adresse virtuelle qui a causé un Page Fault
+
+3.5.3 CR3
+---------
+- Contient l'adresse physique de la PML4 (Page Map Level 4)
+- Bits 3-11 : PCID (Process Context Identifier, optionnel)
+- Bits 12-51 : Adresse de la PML4 (alignée sur 4 Ko)
+
+3.5.4 CR4
+---------
+| Bit | Nom | Description |
+|-----|-----|-------------|
+| 0 | VME | Virtual 8086 Mode Extensions |
+| 1 | PVI | Protected Mode Virtual Interrupts |
+| 2 | TSD | Time Stamp Disable |
+| 3 | DE | Debugging Extensions |
+| 4 | PSE | Page Size Extension (4 MiB pages) |
+| 5 | PAE | Physical Address Extension |
+| 6 | MCE | Machine Check Exception |
+| 7 | PGE | Page Global Enable |
+| 8 | PCE | Performance Monitoring Counter Enable |
+| 9 | OSFXSR | OS Support for FXSAVE/FXRSTOR |
+| 10 | OSXMMEXCPT | OS Support for Unmasked SIMD Exceptions |
+| 14 | FSGSBASE | Enable RDFSBASE/RDGSBASE/WRFSBASE/WRGSBASE |
+| 16 | PCIDE | PCID Enable |
+| 17 | OSXSAVE | XSAVE and Processor Extended States Enable |
+
+3.5.5 CR8
+---------
+- Contrôleur de priorité des interruptions APIC (TPR : Task Priority Register)
+
+3.6 Registres MSR (Model-Specific Registers)
+--------------------------------------------
+Registres spécifiques au modèle, accessibles via RDMSR/WRMSR :
+
+| MSR | Nom | Description |
+|-----|-----|-------------|
+| 0x00000017-0x0000001A | MTRR | Memory Type Range Registers |
+| 0x00000080-0x0000008F | APIC | APIC Base et LVT |
+| 0x00000174 | SYSENTER_CS | Sysenter CS |
+| 0x00000175 | SYSENTER_ESP | Sysenter ESP |
+| 0x00000176 | SYSENTER_EIP | Sysenter EIP |
+| 0x00000179 | MCG_CAP | Machine Check Global Capabilities |
+| 0x0000017A | MCG_STATUS | Machine Check Global Status |
+| 0x0000017B | MCG_CTL | Machine Check Global Control |
+| 0xC0000080 | EFER | Extended Feature Enable Register |
+| 0xC0000081 | STAR | System Call Target Address (32-bit) |
+| 0xC0000082 | LSTAR | Long System Call Target Address (64-bit) |
+| 0xC0000083 | CSTAR | Compatibility System Call Target Address |
+| 0xC0000084 | SFMASK | System Call Flag Mask |
+| 0xC0000100 | FSBASE | FS Segment Base Address |
+| 0xC0000101 | GSBASE | GS Segment Base Address |
+| 0xC0000102 | KERNEL_GSBASE | Kernel GS Base Address |
+
+3.6.1 EFER (Extended Feature Enable Register)
+----------------------------------------------
+| Bit | Nom | Description |
+|-----|-----|-------------|
+| 0 | SCE | System Call Extensions |
+| 8 | LME | Long Mode Enable |
+| 10 | LMA | Long Mode Active |
+| 11 | NXE | No-Execute Enable |
+| 12 | SVME | Secure Virtual Machine Enable |
+| 13 | LMSLE | Long Mode Segment Limit Enable |
+| 14 | FFXSR | Fast FXSAVE/FXRSTOR |
+| 15 | TCE | Translation Cache Extension |
+
+3.7 Registres SSE/AVX
+---------------------
+- XMM0-XMM15 : Registres SSE 128 bits
+- YMM0-YMM15 : Registres AVX 256 bits (étendus de XMM)
+- ZMM0-ZMM31 : Registres AVX-512 512 bits
+- MXCSR : Control and Status Register pour SSE
+
+Exemple d'utilisation des registres en assembleur 64 bits :
+
+bits 64
+section .text
+global example_registers
+
+example_registers:
+    ; Utiliser les registres classiques
+    mov rax, 0x123456789ABCDEF0
+    mov rbx, 0x0FEDCBA987654321
+    add rax, rbx
+    
+    ; Utiliser les nouveaux registres
+    mov r8, 100
+    mov r9, 200
+    lea r10, [r8 + r9 * 2]
+    
+    ; Registres 32 bits zero-extendent automatiquement en 64 bits
+    mov eax, 42          ; RAX = 0x000000000000002A
+    mov ebx, -1          ; RBX = 0x00000000FFFFFFFF
+    mov ecx, 0xFFFFFFFF  ; RCX = 0x00000000FFFFFFFF
+    
+    ; Accès 8 bits et 16 bits
+    mov al, 0x42
+    mov ax, 0x1234
+    mov r8w, 0x5678
+    mov r9b, 0x9A
+    
+    ret
+
+================================================================================
+PARTIE 4 : GDT (Global Descriptor Table) EN LONG MODE
+================================================================================
+
+4.1 Structure de la GDT en Long Mode
+------------------------------------
+La GDT contient des descripteurs de segment :
+
+Descripteur NULL (obligatoire) :
+```
+dq 0
+```
+
+Descripteur de code 64 bits :
+```
+dw 0xFFFF      ; Limit 15:0
+dw 0x0000      ; Base 15:0
+db 0x00        ; Base 23:16
+db 0x9A        ; Access Byte (P=1, DPL=0, S=1, Type=1010)
+db 0xAF        ; Granularity (G=1, D=0, L=1, Limit 19:16)
+db 0x00        ; Base 31:24
+```
+
+Descripteur de données 64 bits :
+```
+dw 0xFFFF      ; Limit 15:0
+dw 0x0000      ; Base 15:0
+db 0x00        ; Base 23:16
+db 0x92        ; Access Byte (P=1, DPL=0, S=1, Type=0010)
+db 0xAF        ; Granularity (G=1, D=0, L=0, Limit 19:16)
+db 0x00        ; Base 31:24
+```
+
+4.2 Champs des descripteurs
+----------------------------
+
+4.2.1 Access Byte
+-----------------
+| Bit | Nom | Description |
+|-----|-----|-------------|
+| 7 | P | Present (1=présent) |
+| 5-6 | DPL | Privilege Level (0-3) |
+| 4 | S | System (0) ou Code/Data (1) |
+| 3 | E | Executable (1=code) |
+| 2 | DC | Direction/Conforming |
+| 1 | RW | Readable/Writable |
+| 0 | A | Accessed |
+
+Pour Code Segment :
+- Type = 1 (Executable)
+- RW = 1 (Readable)
+
+Pour Data Segment :
+- Type = 0 (Non-executable)
+- RW = 1 (Writable)
+
+4.2.2 Granularity Byte
+-----------------------
+| Bit | Nom | Description |
+|-----|-----|-------------|
+| 7 | G | Granularity (0=1 octet, 1=4 Ko) |
+| 6 | D | Default Operand Size (0=16-bit, 1=32-bit) |
+| 5 | L | Long Mode (1=64-bit, 0=32/16-bit) |
+| 4 | AVL | Available pour OS |
+| 0-3 | Limit | Limit 19:16 |
+
+En Long Mode :
+- L doit être 1 pour les segments de code
+- D doit être 0 (ignoré)
+
+4.3 Exemple de GDT complète pour Long Mode
+-------------------------------------------
+
+section .rodata
+align 16
+
+; GDT complète pour Long Mode
+gdt64:
+    ; Descripteur NULL (obligatoire)
+    dq 0
+    
+    ; Descripteur de code kernel (64 bits)
+.code: equ $ - gdt64
+    dw 0xFFFF      ; Limit 15:0
+    dw 0x0000      ; Base 15:0
+    db 0x00        ; Base 23:16
+    db 0x9A        ; Access (P=1, DPL=0, S=1, Type=1010)
+    db 0xAF        ; Granularity (G=1, D=0, L=1)
+    db 0x00        ; Base 31:24
+    
+    ; Descripteur de données kernel (64 bits)
+.data: equ $ - gdt64
+    dw 0xFFFF      ; Limit 15:0
+    dw 0x0000      ; Base 15:0
+    db 0x00        ; Base 23:16
+    db 0x92        ; Access (P=1, DPL=0, S=1, Type=0010)
+    db 0xAF        ; Granularity (G=1, D=0, L=0)
+    db 0x00        ; Base 31:24
+    
+    ; Descripteur de code user (64 bits)
+.user_code: equ $ - gdt64
+    dw 0xFFFF      ; Limit 15:0
+    dw 0x0000      ; Base 15:0
+    db 0x00        ; Base 23:16
+    db 0xFA        ; Access (P=1, DPL=3, S=1, Type=1010)
+    db 0xAF        ; Granularity (G=1, D=0, L=1)
+    db 0x00        ; Base 31:24
+    
+    ; Descripteur de données user (64 bits)
+.user_data: equ $ - gdt64
+    dw 0xFFFF      ; Limit 15:0
+    dw 0x0000      ; Base 15:0
+    db 0x00        ; Base 23:16
+    db 0xF2        ; Access (P=1, DPL=3, S=1, Type=0010)
+    db 0xAF        ; Granularity (G=1, D=0, L=0)
+    db 0x00        ; Base 31:24
+    
+.end:
+
+; Pseudo-descripteur GDTR
+gdt64_pointer:
+    dw gdt64.end - gdt64 - 1  ; Limite
+    dq gdt64                  ; Base (adresse 64 bits)
+
+4.4 Chargement de la GDT
+-------------------------
+En 32 bits (avant Long Mode) :
+```asm
+lgdt [gdt64_pointer]
+```
+
+En 64 bits :
+```asm
+lgdt [gdt64_pointer]
+```
+
+Puis charger les registres de segment :
+```asm
+; Charger CS via far jump
+jmp gdt64.code:reload_cs
+
+reload_cs:
+    ; Charger DS, ES, SS
+    mov ax, gdt64.data
+    mov ds, ax
+    mov es, ax
+    mov ss, ax
+    
+    ; FS et GS peuvent être configurés via MSR
+    mov ax, 0
+    mov fs, ax
+    mov gs, ax
+```
+
+================================================================================
+PARTIE 5 : PAGING IA-32e (4 NIVEAUX)
+================================================================================
+
+5.1 Aperçu de la pagination x86_64
+-----------------------------------
+La pagination IA-32e utilise 4 niveaux de tables de pages :
+
+```
+Adresse virtuelle (48 bits) :
+┌─────────────────────────────────────────────────────────────────┐
+│ 63-48 │ 47-39 │ 38-30 │ 29-21 │ 20-12 │ 11-0                  │
+│ Sign  │ PML4  │ PDPT  │ PDT   │ PT    │ Offset                │
+└─────────────────────────────────────────────────────────────────┘
+
+Arborescence :
+CR3 → PML4 (Page Map Level 4)
+      ↓
+    PDPT (Page Directory Pointer Table)
+      ↓
+    PDT (Page Directory Table)
+      ↓
+    PT (Page Table)
+      ↓
+    Page physique (4 Ko, 2 Mo ou 1 Go)
+```
+
+5.2 Niveaux de décomposition
+-----------------------------
+
+5.2.1 PML4 (Page Map Level 4)
+------------------------------
+- 512 entrées de 8 octets chacune (4 Ko)
+- Chaque entrée pointe vers une PDPT
+- Adresse stockée dans CR3
+- Index : bits 47-39 de l'adresse virtuelle
+
+5.2.2 PDPT (Page Directory Pointer Table)
+------------------------------------------
+- 512 entrées de 8 octets chacune (4 Ko)
+- Chaque entrée pointe vers une PDT
+- Si le bit PS (Page Size) est à 1 : maps 1 Go directement !
+- Index : bits 38-30 de l'adresse virtuelle
+
+5.2.3 PDT (Page Directory Table)
+---------------------------------
+- 512 entrées de 8 octets chacune (4 Ko)
+- Chaque entrée pointe vers une PT
+- Si le bit PS (Page Size) est à 1 : maps 2 Mo directement !
+- Index : bits 29-21 de l'adresse virtuelle
+
+5.2.4 PT (Page Table)
+----------------------
+- 512 entrées de 8 octets chacune (4 Ko)
+- Chaque entrée pointe vers une page physique de 4 Ko
+- Index : bits 20-12 de l'adresse virtuelle
+
+5.2.5 Offset
+-------------
+- Bits 11-0 de l'adresse virtuelle
+- Offset dans la page physique
+- 12 bits → 4 Ko (2^12 = 4096)
+
+5.3 Format d'entrée de table de pages
+--------------------------------------
+Chaque entrée (64 bits) :
+
+```
+Bits 63-52 : Réservés (hardware)
+Bits 51-12 : Adresse physique de la table/page (alignée sur 4 Ko)
+Bits 11-0  : Flags et informations
+```
+
+| Bit | Nom | Description |
+|-----|-----|-------------|
+| 0 | P | Present (1=présent en mémoire) |
+| 1 | R/W | Read/Write (0=lecture seule, 1=écriture autorisée) |
+| 2 | U/S | User/Supervisor (0=kernel seulement, 1=user autorisé) |
+| 3 | PWT | Page Write-Through |
+| 4 | PCD | Page Cache Disable |
+| 5 | A | Accessed |
+| 6 | D | Dirty (modifié) |
+| 7 | PS | Page Size (0=4 Ko, 1=2 Mo/1 Go) |
+| 8 | G | Global (ne pas flusher du TLB) |
+| 9-11 | AVL | Disponibles pour l'OS |
+| 12-51 | Adresse | Adresse physique de la table/page |
+| 52-62 | - | Réservés |
+| 63 | XD | Execute Disable (si EFER.NXE=1) |
+
+5.4 Exemple d'initialisation de la pagination
+----------------------------------------------
+
+section .bss
+align 4096
+
+; Page Map Level 4 (PML4)
+pml4_table:
+    resb 4096
+
+; Page Directory Pointer Table (PDPT)
+pdpt_table:
+    resb 4096
+
+; Page Directory Table (PDT)
+pdt_table:
+    resb 4096 * 4  ; 4 PDTs (map 4 * 512 * 2 Mo = 4 Go)
+
+section .text
+bits 32
+
+setup_paging:
+    ; Initialiser la PML4
+    mov eax, pdpt_table
+    or eax, 0x3                        ; Present + R/W
+    mov [pml4_table], eax
+    
+    ; Initialiser la PDPT (4 entrées pour 4 Go)
+    mov eax, pdt_table
+    or eax, 0x3                        ; Present + R/W
+    mov [pdpt_table], eax
+    mov [pdpt_table + 8], eax
+    mov [pdpt_table + 16], eax
+    mov [pdpt_table + 24], eax
+    
+    ; Initialiser les PDT avec des Huge Pages de 2 Mo
+    mov ecx, 0                         ; Compteur
+    mov eax, 0x00000000 | 0x83         ; Adresse 0 + Present + R/W + PS
+.map_pdt:
+    mov [pdt_table + ecx * 8], eax
+    add eax, 0x200000                  ; Prochaine page 2 Mo
+    inc ecx
+    cmp ecx, 2048                      ; 4 PDT × 512 entrées = 2048 entrées
+    jne .map_pdt
+    
+    ret
+
+5.5 Higher Half Kernel
+----------------------
+Le kernel est souvent placé dans la moitié supérieure de l'espace virtuel :
+
+- 0x0000000000000000 - 0x00007FFFFFFFFFFF : User space (128 To)
+- 0xFFFF800000000000 - 0xFFFFFFFFFFFFFFFF : Kernel space (128 To)
+
+Exemple de mapping Higher Half :
+
+setup_higher_half:
+    ; Mapper la PML4 entrée 511 (0xFFFF800000000000)
+    mov eax, pdpt_table
+    or eax, 0x3
+    mov [pml4_table + 511 * 8], eax
+    
+    ; Mapper la PDPT
+    mov eax, pdt_table
+    or eax, 0x3
+    mov [pdpt_table], eax
+    
+    ; Identity mapping pour l'initialisation
+    mov eax, pdt_table
+    or eax, 0x3
+    mov [pml4_table], eax
+    
+    ret
+
+5.6 TLB (Translation Lookaside Buffer)
+---------------------------------------
+Cache pour les traductions adresse virtuelle → physique :
+
+- Instruction TLB (ITLB) : Pour les fetches d'instructions
+- Data TLB (DTLB) : Pour les accès mémoire data
+- Flush du TLB : Recharger CR3 ou utiliser INVLPG
+
+Instructions pour gérer le TLB :
+```asm
+; Flush complet du TLB
+mov rax, cr3
+mov cr3, rax
+
+; Flush d'une seule page
+invlpg [adresse]
+```
+
+================================================================================
+PARTIE 6 : INTERRUPTIONS ET EXCEPTIONS EN x86_64
+================================================================================
+
+6.1 IDT (Interrupt Descriptor Table)
+-------------------------------------
+En Long Mode, chaque entrée IDT fait 16 octets :
+
+```
+Entrée IDT 64 bits :
+Bits 63-48 : Offset (bits 48-63)
+Bits 47-32 : Réservés
+Bits 31-16 : Offset (bits 31-16)
+Bits 15-0  : Offset (bits 0-15)
+Bits 16-31 : Sélecteur de segment
+Bits 32-39 : IST (Interrupt Stack Table)
+Bits 40-43 : Type (0xE = Interrupt Gate 64 bits)
+Bits 44-45 : DPL (Privilege Level)
+Bit  47    : P (Present)
+```
+
+6.2 Exceptions x86_64
+----------------------
+| Vecteur | Nom | Description | Code d'erreur ? |
+|---------|-----|-------------|------------------|
+| 0 | DE | Divide Error | Non |
+| 1 | DB | Debug | Non |
+| 2 | NMI | Non-Maskable Interrupt | Non |
+| 3 | BP | Breakpoint | Non |
+| 4 | OF | Overflow | Non |
+| 5 | BR | Bound Range Exceeded | Non |
+| 6 | UD | Invalid Opcode | Non |
+| 7 | NM | Device Not Available | Non |
+| 8 | DF | Double Fault | Oui (0) |
+| 9 | CS | Coprocessor Segment Overrun | Non |
+| 10 | TS | Invalid TSS | Oui |
+| 11 | NP | Segment Not Present | Oui |
+| 12 | SS | Stack-Segment Fault | Oui |
+| 13 | GP | General Protection Fault | Oui |
+| 14 | PF | Page Fault | Oui |
+| 15 | - | Réservé | - |
+| 16 | MF | x87 Math Fault | Non |
+| 17 | AC | Alignment Check | Oui (0) |
+| 18 | MC | Machine Check | Non |
+| 19 | XM | SIMD Floating-Point Exception | Non |
+| 20-31 | - | Réservés | - |
+
+6.3 Page Fault (Exception 14)
+------------------------------
+Code d'erreur Page Fault :
+
+| Bit | Nom | Description |
+|-----|-----|-------------|
+| 0 | P | 0=page non présente, 1=protection |
+| 1 | WR | 0=lecture, 1=écriture |
+| 2 | US | 0=kernel, 1=user |
+| 3 | RSVD | 1=réservé bit mis à 1 |
+| 4 | ID | 1=instruction fetch |
+| 5 | PK | 1=protection key |
+| 6 | SS | 1=shadow stack access |
+| 7-15 | - | Réservés |
+
+Adresse de la page fautive : Registre CR2
+
+Exemple de handler Page Fault :
+
+bits 64
+section .text
+global page_fault_handler
+extern page_fault_handler_c
+
+page_fault_handler:
+    ; Le code d'erreur est déjà sur la pile
+    push rax
+    push rbx
+    push rcx
+    push rdx
+    push rsi
+    push rdi
+    push rbp
+    push r8
+    push r9
+    push r10
+    push r11
+    push r12
+    push r13
+    push r14
+    push r15
+    
+    ; Appeler le handler C
+    mov rdi, cr2                    ; Adresse fautive
+    mov rsi, [rsp + 15 * 8]         ; Code d'erreur
+    call page_fault_handler_c
+    
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop r11
+    pop r10
+    pop r9
+    pop r8
+    pop rbp
+    pop rdi
+    pop rsi
+    pop rdx
+    pop rcx
+    pop rbx
+    pop rax
+    
+    add rsp, 8                      ; Enlever le code d'erreur
+    iretq
+
+6.4 IST (Interrupt Stack Table)
+--------------------------------
+En Long Mode, l'IST permet d'utiliser des piles dédiées pour les interruptions :
+
+- 7 piles IST disponibles (IST1 à IST7)
+- Stockées dans la TSS (Task State Segment)
+- Utile pour les NMI et Double Fault
+
+Exemple d'initialisation IST :
+
+section .data
+align 16
+
+ist1_stack:
+    resb 8192
+ist1_stack_top:
+
+section .text
+bits 64
+
+setup_ist:
+    ; Configurer la TSS avec IST1
+    mov rax, tss64
+    mov word [rax + 36], ist1_stack_top & 0xFFFF
+    mov word [rax + 38], (ist1_stack_top >> 16) & 0xFFFF
+    mov dword [rax + 40], (ist1_stack_top >> 32) & 0xFFFFFFFF
+    
+    ; Charger la TR (Task Register)
+    mov ax, tss64_sel
+    ltr ax
+    
+    ret
+
+================================================================================
+PARTIE 7 : CONVENTION D'APPEL SYSTEM V AMD64 ABI
+================================================================================
+
+7.1 Passage des paramètres
+---------------------------
+Les 6 premiers paramètres entiers/pointeurs passés dans :
+1. RDI
+2. RSI
+3. RDX
+4. RCX
+5. R8
+6. R9
+
+Paramètres supplémentaires : passés sur la pile
+
+Paramètres flottants : XMM0-XMM7
+
+7.2 Registres sauvés et préservés
+----------------------------------
+
+Registres volatile (écrasés par l'appelé) :
+- RAX, RCX, RDX, RDI, RSI, R8-R11
+- XMM0-XMM15
+
+Registres préservés (doivent être sauvegardés par l'appelé) :
+- RBX, RBP, R12-R15
+- XMM6-XMM15 (selon ABI)
+
+7.3 Valeur de retour
+--------------------
+- Entiers/pointeurs : RAX
+- Flottants : XMM0
+- Structures de 16 octets ou moins : RAX:RDX
+- Structures plus grandes : via pointeur passé en RDI
+
+7.4 Alignement de la pile
+--------------------------
+La pile doit être alignée sur 16 octets avant l'appel d'une fonction.
+
+Exemple :
+```asm
+main:
+    sub rsp, 8                      ; Désaligner (RSP + 8 = 8 octets)
+    call fonction                   ; Maintenant RSP - 8 est aligné
+    add rsp, 8                      ; Restaurer
+```
+
+7.5 Exemple d'assembleur appelant du C
+---------------------------------------
+
+Fonction C :
+```c
+long add_numbers(long a, long b, long c, long d, long e, long f, long g) {
+    return a + b + c + d + e + f + g;
+}
+```
+
+Appel depuis assembleur 64 bits :
+
+bits 64
+extern add_numbers
+
+section .text
+global call_add
+
+call_add:
+    push rbp
+    mov rbp, rsp
+    sub rsp, 16                     ; Alignement + espace pour g
+    
+    ; Paramètres 1-6 dans les registres
+    mov rdi, 1                      ; a = 1
+    mov rsi, 2                      ; b = 2
+    mov rdx, 3                      ; c = 3
+    mov rcx, 4                      ; d = 4
+    mov r8, 5                       ; e = 5
+    mov r9, 6                       ; f = 6
+    
+    ; Paramètre 7 sur la pile
+    mov qword [rsp], 7              ; g = 7
+    
+    call add_numbers
+    
+    leave
+    ret
+
+7.6 Fonction assembleur appelable depuis C
+-------------------------------------------
+
+bits 64
+global multiply_numbers
+
+; long multiply_numbers(long a, long b)
+; a dans RDI, b dans RSI, retour dans RAX
+multiply_numbers:
+    push rbp
+    mov rbp, rsp
+    
+    mov rax, rdi                    ; RAX = a
+    imul rax, rsi                   ; RAX = a * b
+    
+    leave
+    ret
+
+================================================================================
+PARTIE 8 : SYSCALL/SYSRET ET SYSCALLS
+================================================================================
+
+8.1 Instructions SYSCALL et SYSRET
+-----------------------------------
+- SYSCALL : Passer de user mode à kernel mode rapide
+- SYSRET : Retourner de kernel mode à user mode rapide
+
+Configuration nécessaire :
+- EFER.SCE = 1 (System Call Extensions)
+- LSTAR : Adresse du handler syscall (64 bits)
+- CSTAR : Adresse du handler syscall (compatibilité)
+- STAR : Sélecteurs CS et SS
+- SFMASK : Masque pour RFLAGS
+
+8.2 Configuration des MSR
+---------------------------
+
+setup_syscall_msr:
+    ; Activer SCE dans EFER
+    mov ecx, 0xC0000080             ; EFER
+    rdmsr
+    or eax, 1 << 0                  ; SCE bit
+    wrmsr
+    
+    ; Configurer LSTAR (adresse du handler)
+    mov ecx, 0xC0000082             ; LSTAR
+    mov eax, syscall_handler
+    mov edx, 0
+    wrmsr
+    
+    ; Configurer STAR
+    mov ecx, 0xC0000081             ; STAR
+    mov edx, (gdt64.user_code << 16) | gdt64.code
+    mov eax, (gdt64.user_data << 16) | gdt64.data
+    wrmsr
+    
+    ; Configurer SFMASK (désactiver IF)
+    mov ecx, 0xC0000084             ; SFMASK
+    mov eax, 1 << 9                 ; IF flag
+    mov edx, 0
+    wrmsr
+    
+    ret
+
+8.3 Handler de syscall
+-----------------------
+
+bits 64
+section .text
+global syscall_handler
+extern syscall_table
+
+syscall_handler:
+    ; Le numéro de syscall est dans RAX
+    ; Paramètres dans RDI, RSI, RDX, R10, R8, R9
+    ; RCX contient RIP de retour
+    ; R11 contient RFLAGS
+    
+    ; Sauvegarder les registres préservés
+    push rbx
+    push rbp
+    push r12
+    push r13
+    push r14
+    push r15
+    
+    ; Convertir R10 en RCX (pour le C)
+    mov rcx, r10
+    
+    ; Vérifier que le numéro est valide
+    cmp rax, MAX_SYSCALL
+    jae .invalid
+    
+    ; Appeler la fonction correspondante
+    call [syscall_table + rax * 8]
+    
+.restore:
+    pop r15
+    pop r14
+    pop r13
+    pop r12
+    pop rbp
+    pop rbx
+    
+    ; Retourner en user mode
+    o64 sysret                      ; SYSRET 64 bits
+
+.invalid:
+    mov rax, -1                     ; Erreur
+    jmp .restore
+
+8.4 Appeler un syscall depuis user mode
+----------------------------------------
+
+bits 64
+section .text
+global syscall_write
+
+; Exemple de write syscall
+; ssize_t write(int fd, const void *buf, size_t count)
+syscall_write:
+    ; Numéro de syscall write dans RAX
+    mov rax, 1
+    
+    ; Paramètres déjà dans RDI, RSI, RDX
+    syscall
+    
+    ret
+
+================================================================================
+PARTIE 9 : GESTION DE LA MEMOIRE VIRTUELLE
+================================================================================
+
+9.1 Espace d'adressage 48 bits
+-------------------------------
+```
+0x0000000000000000 - 0x00007FFFFFFFFFFF : Canonical (User space, 128 To)
+0x0000800000000000 - 0xFFFF7FFFFFFFFFFF : Non-canonical (génère #GP)
+0xFFFF800000000000 - 0xFFFFFFFFFFFFFFFF : Canonical (Kernel space, 128 To)
+```
+
+9.2 Adresses canoniques
+------------------------
+Une adresse est canonique si les bits 63-48 sont une extension du bit 47 :
+- Si bit 47 = 0 → bits 63-48 = 0
+- Si bit 47 = 1 → bits 63-48 = 1
+
+9.3 Exemple d'allocateur de pages virtuelles
+---------------------------------------------
+
+En C :
+
+typedef struct {
+    uint64_t *pml4;
+} page_table_t;
+
+void map_page(page_table_t *pt, uint64_t virt, uint64_t phys, uint64_t flags) {
+    uint64_t pml4_idx = (virt >> 39) & 0x1FF;
+    uint64_t pdpt_idx = (virt >> 30) & 0x1FF;
+    uint64_t pdt_idx = (virt >> 21) & 0x1FF;
+    uint64_t pt_idx = (virt >> 12) & 0x1FF;
+    
+    // PML4 → PDPT
+    if (!(pt->pml4[pml4_idx] & 1)) {
+        // Allouer une nouvelle PDPT
+        uint64_t pdpt = allocate_frame();
+        pt->pml4[pml4_idx] = pdpt | 3;  // Present + R/W
+    }
+    uint64_t *pdpt = (uint64_t *)(pt->pml4[pml4_idx] & ~0xFFF);
+    
+    // PDPT → PDT
+    if (!(pdpt[pdpt_idx] & 1)) {
+        uint64_t pdt = allocate_frame();
+        pdpt[pdpt_idx] = pdt | 3;
+    }
+    uint64_t *pdt = (uint64_t *)(pdpt[pdpt_idx] & ~0xFFF);
+    
+    // PDT → PT
+    if (!(pdt[pdt_idx] & 1)) {
+        uint64_t pt = allocate_frame();
+        pdt[pdt_idx] = pt | 3;
+    }
+    uint64_t *pt_entry = (uint64_t *)(pdt[pdt_idx] & ~0xFFF);
+    
+    // PT → Page physique
+    pt_entry[pt_idx] = phys | flags;
+}
+
+================================================================================
+PARTIE 10 : MULTITÂCHE ET CONTEXTE SWITCHING
+================================================================================
+
+10.1 Structure de contexte
+---------------------------
+
+typedef struct {
+    uint64_t rax, rbx, rcx, rdx;
+    uint64_t rsi, rdi, rbp;
+    uint64_t r8, r9, r10, r11, r12, r13, r14, r15;
+    uint64_t rsp;
+    uint64_t rip;
+    uint64_t rflags;
+    uint64_t cr3;
+} context_t;
+
+10.2 Sauvegarder le contexte
+-----------------------------
+
+bits 64
+section .text
+global save_context
+
+save_context:
+    mov [rdi + 0 * 8], rax
+    mov [rdi + 1 * 8], rbx
+    mov [rdi + 2 * 8], rcx
+    mov [rdi + 3 * 8], rdx
+    mov [rdi + 4 * 8], rsi
+    mov [rdi + 5 * 8], rdi  ; Attention : rdi contient ctx
+    mov [rdi + 6 * 8], rbp
+    mov [rdi + 7 * 8], r8
+    mov [rdi + 8 * 8], r9
+    mov [rdi + 9 * 8], r10
+    mov [rdi + 10 * 8], r11
+    mov [rdi + 11 * 8], r12
+    mov [rdi + 12 * 8], r13
+    mov [rdi + 13 * 8], r14
+    mov [rdi + 14 * 8], r15
+    
+    mov rax, [rsp]          ; RIP de retour
+    mov [rdi + 16 * 8], rax
+    
+    lea rax, [rsp + 8]      ; RSP après le retour
+    mov [rdi + 15 * 8], rax
+    
+    pushfq
+    pop rax
+    mov [rdi + 17 * 8], rax
+    
+    mov rax, cr3
+    mov [rdi + 18 * 8], rax
+    
+    ret
+
+10.3 Restaurer le contexte
+---------------------------
+
+bits 64
+section .text
+global restore_context
+
+restore_context:
+    mov rax, [rdi + 18 * 8]
+    mov cr3, rax
+    
+    mov rax, [rdi + 17 * 8]
+    push rax
+    popfq
+    
+    mov rax, [rdi + 0 * 8]
+    mov rbx, [rdi + 1 * 8]
+    mov rcx, [rdi + 2 * 8]
+    mov rdx, [rdi + 3 * 8]
+    mov rbp, [rdi + 6 * 8]
+    mov r8, [rdi + 7 * 8]
+    mov r9, [rdi + 8 * 8]
+    mov r10, [rdi + 9 * 8]
+    mov r11, [rdi + 10 * 8]
+    mov r12, [rdi + 11 * 8]
+    mov r13, [rdi + 12 * 8]
+    mov r14, [rdi + 13 * 8]
+    mov r15, [rdi + 14 * 8]
+    
+    mov rsp, [rdi + 15 * 8]
+    push qword [rdi + 16 * 8]
+    
+    mov rsi, [rdi + 4 * 8]
+    mov rdi, [rdi + 5 * 8]
+    
+    ret
+
+================================================================================
+PARTIE 11 : APIC (Advanced Programmable Interrupt Controller)
+================================================================================
+
+11.1 Local APIC
+----------------
+- Chaque CPU a son propre Local APIC
+- Gère les interruptions locales (timer, IPI, etc.)
+- Adresse de base : 0xFEE00000 (ou configurable via MSR 0x1B)
+
+Registres Local APIC :
+- 0x0020 : ID Register
+- 0x0030 : Version Register
+- 0x0080 : Task Priority Register (TPR)
+- 0x00B0 : End Of Interrupt (EOI)
+- 0x00D0 : Logical Destination Register
+- 0x00E0 : Destination Format Register
+- 0x00F0 : Spurious Interrupt Vector Register
+- 0x0100 : In-Service Register (ISR)
+- 0x0180 : Interrupt Request Register (IRR)
+- 0x0200 : Error Status Register
+- 0x0280 : LVT CMCI Register
+- 0x0290 : LVT Timer Register
+- 0x02A0 : LVT Thermal Sensor Register
+- 0x02B0 : LVT Performance Monitor Register
+- 0x02C0 : LVT LINT0 Register
+- 0x02D0 : LVT LINT1 Register
+- 0x02E0 : LVT Error Register
+- 0x0300 : Initial Count Register
+- 0x0380 : Current Count Register
+- 0x03E0 : Divide Configuration Register
+- 0x03F0 : Interrupt Command Register (ICR)
+
+11.2 I/O APIC
+--------------
+- Gère les interruptions externes
+- Redirige vers le(s) Local APIC(s)
+- Plusieurs I/O APICs possibles
+
+11.3 Initialiser le Local APIC
+-------------------------------
+
+bits 64
+section .text
+global init_apic
+
+init_apic:
+    ; Activer le Local APIC via MSR
+    mov ecx, 0x1B                   ; APIC_BASE MSR
+    rdmsr
+    or eax, 0x800                   ; BSP + Enable
+    wrmsr
+    
+    ; Configurer Spurious Interrupt
+    mov rsi, 0xFEE000F0             ; SVR
+    mov eax, [rsi]
+    or eax, 0x100 | 0xFF            ; Enable + Vector 255
+    mov [rsi], eax
+    
+    ; Configurer le timer (one-shot)
+    mov rsi, 0xFEE00320             ; LVT Timer
+    mov dword [rsi], 0x20000 | 32   ; Vector 32
+    
+    ; Configurer le diviseur
+    mov rsi, 0xFEE003E0             ; Divide Config
+    mov dword [rsi], 0x3            ; Divide by 16
+    
+    ret
+
+11.4 Envoyer un IPI (Inter-Processor Interrupt)
+------------------------------------------------
+
+send_ipi:
+    ; Destination : dans rdi
+    ; Vector : dans rsi
+    mov rdx, rdi
+    shl rdx, 24
+    
+    mov eax, rsi
+    or eax, 0x4000                  ; Fixed delivery
+    
+    mov rdi, 0xFEE00310             ; ICR high
+    mov [rdi], edx
+    
+    mov rdi, 0xFEE00300             ; ICR low
+    mov [rdi], eax
+    
+.wait:
+    mov eax, [rdi]
+    test eax, 0x1000                ; Delivery status
+    jnz .wait
+    
+    ret
+
+================================================================================
+PARTIE 12 : BOOT SEQUENCE x86_64 COMPLETE
+================================================================================
+
+12.1 Vue d'ensemble
+--------------------
+```
+1. Power-On → BIOS/UEFI
+2. BIOS/UEFI initialise le matériel
+3. Bootloader chargé (GRUB, Limine, etc.)
+4. Bootloader charge le noyau
+5. Noyau démarre en Real Mode
+6. Passage en Protected Mode (32 bits)
+7. Passage en Long Mode (64 bits)
+8. Initialisation du noyau
+```
+
+12.2 Exemple de code de boot complet
+-------------------------------------
+
+; boot.asm - Point d'entrée Multiboot2
+section .multiboot2
+align 8
+mb2_header_start:
+    dd 0xE85250D6                   ; Magic
+    dd 0                            ; Architecture i386
+    dd mb2_header_end - mb2_header_start  ; Taille
+    dd -(0xE85250D6 + 0 + (mb2_header_end - mb2_header_start))  ; Checksum
+    
+    ; Tag Information Request
+    dw 1
+    dw 0
+    dd 8 + 4 + 4 + 4
+    dd 3                            ; Module
+    dd 4                            ; Basic memory
+    dd 6                            ; Memory map
+    
+    ; Tag Entry Address
+    dw 3
+    dw 0
+    dd 12
+    dd 0
+    dd _start
+    
+    ; Tag Terminate
+    dw 0
+    dw 0
+    dd 8
+mb2_header_end:
+
+section .text
+bits 32
+extern kernel_main
+extern setup_paging
+extern gdt64
+extern gdt64_pointer
+
+_start:
+    cli
+    
+    ; Configurer les segments
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    
+    ; Configurer la pile
+    mov esp, stack_top
+    
+    ; Sauvegarder le pointeur Multiboot2
+    mov ebx, eax
+    
+    ; Initialiser la pagination
+    call setup_paging
+    
+    ; Charger la GDT
+    lgdt [gdt64_pointer]
+    
+    ; Passer en Long Mode
+    mov eax, cr4
+    or eax, 1 << 5                  ; PAE
+    mov cr4, eax
+    
+    mov eax, pml4_table
+    mov cr3, eax
+    
+    mov ecx, 0xC0000080             ; EFER
+    rdmsr
+    or eax, 1 << 8                  ; LME
+    wrmsr
+    
+    mov eax, cr0
+    or eax, 1 << 31                 ; PG
+    mov cr0, eax
+    
+    ; Far jump en 64 bits
+    jmp 0x08:long_mode_trampoline
+
+bits 64
+long_mode_trampoline:
+    ; Configurer les segments 64 bits
+    mov ax, 0x10
+    mov ds, ax
+    mov es, ax
+    mov fs, ax
+    mov gs, ax
+    mov ss, ax
+    mov rsp, kernel_stack_top
+    
+    ; Appeler le noyau C
+    mov rdi, rbx                    ; Pointeur Multiboot2
+    call kernel_main
+    
+.halt:
+    hlt
+    jmp .halt
+
+section .bss
+align 16
+stack_bottom:
+    resb 4096
+stack_top:
+
+align 16
+kernel_stack_bottom:
+    resb 65536
+kernel_stack_top:
+
+================================================================================
+PARTIE 13 : OPTIMISATIONS SPECIFIQUES x86_64
+================================================================================
+
+13.1 Huge Pages (2 Mo et 1 Go)
+-------------------------------
+Avantages :
+- Moins d'entrées de table de pages
+- Moins de TLB misses
+- Meilleures performances
+
+Inconvénients :
+- Fragmentation mémoire
+- Pas toujours disponible
+
+13.2 Global Pages (G bit)
+--------------------------
+- Pages marquées G ne sont pas flushées du TLB lors d'un changement de CR3
+- Utile pour le kernel
+
+13.3 PCID (Process Context Identifiers)
+----------------------------------------
+- Permet d'avoir des TLB entries par processus
+- Évite les flush complets du TLB lors de context switch
+
+13.4 SMEP/SMAP
+---------------
+- SMEP (Supervisor Mode Execution Prevention) : Empêche d'exécuter du code user en kernel mode
+- SMAP (Supervisor Mode Access Prevention) : Empêche d'accéder à la mémoire user en kernel mode
+
+13.5 NX/XD (No-Execute/Data Execution Prevention)
+--------------------------------------------------
+- Empêche d'exécuter du code depuis la pile ou les données
+- Configuré via le bit XD dans les entrées de table de pages
+- Nécessite EFER.NXE = 1
+
+================================================================================
+PARTIE 14 : DEBUGGING ET PROFILAGE x86_64
+================================================================================
+
+14.1 Registres de debug
+------------------------
+- DR0-DR3 : Breakpoints d'adresses
+- DR6 : Debug Status
+- DR7 : Debug Control
+
+14.2 Breakpoints
+-----------------
+- INT3 (0xCC) : Breakpoint logiciel
+- DR0-DR3 : Breakpoints matériel (4 maximum)
+
+14.3 Tracing
+-------------
+- TF (Trap Flag) dans RFLAGS : Single-step
+- DB exception (INT 1)
+
+14.4 Performance Monitoring Counters
+-------------------------------------
+- Compteurs de performance matériels
+- Accessibles via RDPMC
+- Programmables via MSRs
+
+================================================================================
+PARTIE 15 : BONNES PRATIQUES ET ASTUCES
+================================================================================
+
+15.1 Pour le développement de noyau
+------------------------------------
+1. Toujours aligner la pile sur 16 octets avant un call
+2. Utiliser les registres R8-R15 pour variables temporaires
+3. Éviter les accès mémoire non alignés (génère #AC si CR0.AM=1)
+4. Toujours valider les pointeurs user en kernel mode
+5. Utiliser les Huge Pages pour le heap kernel
+6. Configurer SMEP et SMAP pour la sécurité
+7. Utiliser le bit NX sur les pages de données
+
+15.2 Erreurs fréquentes
+------------------------
+- Oublier d'aligner la pile avant un call C
+- Utiliser des adresses non canoniques (génère #GP)
+- Oublier de l'instruction IRETQ à la fin d'un handler
+- Confondre RCX et R10 pour les paramètres de syscall
+- Oublier de sauvegarder les registres préservés
+
+================================================================================
+PARTIE 16 : RESSOURCES ET DOCUMENTATION
+================================================================================
+
+16.1 Documentation officielle
+------------------------------
+- Intel Software Developer Manuals (Volumes 1-4)
+- AMD Architecture Programmer's Manual (Volumes 1-5)
+- System V AMD64 ABI
+
+16.2 Références OS Dev
+-----------------------
+- OSDev Wiki : https://wiki.osdev.org/Main_Page
+- OSDev x86_64 : https://wiki.osdev.org/X86-64
+- OSDev Long Mode : https://wiki.osdev.org/Long_Mode
+
+16.3 Outils utiles
+-------------------
+- NASM : Assembleur
+- GDB : Debugger
+- QEMU : Émulateur
+- Bochs : Émulateur avec débogueur intégré
+- objdump : Désassembleur
+
+================================================================================
+FIN
+================================================================================

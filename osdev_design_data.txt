@@ -1,0 +1,326 @@
+Modularité
+Abstraction
+Stratification
+Layering
+Efficacité
+Fiabilité
+Extensibilité
+Sécurité
+Performance
+Temps de réponse
+Débit
+Utilisation CPU
+Utilisation mémoire
+Fiabilité
+Temps entre pannes
+Récupération automatique
+Sécurité
+Protection contre attaques
+Isolation des processus
+Extensibilité
+Facilité d'ajout de fonctionnalités
+Portabilité
+Capacité à fonctionner sur différentes architectures
+Maintainabilité
+Facilité de modification et de débogage
+Architecture Monolithique
+Architecture en Couches
+Architecture Microkernel
+Architecture Hybride
+Architecture Exokernel
+Architecture Modulaire
+Processus
+Thread
+PCB
+Process Control Block
+PID
+Process ID
+États du processus
+Nouveau
+Prêt
+En cours d'exécution
+Bloqué
+Terminé
+Planification
+Scheduling
+First-Come First-Served
+FCFS
+Shortest Job First
+SJF
+Shortest Remaining Time First
+SRTF
+Round Robin
+RR
+Scheduling par Priorité
+Vîllesse
+Aging
+File d'attente à plusieurs niveaux
+Multilevel Queue
+File d'attente à plusieurs niveaux avec feedback
+Multilevel Feedback Queue
+Rate Monotonic Scheduling
+RMS
+Earliest Deadline First
+EDF
+Least Laxity First
+LLF
+Synchronisation
+Mutex
+Mutual Exclusion
+Sémaphore
+P()
+V()
+Moniteur
+Spinlock
+Barrière
+Race Conditions
+Deadlock
+Interblocage
+Priority Inversion
+Inversion de priorité
+Producteur-Consommateur
+Readers-Writers
+Dîner des philosophes
+IPC
+Communication Inter-Processus
+Mémoire partagée
+Shared Memory
+Passage de messages
+Message Passing
+Pipes
+Files de messages
+Message Queues
+Tampons
+Buffers
+Sockets
+Signaux
+Signals
+SIGINT
+SIGTERM
+SIGKILL
+Mémoire
+RAM
+Cache
+L1
+L2
+L3
+Registres CPU
+Disque dur
+Stockage secondaire
+Localité temporelle
+Localité spatiale
+Allocation continue
+Premier ajustement
+First Fit
+Meilleur ajustement
+Best Fit
+Pire ajustement
+Worst Fit
+Suivant ajustement
+Next Fit
+Défragmentation
+Compaction
+Paging
+Segmentation
+Page
+Frame
+Table de pages
+Page Table
+Inode
+Virtuelle mémoire
+Virtual Memory
+Swap
+Défaut de page
+Page Fault
+LRU
+Least Recently Used
+FIFO
+First-In First-Out
+Optimal
+OPT
+MRU
+Most Recently Used
+Clock
+Second Chance
+Enhanced Clock
+Thrashing
+Buddy System
+Bitmap
+Liste chaînée
+Slab Allocation
+Système de fichiers
+File System
+Fichier
+Répertoire
+Inode
+Index Node
+FAT
+File Allocation Table
+ext2
+ext3
+ext4
+UFS
+Unix File System
+Allocation continue
+Allocation chaînée
+Allocation indexée
+SSTF
+Shortest Seek Time First
+SCAN
+Elevator Algorithm
+C-SCAN
+C-LOOK
+Cache de disque
+Write-back
+Write-through
+Permissions Unix
+rwx
+Chmod
+ACLs
+Access Control Lists
+Chiffrement de fichiers
+I/O
+Périphériques
+Polling
+Interrupts
+DMA
+Direct Memory Access
+PIO
+Programmed I/O
+Pilotes de périphériques
+Device Drivers
+Pilotes de caractères
+Pilotes de blocs
+Pilotes réseau
+Buffering
+Buffer simple
+Double buffering
+Circular buffering
+Spooling
+Deadlock
+Interblocage
+Coffman conditions
+Mutual Exclusion
+Hold and Wait
+No Preemption
+Circular Wait
+Graph d'allocation de ressources
+Algorithme du banquier
+Banker's Algorithm
+État courant
+État sûr
+Prévention d'interblocage
+Évitement d'interblocage
+Détection d'interblocage
+Récupération d'interblocage
+Sécurité
+Protection
+Mode noyau
+Kernel mode
+Mode utilisateur
+User mode
+Anneaux de protection
+GDT
+Global Descriptor Table
+LDT
+Local Descriptor Table
+U/S
+User/Supervisor
+R/W
+Read/Write
+XD
+Execute Disable
+DAC
+Discretionary Access Control
+MAC
+Mandatory Access Control
+RBAC
+Role-Based Access Control
+ABAC
+Attribute-Based Access Control
+Authentification
+Mot de passe
+Hashage
+Sel
+Salt
+bcrypt
+scrypt
+Argon2
+Clés publiques
+Clés privées
+Certificats numériques
+Biométrie
+Tokens
+Vulnérabilités
+Buffer overflow
+Race conditions
+SQL injection
+XSS
+Cross-site scripting
+Privilege escalation
+Virtualisation
+Machines virtuelles
+VM
+Hyperviseur
+Type 1
+Bare-metal
+Type 2
+Hosted
+Paravirtualisation
+Intel VT-x
+AMD-V
+Conteneur
+Docker
+LXC
+Systèmes distribués
+Hétérogénéité
+Tolérance aux fautes
+Concurrence
+Latence
+Client-serveur
+Pair-à-pair
+P2P
+DNS
+LDAP
+NTP
+Réplication
+Consensus
+Paxos
+Raft
+Faute de crash
+Faute omissive
+Faute byzantine
+Systèmes temps réel
+RTOS
+Temps réel dur
+Hard RT
+Temps réel mou
+Soft RT
+Prévisibilité
+Basse latence
+Scheduling préemptif
+Gestion de mémoire statique
+FreeRTOS
+QNX
+VxWorks
+RT-Linux
+μC/OS
+Tests unitaires
+Tests d'intégration
+Tests de performance
+Tests de stress
+Tests de sécurité
+Documentation technique
+Documentation utilisateur
+Documentation API
+Licence
+GPL
+MIT
+BSD
+Bootloader
+Gestion bas niveau
+Gestion de mémoire
+Gestion de processus
+Interface utilisateur
+Shell
+GUI

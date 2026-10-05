@@ -1,0 +1,2190 @@
+================================================================================
+                          COURS C POUR DEVELOPPEMENT DE SYSTEMES D'EXPLOITATION
+================================================================================
+
+Ce cours est spécialement conçu pour le développement de noyaux d'ordinateur
+et de systèmes d'exploitation. Il couvre les aspects les plus importants du
+langage C nécessaires pour coder en mode freestanding (sans bibliothèque
+standard) et interagir directement avec le matériel.
+
+Sources de référence :
+- Intel Software Developer Manuals
+- AMD Architecture Programmer's Manual
+- GCC Documentation
+- OSDev Wiki (https://wiki.osdev.org/)
+
+================================================================================
+PARTIE 1 : CONTEXTE ET OUTILS
+================================================================================
+
+1.1 Pourquoi C pour le développement de noyau ?
+-----------------------------------------------
+- Langage compilé, pas de runtime dynamique
+- Accès direct à la mémoire (pointeurs)
+- Contrôle total sur les registres et les instructions
+- Pas de gestion automatique de la mémoire (pas de GC)
+- Bonne performance et taille compacte
+- Standardisé (ANSI C / C11 / C17)
+
+1.2 Environnement de développement
+----------------------------------
+**Compilateur croisé (OBLIGATOIRE)** :
+- x86 32-bit : i686-elf-gcc
+- x86 64-bit : x86_64-elf-gcc
+
+**Options de compilation essentielles** :
+- -ffreestanding : Mode sans bibliothèque standard
+- -nostdlib : Ne pas utiliser la libc
+- -nostdinc : Ne pas utiliser les en-têtes standard
+- -std=gnu99 ou -std=c11 : Standard C
+- -O2 : Optimisation de niveau 2
+- -Wall -Wextra : Vérifications strictes
+- -m32 ou -m64 : Mode 32 ou 64 bits
+
+**Exemple de commande de compilation** :
+i686-elf-gcc -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
+1.3 Mode freestanding vs hosted
+-------------------------------
+**Mode hosted** :
+- Programme s'exécute sous un OS existant
+- Utilise la bibliothèque standard C (libc)
+- Fonction main() comme point d'entrée
+
+**Mode freestanding** :
+- Programme s'exécute directement sur le matériel
+- Aucune bibliothèque standard disponible
+- Point d'entrée personnalisé (_start)
+- Aucun support pour malloc, printf, etc.
+- Doit implémenter soi-même les fonctions basiques
+
+================================================================================
+PARTIE 2 : TYPES STANDARD ET MODE FREESTANDING
+================================================================================
+
+2.1 stdint.h personnalisé
+--------------------------
+En mode freestanding, les en-têtes standards ne sont pas disponibles.
+Il faut définir soi-même les types entiers standard.
+
+```c
+#ifndef STDINT_H
+#define STDINT_H
+
+typedef signed char int8_t;
+typedef unsigned char uint8_t;
+typedef signed short int16_t;
+typedef unsigned short uint16_t;
+typedef signed int int32_t;
+typedef unsigned int uint32_t;
+typedef signed long long int64_t;
+typedef unsigned long long uint64_t;
+
+typedef int8_t int_fast8_t;
+typedef uint8_t uint_fast8_t;
+typedef int32_t int_fast16_t;
+typedef uint32_t uint_fast16_t;
+typedef int32_t int_fast32_t;
+typedef uint32_t uint_fast32_t;
+typedef int64_t int_fast64_t;
+typedef uint64_t uint_fast64_t;
+
+typedef int8_t int_least8_t;
+typedef uint8_t uint_least8_t;
+typedef int16_t int_least16_t;
+typedef uint16_t uint_least16_t;
+typedef int32_t int_least32_t;
+typedef uint32_t uint_least32_t;
+typedef int64_t int_least64_t;
+typedef uint64_t uint_least64_t;
+
+typedef int32_t intptr_t;
+typedef uint32_t uintptr_t;
+
+typedef int64_t intmax_t;
+typedef uint64_t uintmax_t;
+
+#define INT8_MIN (-128)
+#define INT8_MAX 127
+#define UINT8_MAX 255
+
+#define INT16_MIN (-32768)
+#define INT16_MAX 32767
+#define UINT16_MAX 65535
+
+#define INT32_MIN (-2147483648)
+#define INT32_MAX 2147483647
+#define UINT32_MAX 4294967295U
+
+#define INT64_MIN (-9223372036854775808LL)
+#define INT64_MAX 9223372036854775807LL
+#define UINT64_MAX 18446744073709551615ULL
+
+#define INTPTR_MIN INT32_MIN
+#define INTPTR_MAX INT32_MAX
+#define UINTPTR_MAX UINT32_MAX
+
+#define INTMAX_MIN INT64_MIN
+#define INTMAX_MAX INT64_MAX
+#define UINTMAX_MAX UINT64_MAX
+
+#endif
+```
+
+2.2 stddef.h personnalisé
+--------------------------
+```c
+#ifndef STDDEF_H
+#define STDDEF_H
+
+typedef unsigned int size_t;
+typedef int ptrdiff_t;
+
+#define NULL ((void *)0)
+
+#define offsetof(type, member) ((size_t)&(((type *)0)->member))
+
+#endif
+```
+
+================================================================================
+PARTIE 3 : POINTEURS ET ARITHMETIQUE MEMOIRE
+================================================================================
+
+3.1 Pointeurs de base
+---------------------
+Un pointeur est une variable qui contient une adresse mémoire.
+
+```c
+int value = 42;
+int *ptr = &value;  // ptr contient l'adresse de value
+*ptr = 100;         // Déférencement : modifie value à travers ptr
+```
+
+2.2 Pointeurs et types
+----------------------
+La taille du déplacement dépend du type pointé :
+
+```c
+int *ip;
+ip++;  // Déplace de 4 octets (taille d'un int)
+
+char *cp;
+cp++;  // Déplace de 1 octet (taille d'un char)
+
+struct my_struct *sp;
+sp++;  // Déplace de sizeof(struct my_struct) octets
+```
+
+2.3 Pointeurs vers des adresses fixes (OSDev)
+---------------------------------------------
+Dans le développement de noyau, on accède souvent à des zones mémoire
+prédéfinies (mappées en mémoire).
+
+**Exemple : Affichage VGA**
+La mémoire VGA text buffer se trouve à l'adresse 0xB8000.
+Chaque caractère est représenté par 2 octets :
+- Octet 0 : Code ASCII du caractère
+- Octet 1 : Attributs (couleur de fond, couleur de texte)
+
+```c
+#define VGA_MEMORY 0xB8000
+#define VGA_WIDTH 80
+#define VGA_HEIGHT 25
+
+unsigned short *vga_buffer = (unsigned short *)VGA_MEMORY;
+
+void vga_putchar(char c, int x, int y, char color) {
+    vga_buffer[y * VGA_WIDTH + x] = (color << 8) | c;
+}
+```
+
+**Couleurs VGA (attributs) :**
+Bit 0-3 : Couleur du texte
+Bit 4-6 : Couleur de fond
+Bit 7   : Blink (clignotement)
+
+```c
+#define VGA_COLOR_BLACK 0
+#define VGA_COLOR_BLUE 1
+#define VGA_COLOR_GREEN 2
+#define VGA_COLOR_CYAN 3
+#define VGA_COLOR_RED 4
+#define VGA_COLOR_MAGENTA 5
+#define VGA_COLOR_BROWN 6
+#define VGA_COLOR_LIGHT_GREY 7
+#define VGA_COLOR_DARK_GREY 8
+#define VGA_COLOR_LIGHT_BLUE 9
+#define VGA_COLOR_LIGHT_GREEN 10
+#define VGA_COLOR_LIGHT_CYAN 11
+#define VGA_COLOR_LIGHT_RED 12
+#define VGA_COLOR_LIGHT_MAGENTA 13
+#define VGA_COLOR_LIGHT_BROWN 14
+#define VGA_COLOR_WHITE 15
+```
+
+2.4 Pointeurs génériques (void *)
+---------------------------------
+Utilisés pour manipuler de la mémoire sans type spécifique.
+
+```c
+void *memcpy(void *dest, const void *src, size_t n) {
+    unsigned char *d = (unsigned char *)dest;
+    const unsigned char *s = (const unsigned char *)src;
+    for (size_t i = 0; i < n; i++) {
+        d[i] = s[i];
+    }
+    return dest;
+}
+```
+
+2.5 Pointeurs de fonction
+-------------------------
+Utile pour les tableaux de gestionnaires (IDT, ISR).
+
+```c
+typedef void (*isr_handler_t)(void);
+
+void timer_handler(void) {
+    // Gère l'interruption timer
+}
+
+isr_handler_t isr_table[256];
+isr_table[0] = timer_handler;
+```
+
+2.6 Fonctions basiques pour mode freestanding
+---------------------------------------------
+En mode freestanding, aucune fonction de la libc n'est disponible.
+Il faut implémenter les fonctions basiques soi-même.
+
+```c
+void *memset(void *dest, int c, size_t n) {
+    unsigned char *d = (unsigned char *)dest;
+    for (size_t i = 0; i < n; i++) {
+        d[i] = (unsigned char)c;
+    }
+    return dest;
+}
+
+void *memcpy(void *dest, const void *src, size_t n) {
+    unsigned char *d = (unsigned char *)dest;
+    const unsigned char *s = (const unsigned char *)src;
+    for (size_t i = 0; i < n; i++) {
+        d[i] = s[i];
+    }
+    return dest;
+}
+
+void *memmove(void *dest, const void *src, size_t n) {
+    unsigned char *d = (unsigned char *)dest;
+    const unsigned char *s = (const unsigned char *)src;
+    if (d < s) {
+        for (size_t i = 0; i < n; i++) {
+            d[i] = s[i];
+        }
+    } else {
+        for (size_t i = n; i > 0; i--) {
+            d[i-1] = s[i-1];
+        }
+    }
+    return dest;
+}
+
+size_t strlen(const char *str) {
+    size_t len = 0;
+    while (str[len] != '\0') {
+        len++;
+    }
+    return len;
+}
+
+int strcmp(const char *s1, const char *s2) {
+    while (*s1 && *s2 && *s1 == *s2) {
+        s1++;
+        s2++;
+    }
+    return *s1 - *s2;
+}
+
+char *strcpy(char *dest, const char *src) {
+    char *d = dest;
+    while ((*d++ = *src++));
+    return dest;
+}
+```
+
+================================================================================
+PARTIE 3 : STRUCTURES PACKÉES ET BITFIELDS
+================================================================================
+
+3.1 Structures alignées vs packées
+----------------------------------
+Par défaut, les structures sont alignées pour améliorer les performances.
+Mais dans le développement de noyau, on a souvent besoin de structures
+exactement alignées (pour les entrées GDT, IDT, PDE/PTE).
+
+**Structure alignée (défaut)** :
+```c
+struct example {
+    char a;    // 1 octet
+    int b;     // 4 octets (mais commencera à l'octet 4)
+};
+// Taille totale : 8 octets (3 octets de padding)
+```
+
+**Structure packée** :
+```c
+struct example __attribute__((packed)) {
+    char a;    // 1 octet
+    int b;     // 4 octets (commence à l'octet 1)
+};
+// Taille totale : 5 octets (pas de padding)
+```
+
+3.2 Bitfields
+-------------
+Permet de manipuler des champs de bits individuels dans une structure.
+Essentiel pour les registres de contrôle et les entrées de tables.
+
+**Exemple : Entrée Page Directory (PDE)**
+```c
+struct pde_entry __attribute__((packed)) {
+    unsigned int present : 1;       // Bit 0 : Page présente
+    unsigned int read_write : 1;    // Bit 1 : Lecture/écriture
+    unsigned int user_supervisor : 1; // Bit 2 : User/Supervisor
+    unsigned int write_through : 1; // Bit 3 : Write-through
+    unsigned int cache_disable : 1; // Bit 4 : Cache désactivé
+    unsigned int accessed : 1;      // Bit 5 : Accès effectué
+    unsigned int dirty : 1;         // Bit 6 : Page modifiée
+    unsigned int page_size : 1;     // Bit 7 : Taille de page (4K/4M)
+    unsigned int global : 1;        // Bit 8 : Page globale
+    unsigned int reserved : 3;      // Bits 9-11 : Réservés
+    unsigned int page_table_base : 20; // Bits 12-31 : Adresse base
+};
+```
+
+**Utilisation** :
+```c
+struct pde_entry pde;
+pde.present = 1;
+pde.read_write = 1;
+pde.user_supervisor = 0;
+pde.page_table_base = 0x1000 >> 12;
+```
+
+3.3 Exemples pratiques OSDev
+-----------------------------
+
+**Entrée Global Descriptor Table (GDT)** :
+```c
+struct gdt_entry __attribute__((packed)) {
+    unsigned short limit_low;
+    unsigned short base_low;
+    unsigned char base_middle;
+    unsigned char access;
+    unsigned char granularity;
+    unsigned char base_high;
+};
+```
+
+**Entrée Interrupt Descriptor Table (IDT)** :
+```c
+struct idt_entry __attribute__((packed)) {
+    unsigned short offset_low;
+    unsigned short selector;
+    unsigned char zero;
+    unsigned char type_attr;
+    unsigned short offset_high;
+};
+```
+
+**Entrée Page Table (PTE)** :
+```c
+struct pte_entry __attribute__((packed)) {
+    unsigned int present : 1;
+    unsigned int read_write : 1;
+    unsigned int user_supervisor : 1;
+    unsigned int write_through : 1;
+    unsigned int cache_disable : 1;
+    unsigned int accessed : 1;
+    unsigned int dirty : 1;
+    unsigned int pat : 1;
+    unsigned int global : 1;
+    unsigned int reserved : 3;
+    unsigned int physical_address : 20;
+};
+```
+
+================================================================================
+PARTIE 4 : VOLATILE ET REGISTRES MEMOIRE-MAPPES
+================================================================================
+
+4.1 Qu'est-ce que volatile ?
+----------------------------
+Le mot-clé volatile indique au compilateur que la valeur d'une variable
+peut changer à tout moment, indépendamment du programme. Cela empêche
+le compilateur de faire des optimisations qui supposent que la valeur
+ne change pas.
+
+**Utilisation** :
+- Accès à des registres mémoire-mappés
+- Variables partagées avec des interruptions
+- Variables modifiées par du code externe
+
+4.2 Registres mémoire-mappés
+----------------------------
+La plupart des périphériques sont contrôlés via des registres qui sont
+accédés comme des adresses mémoire.
+
+**Exemple : Ports d'E/S**
+```c
+volatile unsigned char *port_base = (volatile unsigned char *)0x3F8;
+
+void serial_write(char c) {
+    while (!(port_base[5] & 0x20));  // Attend que le buffer soit vide
+    port_base[0] = c;                 // Écrit le caractère
+}
+```
+
+**Exemple : Programmable Interval Timer (PIT)**
+```c
+volatile unsigned char *pit_command = (volatile unsigned char *)0x43;
+volatile unsigned char *pit_data = (volatile unsigned char *)0x40;
+
+void pit_set_frequency(uint32_t freq) {
+    uint32_t divisor = 1193180 / freq;
+    *pit_command = 0x36;
+    *pit_data = divisor & 0xFF;
+    *pit_data = (divisor >> 8) & 0xFF;
+}
+```
+
+4.3 Accès atomiques avec volatile
+----------------------------------
+```c
+volatile int counter = 0;
+
+void increment_counter(void) {
+    counter++;  // Accès atomique (pour les types petits)
+}
+```
+
+================================================================================
+PARTIE 5 : INLINE ASSEMBLY
+================================================================================
+
+5.1 Syntaxe GCC inline assembly
+-------------------------------
+Permet d'insérer du code assembleur directement dans le code C.
+
+```c
+asm volatile (
+    "instruction1\n\t"
+    "instruction2\n\t"
+    : output_operands
+    : input_operands
+    : clobbered_registers
+);
+```
+
+5.2 Exemples pratiques
+----------------------
+
+**Lecture d'un port** :
+```c
+static inline uint8_t inb(uint16_t port) {
+    uint8_t result;
+    asm volatile ("inb %1, %0"
+                  : "=a" (result)
+                  : "dN" (port));
+    return result;
+}
+```
+
+**Écriture sur un port** :
+```c
+static inline void outb(uint16_t port, uint8_t data) {
+    asm volatile ("outb %1, %0"
+                  :
+                  : "dN" (port), "a" (data));
+}
+```
+
+**Chargement de CR3 (pour le paging)** :
+```c
+static inline void load_cr3(uint32_t page_directory) {
+    asm volatile ("mov %0, %%cr3"
+                  :
+                  : "r" (page_directory));
+}
+```
+
+**Activation du paging** :
+```c
+static inline void enable_paging(void) {
+    uint32_t cr0;
+    asm volatile ("mov %%cr0, %0" : "=r" (cr0));
+    cr0 |= 0x80000001;
+    asm volatile ("mov %0, %%cr0" : : "r" (cr0));
+}
+```
+
+**Lecture de CR2 (adresse de page fault)** :
+```c
+static inline uint32_t read_cr2(void) {
+    uint32_t cr2;
+    asm volatile ("mov %%cr2, %0" : "=r" (cr2));
+    return cr2;
+}
+```
+
+**Lecture des flags depuis la stack** :
+```c
+static inline uint32_t read_eflags(void) {
+    uint32_t eflags;
+    asm volatile ("pushf; pop %0" : "=r" (eflags));
+    return eflags;
+}
+```
+
+**Halt CPU** :
+```c
+static inline void halt(void) {
+    asm volatile ("hlt");
+}
+```
+
+**Cli/Sti (désactiver/activer interruptions)** :
+```c
+static inline void cli(void) {
+    asm volatile ("cli");
+}
+
+static inline void sti(void) {
+    asm volatile ("sti");
+}
+```
+
+5.3 Appels système (int 0x80)
+------------------------------
+```c
+int syscall(int num, int arg1, int arg2, int arg3) {
+    int result;
+    asm volatile ("int $0x80"
+                  : "=a" (result)
+                  : "a" (num), "b" (arg1), "c" (arg2), "d" (arg3));
+    return result;
+}
+```
+
+================================================================================
+PARTIE 6 : MODELE MEMOIRE C ET LINKER SCRIPT
+================================================================================
+
+6.1 Sections d'un programme C
+------------------------------
+Un programme C compilé est organisé en plusieurs sections :
+
+- .text : Code exécutable
+- .rodata : Données constantes (read-only)
+- .data : Données initialisées
+- .bss : Données non initialisées (Block Started by Symbol)
+- .multiboot : En-tête Multiboot (pour GRUB)
+
+**Exemple de layout mémoire** :
+```
+0xC0000000 +-----------------+
+           |     .text       |  Code exécutable
+           +-----------------+
+           |    .rodata      |  Données constantes
+           +-----------------+
+           |     .data       |  Données initialisées
+           +-----------------+
+           |     .bss        |  Données non initialisées (à 0)
+           +-----------------+
+           |      stack      |  Pile (croît vers le bas)
+           +-----------------+
+           |      heap       |  Tas (croît vers le haut)
+           +-----------------+
+```
+
+6.2 Script de linkage (linker.ld)
+----------------------------------
+Définit la disposition des sections en mémoire.
+
+```ld
+ENTRY(_start)
+
+SECTIONS
+{
+    . = 0xC0000000;
+
+    .text ALIGN(4K) :
+    {
+        *(.multiboot)
+        *(.text)
+    }
+
+    .rodata ALIGN(4K) :
+    {
+        *(.rodata)
+    }
+
+    .data ALIGN(4K) :
+    {
+        *(.data)
+    }
+
+    .bss ALIGN(4K) :
+    {
+        *(COMMON)
+        *(.bss)
+    }
+
+    . = ALIGN(4K);
+    PROVIDE(_end = .);
+}
+```
+
+6.3 Initialisation du .bss
+---------------------------
+En mode freestanding, il faut initialiser le .bss à zéro manuellement.
+
+```c
+extern char __bss_start[];
+extern char __bss_end[];
+
+void init_bss(void) {
+    memset(__bss_start, 0, __bss_end - __bss_start);
+}
+```
+
+6.4 Pile (stack)
+-----------------
+La pile doit être initialisée avant d'appeler du code C.
+
+```c
+// Dans boot.s (assembleur)
+.section .bss
+.align 16
+stack_bottom:
+.skip 16384  // 16 KiB de pile
+stack_top:
+
+.section .text
+_start:
+    mov $stack_top, %esp
+    call kernel_main
+```
+
+================================================================================
+PARTIE 7 : ATTRIBUTS GCC SPECIFIQUES
+================================================================================
+
+7.1 Attributs de fonctions
+---------------------------
+
+**noreturn** : Fonction qui ne retourne jamais
+```c
+void kernel_panic(const char *msg) __attribute__((noreturn));
+```
+
+**noinline** : Ne pas inline la fonction
+```c
+void critical_section(void) __attribute__((noinline));
+```
+
+**always_inline** : Toujours inline la fonction
+```c
+static inline int min(int a, int b) __attribute__((always_inline));
+```
+
+**used** : Empêche le linker de supprimer une fonction inutilisée
+```c
+void isr_handler(void) __attribute__((used));
+```
+
+7.2 Attributs de variables
+---------------------------
+
+**section** : Place une variable dans une section spécifique
+```c
+int kernel_version __attribute__((section(".rodata"))) = 1;
+```
+
+**aligned** : Aligne une variable sur une frontière spécifique
+```c
+uint32_t page_table[1024] __attribute__((aligned(4096)));
+```
+
+**packed** : Empêche le padding dans une structure
+```c
+struct idt_entry __attribute__((packed));
+```
+
+7.3 Attributs de types
+-----------------------
+
+**mode** : Spécifie la taille d'un type
+```c
+typedef int my_int __attribute__((mode(HI)));  // 16 bits
+typedef int my_long __attribute__((mode(SI))); // 32 bits
+```
+
+7.4 Exemple complet
+-------------------
+```c
+struct gdt_entry __attribute__((packed)) {
+    unsigned short limit_low;
+    unsigned short base_low;
+    unsigned char base_middle;
+    unsigned char access;
+    unsigned char granularity;
+    unsigned char base_high;
+};
+
+struct gdt_entry gdt[3] __attribute__((aligned(8)));
+
+void gdt_init(void) __attribute__((noinline));
+void kernel_main(void) __attribute__((noreturn));
+```
+
+================================================================================
+PARTIE 8 : CONVENTIONS D'APPEL ET APPELS SYSTEME
+================================================================================
+
+8.1 Convention d'appel System V ABI (x86)
+------------------------------------------
+Pour les appels de fonctions en 32 bits :
+- Arguments : EAX, EDX, ECX (puis pile)
+- Valeur de retour : EAX
+- Registres préservés : EBX, ESI, EDI, EBP, ESP
+- Registres volatils : EAX, ECX, EDX
+
+**Exemple** :
+```c
+int add(int a, int b) {
+    return a + b;
+}
+// Appel : add(3, 5)
+// EAX = 3, EDX = 5
+// Retour : EAX = 8
+```
+
+8.2 Convention d'appel System V ABI (x86-64)
+---------------------------------------------
+Pour les appels de fonctions en 64 bits :
+- Arguments : RDI, RSI, RDX, RCX, R8, R9 (puis pile)
+- Valeur de retour : RAX
+- Registres préservés : RBX, RBP, RSP, R12-R15
+- Registres volatils : RAX, RCX, RDX, RSI, RDI, R8-R11
+
+8.3 Appels système
+-------------------
+Les appels système sont la manière dont les programmes utilisateurs
+communiquent avec le noyau.
+
+**Sur x86 (int 0x80)** :
+- Numéro de l'appel système : EAX
+- Arguments : EBX, ECX, EDX, ESI, EDI, EBP
+
+```c
+#define SYS_WRITE 4
+#define SYS_EXIT 1
+
+int sys_write(int fd, const char *buf, int count) {
+    int result;
+    asm volatile ("int $0x80"
+                  : "=a" (result)
+                  : "a" (SYS_WRITE), "b" (fd), "c" (buf), "d" (count));
+    return result;
+}
+```
+
+**Sur x86-64 (syscall)** :
+- Numéro de l'appel système : RAX
+- Arguments : RDI, RSI, RDX, R10, R8, R9
+
+```c
+#define SYS_WRITE 1
+
+ssize_t sys_write(int fd, const void *buf, size_t count) {
+    ssize_t result;
+    asm volatile ("syscall"
+                  : "=a" (result)
+                  : "a" (SYS_WRITE), "D" (fd), "S" (buf), "d" (count)
+                  : "rcx", "r11");
+    return result;
+}
+```
+
+8.4 Gestionnaire d'appels système
+----------------------------------
+```c
+typedef int (*syscall_handler_t)(int, int, int, int, int, int);
+
+syscall_handler_t syscall_table[256];
+
+void syscall_handler(void) {
+    int num = get_register_eax();
+    if (num < 256 && syscall_table[num]) {
+        int arg1 = get_register_ebx();
+        int arg2 = get_register_ecx();
+        int arg3 = get_register_edx();
+        int arg4 = get_register_esi();
+        int arg5 = get_register_edi();
+        int arg6 = get_register_ebp();
+        
+        int result = syscall_table[num](arg1, arg2, arg3, arg4, arg5, arg6);
+        set_register_eax(result);
+    }
+}
+```
+
+================================================================================
+PARTIE 9 : ALLOCATION DE MEMOIRE BAS NIVEAU
+================================================================================
+
+9.1 Bitmap allocation
+----------------------
+Utilise un tableau de bits pour suivre l'allocation des pages.
+
+```c
+#define MEMORY_SIZE 1024 * 1024 * 1024  // 1 GiB
+#define PAGE_SIZE 4096
+#define BITMAP_SIZE (MEMORY_SIZE / PAGE_SIZE / 8)
+
+unsigned char memory_bitmap[BITMAP_SIZE];
+
+void bitmap_init(void) {
+    memset(memory_bitmap, 0, BITMAP_SIZE);
+}
+
+void *bitmap_alloc(size_t pages) {
+    size_t i, j;
+    for (i = 0; i < BITMAP_SIZE; i++) {
+        if (memory_bitmap[i] != 0xFF) {
+            for (j = 0; j < 8; j++) {
+                size_t bit = i * 8 + j;
+                if (!(memory_bitmap[i] & (1 << j))) {
+                    // Vérifier si on a assez de pages consécutives
+                    size_t k;
+                    for (k = 0; k < pages; k++) {
+                        size_t bi = (bit + k) / 8;
+                        size_t bj = (bit + k) % 8;
+                        if (memory_bitmap[bi] & (1 << bj)) {
+                            break;
+                        }
+                    }
+                    if (k == pages) {
+                        // Allouer les pages
+                        for (k = 0; k < pages; k++) {
+                            size_t bi = (bit + k) / 8;
+                            size_t bj = (bit + k) % 8;
+                            memory_bitmap[bi] |= (1 << bj);
+                        }
+                        return (void *)(bit * PAGE_SIZE);
+                    }
+                }
+            }
+        }
+    }
+    return NULL;
+}
+
+void bitmap_free(void *ptr, size_t pages) {
+    size_t bit = (size_t)ptr / PAGE_SIZE;
+    for (size_t k = 0; k < pages; k++) {
+        size_t bi = (bit + k) / 8;
+        size_t bj = (bit + k) % 8;
+        memory_bitmap[bi] &= ~(1 << bj);
+    }
+}
+```
+
+9.2 Buddy System
+-----------------
+Algorithme d'allocation qui gère des blocs de taille puissance de 2.
+Plus efficace que le bitmap pour les allocations dynamiques.
+
+```c
+#define MAX_ORDER 10
+#define MEMORY_SIZE (1 << MAX_ORDER) * PAGE_SIZE
+
+struct buddy_system {
+    unsigned char free[MAX_ORDER + 1][MEMORY_SIZE / PAGE_SIZE];
+    int order_count[MAX_ORDER + 1];
+};
+
+struct buddy_system buddy;
+
+void buddy_init(void) {
+    for (int o = 0; o <= MAX_ORDER; o++) {
+        memset(buddy.free[o], 0, MEMORY_SIZE / PAGE_SIZE);
+        buddy.order_count[o] = 0;
+    }
+    buddy.free[MAX_ORDER][0] = 1;
+    buddy.order_count[MAX_ORDER] = 1;
+}
+
+static int find_block(int order) {
+    for (int i = 0; i < (MEMORY_SIZE / PAGE_SIZE) >> order; i++) {
+        if (buddy.free[order][i]) {
+            return i;
+        }
+    }
+    return -1;
+}
+
+void *buddy_alloc(size_t size) {
+    int order = 0;
+    while ((1 << order) * PAGE_SIZE < size) order++;
+    
+    if (order > MAX_ORDER) return NULL;
+    
+    for (int o = order; o <= MAX_ORDER; o++) {
+        if (buddy.order_count[o] > 0) {
+            int block_idx = find_block(o);
+            if (block_idx != -1) {
+                buddy.free[o][block_idx] = 0;
+                buddy.order_count[o]--;
+                
+                for (int j = o; j > order; j--) {
+                    int half = block_idx * 2 + 1;
+                    buddy.free[j-1][block_idx * 2] = 1;
+                    buddy.free[j-1][half] = 1;
+                    buddy.order_count[j-1] += 2;
+                    block_idx *= 2;
+                }
+                
+                return (void *)(block_idx * PAGE_SIZE);
+            }
+        }
+    }
+    return NULL;
+}
+
+void buddy_free(void *ptr) {
+    size_t addr = (size_t)ptr;
+    int block_idx = addr / PAGE_SIZE;
+    int order = 0;
+    
+    while (order <= MAX_ORDER && !buddy.free[order][block_idx]) {
+        order++;
+    }
+    
+    if (order > MAX_ORDER) return;
+    
+    buddy.free[order][block_idx] = 1;
+    buddy.order_count[order]++;
+    
+    while (order < MAX_ORDER) {
+        int buddy_idx = block_idx ^ 1;
+        if (buddy.free[order][buddy_idx]) {
+            buddy.free[order][block_idx] = 0;
+            buddy.free[order][buddy_idx] = 0;
+            buddy.order_count[order] -= 2;
+            
+            block_idx /= 2;
+            order++;
+            
+            buddy.free[order][block_idx] = 1;
+            buddy.order_count[order]++;
+        } else {
+            break;
+        }
+    }
+}
+```
+
+9.3 Allocation simple (kmalloc/kfree)
+--------------------------------------
+```c
+void *kmalloc(size_t size) {
+    if (size <= PAGE_SIZE) {
+        return bitmap_alloc(1);
+    } else {
+        size_t pages = (size + PAGE_SIZE - 1) / PAGE_SIZE;
+        return bitmap_alloc(pages);
+    }
+}
+
+void kfree(void *ptr, size_t size) {
+    if (size <= PAGE_SIZE) {
+        bitmap_free(ptr, 1);
+    } else {
+        size_t pages = (size + PAGE_SIZE - 1) / PAGE_SIZE;
+        bitmap_free(ptr, pages);
+    }
+}
+```
+
+================================================================================
+PARTIE 10 : STRUCTURES DE DONNEES POUR L'OS
+================================================================================
+
+10.1 Listes chaînées
+--------------------
+
+**Liste chaînée simple** :
+```c
+struct list_node {
+    struct list_node *next;
+    void *data;
+};
+
+struct list {
+    struct list_node *head;
+    struct list_node *tail;
+};
+
+void list_init(struct list *l) {
+    l->head = NULL;
+    l->tail = NULL;
+}
+
+void list_add(struct list *l, void *data) {
+    struct list_node *node = kmalloc(sizeof(struct list_node));
+    node->data = data;
+    node->next = NULL;
+    
+    if (l->tail) {
+        l->tail->next = node;
+    } else {
+        l->head = node;
+    }
+    l->tail = node;
+}
+
+void *list_remove(struct list *l) {
+    if (!l->head) return NULL;
+    
+    struct list_node *node = l->head;
+    void *data = node->data;
+    l->head = node->next;
+    
+    if (!l->head) {
+        l->tail = NULL;
+    }
+    
+    kfree(node, sizeof(struct list_node));
+    return data;
+}
+```
+
+**Liste chaînée doublement chaînée** :
+```c
+struct dlist_node {
+    struct dlist_node *prev;
+    struct dlist_node *next;
+    void *data;
+};
+
+void dlist_insert_after(struct dlist_node *node, void *data) {
+    struct dlist_node *new_node = kmalloc(sizeof(struct dlist_node));
+    new_node->data = data;
+    new_node->prev = node;
+    new_node->next = node->next;
+    
+    if (node->next) {
+        node->next->prev = new_node;
+    }
+    node->next = new_node;
+}
+
+void dlist_remove(struct dlist_node *node) {
+    if (node->prev) {
+        node->prev->next = node->next;
+    }
+    if (node->next) {
+        node->next->prev = node->prev;
+    }
+    kfree(node, sizeof(struct dlist_node));
+}
+```
+
+10.2 Files (Queues)
+--------------------
+```c
+struct queue {
+    struct list list;
+};
+
+void queue_init(struct queue *q) {
+    list_init(&q->list);
+}
+
+void queue_enqueue(struct queue *q, void *data) {
+    list_add(&q->list, data);
+}
+
+void *queue_dequeue(struct queue *q) {
+    return list_remove(&q->list);
+}
+```
+
+10.3 Structures pour la gestion de processus
+---------------------------------------------
+
+**Process Control Block (PCB)** :
+```c
+typedef enum {
+    PROCESS_NEW,
+    PROCESS_READY,
+    PROCESS_RUNNING,
+    PROCESS_BLOCKED,
+    PROCESS_TERMINATED
+} process_state_t;
+
+struct pcb {
+    int pid;
+    process_state_t state;
+    void *stack;
+    void *page_directory;
+    int priority;
+    struct dlist_node node;
+};
+
+struct process_queue {
+    struct dlist_node head;
+};
+
+void process_queue_init(struct process_queue *pq) {
+    pq->head.prev = &pq->head;
+    pq->head.next = &pq->head;
+}
+
+void process_queue_add(struct process_queue *pq, struct pcb *pcb) {
+    dlist_insert_after(&pq->head, pcb);
+}
+
+struct pcb *process_queue_remove(struct process_queue *pq) {
+    if (pq->head.next == &pq->head) return NULL;
+    struct dlist_node *node = pq->head.next;
+    struct pcb *pcb = (struct pcb *)node->data;
+    dlist_remove(node);
+    return pcb;
+}
+```
+
+================================================================================
+PARTIE 11 : SYNCHRONISATION ET CONCURRENCE
+================================================================================
+
+11.1 Spinlock
+--------------
+Verrou qui tourne en boucle jusqu'à obtention (pour les sections critiques
+courtes).
+
+```c
+typedef volatile int spinlock_t;
+
+#define SPINLOCK_UNLOCKED 0
+#define SPINLOCK_LOCKED 1
+
+void spinlock_acquire(spinlock_t *lock) {
+    while (__sync_lock_test_and_set(lock, SPINLOCK_LOCKED)) {
+        // Spin
+    }
+}
+
+void spinlock_release(spinlock_t *lock) {
+    __sync_lock_release(lock);
+}
+```
+
+**Version plus sophistiquée** :
+```c
+void spinlock_acquire(spinlock_t *lock) {
+    while (1) {
+        if (!*lock && !__sync_lock_test_and_set(lock, 1)) {
+            return;
+        }
+        // Yield to other processors
+        asm volatile ("pause");
+    }
+}
+
+void spinlock_release(spinlock_t *lock) {
+    __sync_synchronize();
+    *lock = 0;
+}
+```
+
+11.2 Mutex
+-----------
+Verrou qui bloque le processus si le verrou est occupé.
+
+```c
+struct mutex {
+    spinlock_t lock;
+    int owner;
+    struct queue waiters;
+};
+
+void mutex_init(struct mutex *m) {
+    m->lock = SPINLOCK_UNLOCKED;
+    m->owner = -1;
+    queue_init(&m->waiters);
+}
+
+void mutex_lock(struct mutex *m) {
+    spinlock_acquire(&m->lock);
+    
+    if (m->owner == -1) {
+        m->owner = current_pid();
+        spinlock_release(&m->lock);
+        return;
+    }
+    
+    // Ajouter le processus à la file d'attente
+    queue_enqueue(&m->waiters, (void *)(intptr_t)current_pid());
+    spinlock_release(&m->lock);
+    
+    // Bloquer le processus
+    block_process(current_pid());
+}
+
+void mutex_unlock(struct mutex *m) {
+    spinlock_acquire(&m->lock);
+    
+    m->owner = -1;
+    
+    // Débloquer un processus en attente
+    if (!queue_is_empty(&m->waiters)) {
+        int pid = (int)(intptr_t)queue_dequeue(&m->waiters);
+        unblock_process(pid);
+    }
+    
+    spinlock_release(&m->lock);
+}
+```
+
+11.3 Sémaphore
+---------------
+```c
+struct semaphore {
+    spinlock_t lock;
+    int value;
+    struct queue waiters;
+};
+
+void semaphore_init(struct semaphore *s, int value) {
+    s->lock = SPINLOCK_UNLOCKED;
+    s->value = value;
+    queue_init(&s->waiters);
+}
+
+void semaphore_p(struct semaphore *s) {
+    spinlock_acquire(&s->lock);
+    
+    s->value--;
+    
+    if (s->value < 0) {
+        queue_enqueue(&s->waiters, (void *)(intptr_t)current_pid());
+        spinlock_release(&s->lock);
+        block_process(current_pid());
+    } else {
+        spinlock_release(&s->lock);
+    }
+}
+
+void semaphore_v(struct semaphore *s) {
+    spinlock_acquire(&s->lock);
+    
+    s->value++;
+    
+    if (s->value <= 0) {
+        int pid = (int)(intptr_t)queue_dequeue(&s->waiters);
+        unblock_process(pid);
+    }
+    
+    spinlock_release(&s->lock);
+}
+```
+
+11.4 Exemple : Producteur-Consommateur
+---------------------------------------
+```c
+#define BUFFER_SIZE 10
+
+int buffer[BUFFER_SIZE];
+int head = 0;
+int tail = 0;
+
+struct semaphore empty;
+struct semaphore full;
+struct mutex lock;
+
+void producer(void) {
+    int item = 0;
+    while (1) {
+        item++;
+        semaphore_p(&empty);
+        mutex_lock(&lock);
+        
+        buffer[head] = item;
+        head = (head + 1) % BUFFER_SIZE;
+        
+        mutex_unlock(&lock);
+        semaphore_v(&full);
+    }
+}
+
+void consumer(void) {
+    while (1) {
+        semaphore_p(&full);
+        mutex_lock(&lock);
+        
+        int item = buffer[tail];
+        tail = (tail + 1) % BUFFER_SIZE;
+        
+        mutex_unlock(&lock);
+        semaphore_v(&empty);
+        
+        process_item(item);
+    }
+}
+
+void init_producer_consumer(void) {
+    semaphore_init(&empty, BUFFER_SIZE);
+    semaphore_init(&full, 0);
+    mutex_init(&lock);
+}
+```
+
+================================================================================
+PARTIE 12 : GESTION DES INTERRUPTIONS
+================================================================================
+
+12.1 IDT (Interrupt Descriptor Table)
+--------------------------------------
+
+**Structure de l'IDT** :
+```c
+struct idt_entry __attribute__((packed)) {
+    unsigned short offset_low;
+    unsigned short selector;
+    unsigned char zero;
+    unsigned char type_attr;
+    unsigned short offset_high;
+};
+
+struct idt_ptr __attribute__((packed)) {
+    unsigned short limit;
+    unsigned int base;
+};
+
+struct idt_entry idt[256];
+struct idt_ptr idtp;
+```
+
+**Initialisation de l'IDT** :
+```c
+void idt_set_gate(int num, void (*handler)(void), unsigned short selector, unsigned char flags) {
+    unsigned int handler_addr = (unsigned int)handler;
+    
+    idt[num].offset_low = handler_addr & 0xFFFF;
+    idt[num].selector = selector;
+    idt[num].zero = 0;
+    idt[num].type_attr = flags;
+    idt[num].offset_high = (handler_addr >> 16) & 0xFFFF;
+}
+
+void idt_init(void) {
+    idtp.limit = sizeof(struct idt_entry) * 256 - 1;
+    idtp.base = (unsigned int)idt;
+    
+    // Initialiser toutes les entrées à 0
+    memset(idt, 0, sizeof(struct idt_entry) * 256);
+    
+    // Charger l'IDT
+    asm volatile ("lidt %0" : : "m" (idtp));
+}
+```
+
+**Flags pour l'IDT** :
+- Bit 0-3 : Type (0x0E pour interrupt gate)
+- Bit 4 : Zero
+- Bit 5-6 : DPL (Descriptor Privilege Level)
+- Bit 7 : P (Present)
+
+```c
+#define IDT_INTERRUPT_GATE 0x8E  // Present + DPL 0 + Interrupt Gate
+```
+
+12.2 ISR (Interrupt Service Routines)
+--------------------------------------
+
+**Générateur d'ISR** :
+```c
+#define ISR_NOERR(n) \
+void isr##n(void) { \
+    asm volatile ("push %d" #n); \
+    asm volatile ("pusha"); \
+    asm volatile ("call isr_handler_common"); \
+    asm volatile ("popa"); \
+    asm volatile ("add $4, %esp"); \
+    asm volatile ("iret"); \
+}
+
+#define ISR_ERR(n) \
+void isr##n(void) { \
+    asm volatile ("push %d" #n); \
+    asm volatile ("pusha"); \
+    asm volatile ("call isr_handler_common"); \
+    asm volatile ("popa"); \
+    asm volatile ("add $8, %esp"); \
+    asm volatile ("iret"); \
+}
+
+ISR_NOERR(0)   // Division by zero
+ISR_NOERR(1)   // Debug
+ISR_NOERR(2)   // NMI
+ISR_NOERR(3)   // Breakpoint
+ISR_NOERR(4)   // Overflow
+ISR_NOERR(5)   // Bound range exceeded
+ISR_NOERR(6)   // Invalid opcode
+ISR_NOERR(7)   // Device not available
+ISR_ERR(8)     // Double fault
+ISR_NOERR(9)   // Coprocessor segment overrun
+ISR_ERR(10)    // Invalid TSS
+ISR_ERR(11)    // Segment not present
+ISR_ERR(12)    // Stack fault
+ISR_ERR(13)    // General protection fault
+ISR_ERR(14)    // Page fault
+ISR_NOERR(15)  // Reserved
+ISR_NOERR(16)  // x87 FPU error
+ISR_ERR(17)    // Alignment check
+ISR_NOERR(18)  // Machine check
+ISR_NOERR(19)  // SIMD FPU exception
+```
+
+**Handler commun** :
+```c
+typedef struct {
+    unsigned int ds;
+    unsigned int edi, esi, ebp, esp, ebx, edx, ecx, eax;
+    unsigned int interrupt_num;
+    unsigned int error_code;
+    unsigned int eip, cs, eflags, user_esp, ss;
+} interrupt_frame_t;
+
+void isr_handler_common(interrupt_frame_t *frame) {
+    switch (frame->interrupt_num) {
+        case 0:
+            kernel_panic("Division by zero");
+            break;
+        case 14:
+            page_fault_handler(frame->error_code);
+            break;
+        default:
+            break;
+    }
+}
+```
+
+12.3 IRQ (Interrupt Requests)
+------------------------------
+Les IRQ sont les interruptions matérielles. Sur x86, elles sont gérées
+par le PIC (Programmable Interrupt Controller).
+
+**Remapping des IRQ** :
+```c
+void pic_remap(void) {
+    outb(0x20, 0x11);
+    outb(0xA0, 0x11);
+    outb(0x21, 0x20);
+    outb(0xA1, 0x28);
+    outb(0x21, 0x04);
+    outb(0xA1, 0x02);
+    outb(0x21, 0x01);
+    outb(0xA1, 0x01);
+    outb(0x21, 0x00);
+    outb(0xA1, 0x00);
+}
+```
+
+**Acknowledge d'une IRQ** :
+```c
+void irq_ack(int irq) {
+    if (irq >= 8) {
+        outb(0xA0, 0x20);
+    }
+    outb(0x20, 0x20);
+}
+```
+
+================================================================================
+PARTIE 13 : PAGING ET MEMOIRE VIRTUELLE
+================================================================================
+
+13.1 Paging 32-bit
+-------------------
+
+**Page Directory et Page Table** :
+```c
+#define PAGE_SIZE 4096
+#define TABLE_ENTRIES 1024
+
+typedef uint32_t page_directory_t[TABLE_ENTRIES];
+typedef uint32_t page_table_t[TABLE_ENTRIES];
+
+page_directory_t *kernel_page_directory;
+page_table_t *kernel_page_tables[TABLE_ENTRIES];
+```
+
+**Initialisation** :
+```c
+void paging_init(void) {
+    kernel_page_directory = (page_directory_t *)kmalloc(sizeof(page_directory_t));
+    memset(kernel_page_directory, 0, sizeof(page_directory_t));
+    
+    // Mapper la mémoire physique 0-4MiB à 0xC0000000
+    for (int i = 0; i < TABLE_ENTRIES; i++) {
+        kernel_page_tables[i] = (page_table_t *)kmalloc(sizeof(page_table_t));
+        memset(kernel_page_tables[i], 0, sizeof(page_table_t));
+        
+        for (int j = 0; j < TABLE_ENTRIES; j++) {
+            uint32_t phys_addr = (i * TABLE_ENTRIES + j) * PAGE_SIZE;
+            kernel_page_tables[i][j] = phys_addr | 0x3;  // Present + RW
+        }
+        
+        kernel_page_directory[i] = (uint32_t)kernel_page_tables[i] | 0x3;
+    }
+    
+    load_cr3((uint32_t)kernel_page_directory);
+    enable_paging();
+}
+```
+
+13.2 Page Fault Handler
+------------------------
+```c
+void page_fault_handler(void) {
+    uint32_t fault_addr;
+    asm volatile ("mov %%cr2, %0" : "=r" (fault_addr));
+    
+    int present = !(read_cr2_flags() & 0x1);
+    int rw = read_cr2_flags() & 0x2;
+    int us = read_cr2_flags() & 0x4;
+    
+    if (us) {
+        // Page fault en mode utilisateur
+        kill_process(current_pid());
+    } else {
+        // Page fault en mode noyau
+        kernel_panic("Page fault at 0x%x", fault_addr);
+    }
+}
+```
+
+================================================================================
+PARTIE 14 : EXEMPLE COMPLET : NOYAU MINIMAL
+================================================================================
+
+14.1 Fichier boot.s
+--------------------
+```assembly
+.set ALIGN,    1<<0
+.set MEMINFO,  1<<1
+.set FLAGS,    ALIGN | MEMINFO
+.set MAGIC,    0x1BADB002
+.set CHECKSUM, -(MAGIC + FLAGS)
+
+.section .multiboot
+.align 4
+.long MAGIC
+.long FLAGS
+.long CHECKSUM
+
+.section .bss
+.align 16
+stack_bottom:
+.skip 16384
+stack_top:
+
+.section .text
+.global _start
+.type _start, @function
+_start:
+    mov $stack_top, %esp
+    call kernel_main
+    cli
+1:  hlt
+    jmp 1b
+.size _start, . - _start
+```
+
+14.2 Fichier kernel.c
+----------------------
+```c
+#include <stdint.h>
+#include <stddef.h>
+
+#define VGA_MEMORY 0xB8000
+#define VGA_WIDTH 80
+#define VGA_HEIGHT 25
+
+unsigned short *vga_buffer = (unsigned short *)VGA_MEMORY;
+size_t vga_row = 0;
+size_t vga_col = 0;
+
+void vga_putchar(char c, char color) {
+    vga_buffer[vga_row * VGA_WIDTH + vga_col] = (color << 8) | c;
+    vga_col++;
+    if (vga_col >= VGA_WIDTH) {
+        vga_col = 0;
+        vga_row++;
+    }
+}
+
+void vga_clear(void) {
+    for (size_t i = 0; i < VGA_WIDTH * VGA_HEIGHT; i++) {
+        vga_buffer[i] = 0;
+    }
+    vga_row = 0;
+    vga_col = 0;
+}
+
+void vga_write_string(const char *str, char color) {
+    for (size_t i = 0; str[i] != '\0'; i++) {
+        vga_putchar(str[i], color);
+    }
+}
+
+void kernel_main(void) {
+    vga_clear();
+    vga_write_string("Bienvenue dans mon noyau C !", 0x0F);
+    
+    while (1) {
+        asm volatile ("hlt");
+    }
+}
+```
+
+14.3 Fichier linker.ld
+-----------------------
+```ld
+ENTRY(_start)
+
+SECTIONS
+{
+    . = 0xC0000000;
+
+    .text ALIGN(4K) :
+    {
+        *(.multiboot)
+        *(.text)
+    }
+
+    .rodata ALIGN(4K) :
+    {
+        *(.rodata)
+    }
+
+    .data ALIGN(4K) :
+    {
+        *(.data)
+    }
+
+    .bss ALIGN(4K) :
+    {
+        *(COMMON)
+        *(.bss)
+    }
+}
+```
+
+14.4 Compilation et test
+-------------------------
+```bash
+# Assembleur
+i686-elf-as boot.s -o boot.o
+
+# Compilation C
+i686-elf-gcc -c kernel.c -o kernel.o -std=gnu99 -ffreestanding -O2 -Wall -Wextra
+
+# Linkage
+i686-elf-ld -T linker.ld boot.o kernel.o -o myos.bin -nostdlib
+
+# Création de l'image ISO
+mkdir -p isodir/boot/grub
+cp myos.bin isodir/boot/myos.bin
+cat > isodir/boot/grub/grub.cfg << EOF
+menuentry "My OS" {
+    multiboot /boot/myos.bin
+}
+EOF
+grub-mkrescue -o myos.iso isodir
+
+# Test avec QEMU
+qemu-system-i386 -cdrom myos.iso
+```
+
+================================================================================
+PARTIE 15 : SYMBOLES LINKER ET INITIALISATION
+================================================================================
+
+15.1 Symboles linker
+--------------------
+Le linker LD définit des symboles spéciaux qui marquent les bornes
+des sections. Ils peuvent être utilisés pour parcourir ou initialiser
+les sections.
+
+```c
+extern char _start[];
+extern char _end[];
+extern char __text_start[];
+extern char __text_end[];
+extern char __data_start[];
+extern char __data_end[];
+extern char __bss_start[];
+extern char __bss_end[];
+```
+
+**Utilisation dans le linker script** :
+```ld
+SECTIONS
+{
+    . = 0xC0000000;
+    
+    .text ALIGN(4K) :
+    {
+        __text_start = .;
+        *(.multiboot)
+        *(.text)
+        __text_end = .;
+    }
+    
+    .data ALIGN(4K) :
+    {
+        __data_start = .;
+        *(.data)
+        __data_end = .;
+    }
+    
+    .bss ALIGN(4K) :
+    {
+        __bss_start = .;
+        *(COMMON)
+        *(.bss)
+        __bss_end = .;
+    }
+    
+    . = ALIGN(4K);
+    _end = .;
+}
+```
+
+**Initialisation du .bss** :
+```c
+void init_bss(void) {
+    memset(__bss_start, 0, __bss_end - __bss_start);
+}
+```
+
+15.2 __attribute__((weak))
+--------------------------
+L'attribut `weak` permet de définir une fonction ou une variable
+comme une implémentation par défaut. Si une autre implémentation
+plus forte est définie ailleurs, elle sera utilisée à la place.
+
+```c
+void platform_init(void) __attribute__((weak));
+
+void platform_init(void) {
+    // Implémentation par défaut
+}
+
+void kernel_main(void) {
+    platform_init();
+}
+```
+
+**Utilisation pour les drivers** :
+```c
+struct driver {
+    const char *name;
+    void (*init)(void);
+};
+
+struct driver __attribute__((weak)) my_driver = {
+    .name = "default",
+    .init = NULL,
+};
+```
+
+15.3 Constructeurs .init_array
+-------------------------------
+Les constructeurs sont des fonctions appelées automatiquement
+avant `main()` dans le mode hosted. En mode freestanding, il faut
+les appeler manuellement.
+
+**Définir un constructeur** :
+```c
+void my_constructor(void) __attribute__((constructor));
+
+void my_constructor(void) {
+    // Initialisation
+}
+```
+
+**Appeler les constructeurs manuellement** :
+```c
+extern void (*__init_array_start[])();
+extern void (*__init_array_end[])();
+
+void call_constructors(void) {
+    size_t count = __init_array_end - __init_array_start;
+    for (size_t i = 0; i < count; i++) {
+        __init_array_start[i]();
+    }
+}
+```
+
+**Linker script** :
+```ld
+.init_array ALIGN(4) :
+{
+    __init_array_start = .;
+    KEEP(*(.init_array))
+    __init_array_end = .;
+}
+```
+
+================================================================================
+PARTIE 16 : CONTEXTE SWITCHING
+================================================================================
+
+16.1 Sauvegarde et restauration du contexte
+-------------------------------------------
+Le contexte switching permet de passer d'un processus à un autre.
+Il faut sauvegarder tous les registres du CPU.
+
+**Structure du contexte** :
+```c
+struct context {
+    uint32_t edi;
+    uint32_t esi;
+    uint32_t ebp;
+    uint32_t esp;
+    uint32_t ebx;
+    uint32_t edx;
+    uint32_t ecx;
+    uint32_t eax;
+    uint32_t eip;
+    uint32_t cs;
+    uint32_t eflags;
+    uint32_t ss;
+};
+```
+
+**Sauvegarder le contexte** :
+```c
+void context_save(struct context *ctx) {
+    asm volatile (
+        "mov %%edi, %0\n\t"
+        "mov %%esi, %1\n\t"
+        "mov %%ebp, %2\n\t"
+        "mov %%esp, %3\n\t"
+        "mov %%ebx, %4\n\t"
+        "mov %%edx, %5\n\t"
+        "mov %%ecx, %6\n\t"
+        "mov %%eax, %7\n\t"
+        "mov (%%esp), %8\n\t"
+        "mov 4(%%esp), %9\n\t"
+        "pushf\n\t"
+        "pop %10\n\t"
+        : "=m"(ctx->edi), "=m"(ctx->esi), "=m"(ctx->ebp),
+          "=m"(ctx->esp), "=m"(ctx->ebx), "=m"(ctx->edx),
+          "=m"(ctx->ecx), "=m"(ctx->eax), "=m"(ctx->eip),
+          "=m"(ctx->cs), "=m"(ctx->eflags)
+    );
+}
+```
+
+**Restaurer le contexte** :
+```c
+void context_load(struct context *ctx) {
+    asm volatile (
+        "mov %0, %%edi\n\t"
+        "mov %1, %%esi\n\t"
+        "mov %2, %%ebp\n\t"
+        "mov %3, %%esp\n\t"
+        "mov %4, %%ebx\n\t"
+        "mov %5, %%edx\n\t"
+        "mov %6, %%ecx\n\t"
+        "mov %7, %%eax\n\t"
+        "push %8\n\t"
+        "push %9\n\t"
+        "push %10\n\t"
+        "push %11\n\t"
+        "push %12\n\t"
+        "ret"
+        :
+        : "m"(ctx->edi), "m"(ctx->esi), "m"(ctx->ebp),
+          "m"(ctx->esp), "m"(ctx->ebx), "m"(ctx->edx),
+          "m"(ctx->ecx), "m"(ctx->eax), "m"(ctx->ss),
+          "m"(ctx->eflags), "m"(ctx->cs), "m"(ctx->eip)
+    );
+}
+```
+
+16.2 Context switch complet
+----------------------------
+```c
+struct pcb {
+    int pid;
+    process_state_t state;
+    struct context ctx;
+    void *page_directory;
+    int priority;
+};
+
+struct pcb *current_process = NULL;
+
+void switch_to(struct pcb *next) {
+    if (!current_process || !next) return;
+    
+    context_save(&current_process->ctx);
+    
+    load_cr3((uint32_t)next->page_directory);
+    
+    current_process = next;
+    
+    context_load(&current_process->ctx);
+}
+```
+
+================================================================================
+PARTIE 17 : UART SERIE
+================================================================================
+
+17.1 Initialisation de l'UART
+------------------------------
+L'UART (Universal Asynchronous Receiver/Transmitter) est utilisé
+pour la communication série. C'est un outil essentiel pour le debugging.
+
+```c
+#define UART_BASE 0x3F8
+
+void uart_init(void) {
+    outb(UART_BASE + 1, 0x00);
+    outb(UART_BASE + 3, 0x80);
+    outb(UART_BASE + 0, 0x03);
+    outb(UART_BASE + 1, 0x00);
+    outb(UART_BASE + 3, 0x03);
+    outb(UART_BASE + 2, 0xC7);
+    outb(UART_BASE + 4, 0x0B);
+}
+
+int uart_is_transmit_empty(void) {
+    return inb(UART_BASE + 5) & 0x20;
+}
+
+void uart_putchar(char c) {
+    while (!uart_is_transmit_empty());
+    outb(UART_BASE, c);
+}
+
+void uart_write(const char *str) {
+    while (*str) {
+        uart_putchar(*str++);
+    }
+}
+
+int uart_is_receive_ready(void) {
+    return inb(UART_BASE + 5) & 0x01;
+}
+
+char uart_getchar(void) {
+    while (!uart_is_receive_ready());
+    return inb(UART_BASE);
+}
+```
+
+**Utilisation pour le debugging** :
+```c
+#define kprintf(fmt, ...) uart_write(fmt)
+
+void kernel_main(void) {
+    uart_init();
+    kprintf("Kernel started!\n");
+}
+```
+
+================================================================================
+PARTIE 18 : GDT COMPLET
+================================================================================
+
+18.1 Structure de la GDT
+-------------------------
+La Global Descriptor Table (GDT) définit les segments en mode protégé.
+
+```c
+struct gdt_entry __attribute__((packed)) {
+    uint16_t limit_low;
+    uint16_t base_low;
+    uint8_t base_middle;
+    uint8_t access;
+    uint8_t granularity;
+    uint8_t base_high;
+};
+
+struct gdt_ptr __attribute__((packed)) {
+    uint16_t limit;
+    uint32_t base;
+};
+
+struct gdt_entry gdt[5];
+struct gdt_ptr gdtp;
+```
+
+18.2 Flags d'accès
+-------------------
+```c
+#define GDT_ACCESS_PRESENT 0x80
+#define GDT_ACCESS_RING0 0x00
+#define GDT_ACCESS_RING1 0x20
+#define GDT_ACCESS_RING2 0x40
+#define GDT_ACCESS_RING3 0x60
+#define GDT_ACCESS_CODE 0x10
+#define GDT_ACCESS_DATA 0x10
+#define GDT_ACCESS_EXECUTABLE 0x08
+#define GDT_ACCESS_CONFORMING 0x04
+#define GDT_ACCESS_READ_WRITE 0x02
+#define GDT_ACCESS_ACCESSED 0x01
+
+#define GDT_GRANULARITY_4K 0x80
+#define GDT_GRANULARITY_1B 0x00
+#define GDT_SIZE_32BIT 0x40
+#define GDT_SIZE_16BIT 0x00
+```
+
+18.3 Initialisation de la GDT
+------------------------------
+```c
+void gdt_set_gate(int num, uint32_t base, uint32_t limit, uint8_t access, uint8_t granularity) {
+    gdt[num].base_low = (base & 0xFFFF);
+    gdt[num].base_middle = (base >> 16) & 0xFF;
+    gdt[num].base_high = (base >> 24) & 0xFF;
+    
+    gdt[num].limit_low = (limit & 0xFFFF);
+    gdt[num].granularity = (limit >> 16) & 0x0F;
+    gdt[num].granularity |= granularity & 0xF0;
+    
+    gdt[num].access = access;
+}
+
+void gdt_init(void) {
+    gdtp.limit = sizeof(struct gdt_entry) * 5 - 1;
+    gdtp.base = (uint32_t)gdt;
+    
+    gdt_set_gate(0, 0, 0, 0, 0);
+    gdt_set_gate(1, 0, 0xFFFFFFFF,
+                 GDT_ACCESS_PRESENT | GDT_ACCESS_RING0 | GDT_ACCESS_CODE |
+                 GDT_ACCESS_EXECUTABLE | GDT_ACCESS_READ_WRITE,
+                 GDT_GRANULARITY_4K | GDT_SIZE_32BIT);
+    gdt_set_gate(2, 0, 0xFFFFFFFF,
+                 GDT_ACCESS_PRESENT | GDT_ACCESS_RING0 | GDT_ACCESS_DATA |
+                 GDT_ACCESS_READ_WRITE,
+                 GDT_GRANULARITY_4K | GDT_SIZE_32BIT);
+    gdt_set_gate(3, 0, 0xFFFFFFFF,
+                 GDT_ACCESS_PRESENT | GDT_ACCESS_RING3 | GDT_ACCESS_CODE |
+                 GDT_ACCESS_EXECUTABLE | GDT_ACCESS_READ_WRITE,
+                 GDT_GRANULARITY_4K | GDT_SIZE_32BIT);
+    gdt_set_gate(4, 0, 0xFFFFFFFF,
+                 GDT_ACCESS_PRESENT | GDT_ACCESS_RING3 | GDT_ACCESS_DATA |
+                 GDT_ACCESS_READ_WRITE,
+                 GDT_GRANULARITY_4K | GDT_SIZE_32BIT);
+    
+    asm volatile ("lgdt %0" : : "m" (gdtp));
+    
+    asm volatile (
+        "mov $0x10, %%ax\n\t"
+        "mov %%ax, %%ds\n\t"
+        "mov %%ax, %%es\n\t"
+        "mov %%ax, %%fs\n\t"
+        "mov %%ax, %%gs\n\t"
+        "mov %%ax, %%ss\n\t"
+        "ljmp $0x08, $1f\n\t"
+        "1:"
+    );
+}
+```
+
+================================================================================
+PARTIE 19 : BONNES PRATIQUES
+================================================================================
+
+19.1 Sécurité
+-------------
+- Vérifiez tous les pointeurs avant de les déréférencer
+- Évitez les buffer overflow (vérifiez les tailles)
+- Utilisez des types sûrs (uint32_t au lieu de int)
+- Protégez les sections critiques avec des verrous
+- Suivez le principe du minimum de privilège
+
+15.2 Performance
+----------------
+- Optimisez les chemins critiques
+- Utilisez l'alignement mémoire approprié
+- Minimisez les appels système
+- Utilisez la localité spatiale et temporelle
+- Évitez les copies inutiles de données
+
+15.3 Portabilité
+----------------
+- Évitez les dépendances matérielles directes
+- Utilisez des abstractions (HAL - Hardware Abstraction Layer)
+- Suivez les standards C
+- Testez sur plusieurs architectures
+
+15.4 Debugging
+--------------
+- Utilisez QEMU avec GDB pour le débogage
+- Ajoutez des points de contrôle (breakpoints)
+- Utilisez un logger série pour les messages
+- Vérifiez les registres CR0-CR4 pour le paging
+- Utilisez les dumps de mémoire pour analyser les erreurs
+
+15.5 Organisation du code
+--------------------------
+- Séparez le code en modules (mémoire, processus, I/O)
+- Utilisez des fichiers d'en-tête (.h) pour les interfaces
+- Respectez les conventions de nommage
+- Ajoutez des commentaires pour les parties complexes
+- Gardez le code aussi simple que possible
+
+================================================================================
+PARTIE 16 : RESSOURCES SUPPLEMENTAIRES
+================================================================================
+
+16.1 Documentation
+------------------
+- Intel Software Developer Manuals : https://software.intel.com/sites/default/files/managed/39/c5/325462-sdm-vol-1-2abcd-3abcd.pdf
+- AMD Architecture Programmer's Manual : https://developer.amd.com/resources/developer-guides-manuals/
+- GCC Documentation : https://gcc.gnu.org/onlinedocs/
+- OSDev Wiki : https://wiki.osdev.org/
+
+16.2 Livres
+-----------
+- "Operating Systems: Design and Implementation" - Tanenbaum
+- "Operating System Concepts" - Silberschatz, Galvin, Gagne
+- "The C Programming Language" - Kernighan & Ritchie
+- "Expert C Programming" - Peter van der Linden
+
+16.3 Projets
+------------
+- Linux Kernel : https://www.kernel.org/
+- Minix : https://www.minix3.org/
+- xv6 : https://pdos.csail.mit.edu/6.828/2018/xv6.html
+
+================================================================================
+FIN DU COURS
+================================================================================
+
+Dernière mise à jour : Juillet 2026
+Adapté au contexte OSDev du dossier a:\repo\seed

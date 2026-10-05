@@ -1,0 +1,350 @@
+================================================================================
+COURS : WINDOW MANAGERS
+================================================================================
+
+1. INTRODUCTION
+================================================================================
+
+Un Window Manager (WM) est un logiciel qui contrôle le placement et l'apparence
+des fenêtres dans un système à affichage graphique (X11 ou Wayland). Il fait
+partie de l'environnement de bureau mais peut être utilisé seul pour un système
+léger et personnalisable.
+
+Le Window Manager gère :
+- Le placement des fenêtres
+- Le redimensionnement des fenêtres
+- La décoration des fenêtres (barres de titre, bordures)
+- Le focus des fenêtres
+- Les espaces de travail (virtual desktops)
+- Les raccourcis clavier
+
+================================================================================
+2. TYPES DE WINDOW MANAGERS
+================================================================================
+
+2.1. STACKING WINDOW MANAGERS (TRADITIONNELS)
+----------------------------------------------
+Les fenêtres peuvent se chevaucher comme des cartes sur une table.
+
+Caractéristiques :
+- Fenêtres superposées (comme Windows/macOS)
+- Barre de titre et bordures décoratives
+- Maximisation, minimisation
+- Exemples : Openbox, Fluxbox, IceWM
+
+Avantages :
+- Familiarité pour les nouveaux utilisateurs
+- Flexibilité dans le placement
+- Idéal pour les applications graphiques
+
+Inconvénients :
+- Peut encombrer l'écran
+- Nécessite plus de gestion manuelle
+
+2.2. TILING WINDOW MANAGERS (PAVAGE)
+------------------------------------
+Les fenêtres sont automatiquement organisées en mosaïque sans chevauchement.
+
+Caractéristiques :
+- Fenêtres non superposées
+- Division automatique de l'écran
+- Gestion optimisée de l'espace
+- Exemples : i3, sway, dwm, bspwm, xmonad
+
+Avantages :
+- Utilisation maximale de l'espace
+- Gestion clavier prioritaire
+- Très efficace pour le travail multi-fenêtres
+- Configuration par fichiers texte
+
+Inconvénients :
+- Courbe d'apprentissage plus élevée
+- Moins intuitif pour les applications graphiques
+
+2.3. DYNAMIC WINDOW MANAGERS
+-----------------------------
+Combinaison de stacking et tiling, peuvent changer de mode dynamiquement.
+
+Caractéristiques :
+- Peuvent basculer entre modes
+- Flexibilité maximale
+- Exemples : dwm (par défaut), awesome, qtile
+
+2.4. COMPOSING WINDOW MANAGERS
+-------------------------------
+Gèrent également les effets visuels (transparence, ombres, animations).
+
+Caractéristiques :
+- Effets visuels avancés
+- Utilisent un compositeur
+- Exemples : Mutter (GNOME), KWin (KDE)
+
+================================================================================
+3. WINDOW MANAGERS POPULAIRES
+================================================================================
+
+3.1. I3 (TILING)
+----------------
+- Langage de configuration : simple et clair
+- Orientation horizontale/verticale
+- Support des conteneurs
+- Très populaire dans la communauté Linux
+
+Configuration : ~/.config/i3/config
+Lancement : i3
+
+3.2. SWAY (TILING - WAYLAND)
+----------------------------
+- Remplacement d'i3 pour Wayland
+- Compatible avec la configuration i3
+- Meilleure isolation de sécurité
+- Support multi-moniteur amélioré
+
+Configuration : ~/.config/sway/config
+Lancement : sway
+
+3.3. DWM (TILING - DYNAMIC)
+----------------------------
+- Minimaliste, écrit en langage de bas niveau
+- Configuration par modification du code source
+- Très léger et rapide
+- Patchs disponibles pour plus de fonctionnalités
+
+Lancement : dwm
+
+3.4. BSPWM (TILING)
+-------------------
+- Gestion par arbres binaires
+- Pas de configuration par défaut, scripts externes
+- Très flexible avec sxhkd pour les raccourcis
+- Léger et rapide
+
+Configuration : ~/.config/bspwm/bspwmrc
+Lancement : bspwm
+
+3.5. AWESOME (DYNAMIC)
+-----------------------
+- Extensible via un langage de script
+- Support de widgets
+- Thèmes personnalisables
+- Mode tiling et floating
+
+Configuration : Fichier de configuration dans le répertoire utilisateur
+Lancement : awesome
+
+3.6. OPENBOX (STACKING)
+------------------------
+- Léger et rapide
+- Compatible avec de nombreux panneaux
+- Configuration basée sur un format structuré
+- Support des thèmes
+
+Configuration : Fichier de configuration dans le répertoire utilisateur
+Lancement : openbox
+
+================================================================================
+4. X11 VS WAYLAND
+================================================================================
+
+4.1. X11 (X Window System)
+---------------------------
+- Ancien protocole (depuis 1984)
+- Très mature et largement supporté
+- Permet la communication entre applications
+- Moins sécurisé (applications peuvent s'espionner)
+- Support réseau intégré
+
+4.2. WAYLAND
+-----------
+- Protocole moderne (depuis 2008)
+- Meilleure sécurité (isolation des applications)
+- Performance améliorée
+- Pas de support réseau natif
+- Support encore en développement pour certaines applications
+
+Compatibilité :
+- X11 : Tous les WMs traditionnels
+- Wayland : Sway, Wayfire, Hyprland, KWin, Mutter
+
+================================================================================
+5. INSTALLATION ET CONFIGURATION
+================================================================================
+
+5.1. INSTALLATION
+-----------------
+Sur Debian/Ubuntu :
+sudo apt install i3 sway openbox dwm bspwm awesome
+
+Sur Arch Linux :
+sudo pacman -S i3 sway openbox dwm bspwm awesome
+
+5.2. LANCEMENT
+--------------
+Depuis un TTY :
+startx        # Pour X11
+sway         # Pour Wayland
+
+Depuis un display manager :
+Sélectionner le WM dans le menu de connexion
+
+5.3. FICHIERS DE CONFIGURATION TYPIQUES
+----------------------------------------
+i3 : ~/.config/i3/config
+sway : ~/.config/sway/config
+bspwm : ~/.config/bspwm/bspwmrc
+awesome : ~/.config/awesome/rc.lua
+openbox : ~/.config/openbox/rc.xml
+
+================================================================================
+6. CONCEPTS CLÉS DES TILING WMS
+================================================================================
+
+6.1. CONTENEURS
+---------------
+Division de l'écran en zones contenant des fenêtres.
+Peuvent être divisés horizontalement ou verticalement.
+
+6.2. MODES
+---------
+- Tiling : fenêtres organisées en mosaïque
+- Floating : fenêtres libres (comme stacking)
+- Tabbed/Stacked : fenêtres superposées avec onglets
+
+6.3. FOCUS
+----------
+La fenêtre active qui reçoit les entrées clavier/souris.
+Généralement contrôlé par Alt+direction ou raccourcis personnalisés.
+
+6.4. ESPACES DE TRAVAIL (WORKSPACES)
+-------------------------------------
+Écrans virtuels pour organiser les fenêtres par groupe.
+Exemple : Workspace 1 pour le web, Workspace 2 pour le code.
+
+================================================================================
+7. OUTILS COMPLÉMENTAIRES
+================================================================================
+
+7.1. BARRES DE STATUT
+---------------------
+- i3status : barre légère pour i3
+- polybar : barre hautement personnalisable
+- waybar : barre pour Wayland
+- tint2 : barre légère pour stacking WMs
+
+7.2. LANCEURS D'APPLICATIONS
+----------------------------
+- dmenu : lanceur simple en ligne de commande
+- rofi : lanceur moderne avec interface graphique
+- rofi-dmenu : compatible dmenu
+- wofi : lanceur pour Wayland
+
+7.3. GESTIONNAIRES DE RACCOURCIS
+--------------------------------
+- sxhkd : gestionnaire de raccourcis clavier simple
+- used avec bspwm et autres WMs
+
+7.4. NOTIFICATIONS
+-----------------
+- dunst : daemon de notifications légères
+- mako : notifications pour Wayland
+
+7.5. VERROUILLAGE D'ÉCRAN
+--------------------------
+- i3lock : verrouillage pour i3
+- swaylock : verrouillage pour sway
+- slock : verrouillage simple pour dwm
+
+================================================================================
+8. PRINCIPES DE CONFIGURATION
+================================================================================
+
+Les fichiers de configuration des window managers contiennent généralement :
+
+- Définition des modificateurs de touches (touche Super, Alt, etc.)
+- Raccourcis clavier pour lancer des applications
+- Raccourcis pour le déplacement du focus entre fenêtres
+- Raccourcis pour le déplacement et redimensionnement des fenêtres
+- Configuration des modes (tiling, floating, tabbed)
+- Définition des workspaces (espaces de travail)
+- Configuration de la barre de statut
+- Commandes de redémarrage et rechargement
+
+La syntaxe varie selon le window manager mais les concepts restent similaires.
+
+================================================================================
+9. AVANTAGES DES WINDOW MANAGERS
+================================================================================
+
+- Légèreté : Moins de ressources que les environnements de bureau complets
+- Personnalisation : Configuration totale via fichiers texte
+- Efficacité : Travail plus rapide avec les raccourcis clavier
+- Stabilité : Moins de composants, moins de bugs potentiels
+- Apprentissage : Meilleure compréhension du système Linux
+- Flexibilité : Possibilité de mixer différents outils
+
+================================================================================
+10. INCONVÉNIENTS
+================================================================================
+
+- Courbe d'apprentissage : Plus élevée que les DE classiques
+- Configuration manuelle : Tout doit être configuré soi-même
+- Moins convivial : Pour les utilisateurs novices
+- Compatibilité : Certaines applications peuvent mal s'intégrer
+- Dépannage : Plus difficile sans interface graphique de configuration
+
+================================================================================
+11. CHOISIR SON WINDOW MANAGER
+================================================================================
+
+Pour les débutants :
+- Openbox : stacking, facile à configurer
+- i3 : tiling, documentation excellente
+
+Pour les utilisateurs intermédiaires :
+- bspwm : tiling, très flexible
+- awesome : dynamic, extensible via langage de script
+
+Pour les utilisateurs avancés :
+- dwm : minimaliste, modification du code source
+- Configuration personnalisée complète
+
+Pour Wayland :
+- sway : remplacement d'i3
+- Hyprland : tiling moderne avec animations
+
+================================================================================
+12. RESSOURCES
+================================================================================
+
+Documentation officielle :
+- i3 : https://i3wm.org/docs/
+- sway : https://swaywm.org/
+- bspwm : https://github.com/baskerville/bspwm
+- awesome : https://awesomewm.org/
+
+Communautés :
+- r/unixporn : Partage de configurations
+- /r/i3wm : Support i3
+- Arch Wiki : Window Manager section
+
+Outils de configuration :
+- arandr : Configuration graphique des écrans
+- nitrogen : Configuration des fonds d'écran
+- picom : Compositeur pour effets visuels (transparence)
+
+================================================================================
+13. CONCLUSION
+================================================================================
+
+Les Window Managers offrent une alternative légère et personnalisable aux
+environnements de bureau traditionnels. Ils sont particulièrement adaptés
+pour les utilisateurs qui veulent :
+- Un contrôle total sur leur environnement
+- Une utilisation efficace des ressources système
+- Un workflow optimisé par les raccourcis clavier
+- Une configuration basée sur des fichiers texte
+
+Le choix du WM dépend de vos préférences personnelles, de votre niveau
+d'expérience et de vos besoins spécifiques. Commencez par un WM simple
+comme i3 ou Openbox, puis explorez des options plus avancées au fur et à
+mesure de votre apprentissage.

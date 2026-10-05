@@ -1,0 +1,742 @@
+================================================================================
+                        AXIOMES DU DEVELOPPEMENT D'OS
+================================================================================
+
+Sources : 
+1. Tanenbaum - Operating Systems: Design and Implementation
+2. Lampson - Hints and Principles for Computer System Design (2020)
+3. Silberschatz, Galvin, Gagne - Operating System Concepts
+4. Saltzer, Reed & Clark - End-to-End Arguments in System Design (1984)
+5. Unix Philosophy (McIlroy, Pike, Thompson)
+6. Parnas - On the Criteria to Be Used in Decomposing Systems into Modules
+7. Little's Law - Queueing Theory
+8. Wirth's Law - Software Development
+9. Fallacies of Distributed Computing (Deutsch, Joy, Gosling)
+
+================================================================================
+PARTIE 1 : AXIOMES FONDAMENTAUX DU DEVELOPPEMENT D'OS
+================================================================================
+
+AXIOME 1 : ABSTRACTION
+"Abstraction is the most important idea in computing."
+— Butler Lampson
+
+Principe : L'abstraction permet de gérer la complexité en cachant les détails
+            d'implémentation. Chaque niveau fournit une interface claire sans
+            révéler les mécanismes internes.
+
+Application : Processus, mémoire virtuelle, fichiers, périphériques.
+
+AXIOME 2 : MODULARITE
+"Design with independent modules."
+— Butler Lampson
+
+Principe : Diviser le système en composants indépendants avec des interfaces
+            bien définies. Chaque module fait une chose et la fait bien.
+
+Application : Modules du noyau Linux, architecture microkernel.
+
+AXIOME 3 : STRATIFICATION
+"A complex system should be composed of layers."
+— Edsger Dijkstra
+
+Principe : Organisation hiérarchique où chaque couche N utilise uniquement
+            les services de la couche N-1 et fournit des services à la couche N+1.
+
+Application : Architecture à couches (THE OS, MULTICS, modèle OSI).
+
+AXIOME 4 : SEPARATION MECHANISME / POLITIQUE
+"The mechanism should be general; the policy should be specific."
+— Tanenbaum
+
+Principe : Séparer les mécanismes (comment faire) des politiques (quoi faire).
+            Cela permet de changer la politique sans modifier le mécanisme.
+
+Application : Planification de processus, gestion de mémoire.
+
+AXIOME 5 : INFORMATION HIDING
+"Decompose systems into modules that hide design decisions."
+— David Parnas
+
+Principe : Chaque module doit cacher les détails de sa conception qui sont
+            susceptibles de changer. Seule l'interface doit être visible.
+
+Application : Encapsulation, API, interfaces standards.
+
+AXIOME 6 : SEPARATION DES NIVEAUX DE PRIVILEGE
+"The kernel must be protected from user programs."
+— Principe fondamental OS
+
+Principe : Utilisation de modes d'exécution (kernel mode / user mode) pour
+            protéger le noyau des erreurs ou attaques des programmes utilisateurs.
+
+Application : Opération en dual-mode, anneaux de protection, appels système.
+
+AXIOME 7 : ISOLATION DES PROCESSUS
+"Each process should run in its own address space."
+— Principe fondamental OS
+
+Principe : Les processus doivent être isolés les uns des autres pour garantir
+            la sécurité et la stabilité du système.
+
+Application : Mémoire virtuelle, protection mémoire, MMU.
+
+AXIOME 8 : LOCALITE
+"Programs exhibit spatial and temporal locality."
+— Principe fondamental OS
+
+Principe : Les programmes accèdent souvent aux mêmes données ou instructions
+            à proximité dans le temps et l'espace.
+
+Application : Cache CPU, algorithmes de remplacement de pages, prélecture.
+
+AXIOME 9 : PRINCIPE BOUT-EN-BOUT (END-TO-END)
+"Functions placed at a low level may be redundant or of little value
+when compared with the cost of providing them at that level."
+— Saltzer, Reed & Clark
+
+Principe : Certaines fonctions doivent être implémentées aux extrémités du
+            système (applications) plutôt qu'au niveau du noyau ou du réseau,
+            car seul l'application connaît ses besoins spécifiques.
+
+Application : Fiabilité, sécurité, contrôle de flux.
+
+AXIOME 10 : PRINCIPE DU MINIMUM DE PRIVILEGE
+"Each process should have the minimum privileges necessary to
+perform its task."
+— Saltzer & Schroeder
+
+Principe : Un processus ne doit recevoir que les droits strictement nécessaires
+            à l'exécution de sa fonction, réduisant ainsi les conséquences d'une
+            compromise.
+
+Application : Gestion des permissions, sandboxing, conteneurs.
+
+AXIOME 11 : ORTHOGONALITE
+"Orthogonal features should be independent."
+— Tanenbaum
+
+Principe : Les fonctionnalités doivent être indépendantes les unes des autres.
+            Un changement dans une fonctionnalité ne doit pas affecter les autres.
+
+Application : Fork/exec dans Unix, séparation politique/mécanisme.
+
+AXIOME 12 : SIMPLICITE
+"Perfection is reached not when there is no longer anything to add,
+but when there is no longer anything to take away."
+— Antoine de Saint-Exupéry
+
+Principe : Garder les systèmes aussi simples que possible. Une interface simple
+            est préférable à une interface complète mais complexe.
+
+Application : Philosophie Unix, conception microkernel.
+
+AXIOME 13 : EFFICACITE
+"Optimize the common case."
+— Principe général
+
+Principe : Les opérations fréquentes doivent être les plus rapides.
+            Ne pas optimiser les cas rares au détriment des cas courants.
+
+Application : Cache CPU, algorithmes de remplacement de pages, appels système rapides.
+
+AXIOME 14 : TOLERANCE AUX DEFAILLANCES
+"A system should continue to operate despite component failures."
+— Principe fondamental OS
+
+Principe : Le système doit être capable de fonctionner même en cas de défaillance
+            de certaines composantes.
+
+Application : Redondance, checkpoints, mécanismes de récupération.
+
+AXIOME 15 : COMPATIBILITE VERS LE RETOUR (Backward Compatibility)
+"Once an interface is published, it should not be changed."
+— Principe pratique OS
+
+Principe : Les interfaces publiées doivent rester compatibles avec les versions
+            antérieures pour éviter de casser les applications existantes.
+
+Application : API Unix, Windows API.
+
+AXIOME 16 : NAMING
+"Everything needs a name."
+— Principe fondamental OS
+
+Principe : Fournir une méthode cohérente pour référencer les ressources du système.
+
+Application : Hiérarchie du système de fichiers, PID (Process ID), noms de périphériques.
+
+AXIOME 17 : BINDING TIME
+"Delay binding as long as possible."
+— Principe fondamental OS
+
+Principe : Différer les décisions (liaison de noms, allocation de ressources)
+            aussi longtemps que possible pour maximiser la flexibilité.
+
+Application : Chargement paresseux (lazy loading), liaison dynamique, binding runtime.
+
+AXIOME 18 : BOOTSTRAPPING
+"An operating system must be able to bootstrap itself."
+— Principe fondamental OS
+
+Principe : Le système d'exploitation doit être capable de démarrer seul
+            à partir d'un état initial minimal.
+
+Application : Chargement du bootloader, initialisation du noyau.
+
+AXIOME 19 : RECOVERY
+"The system must be able to recover from failures."
+— Principe fondamental OS
+
+Principe : Le système doit pouvoir reprendre son fonctionnement après
+            une panne ou un crash.
+
+Application : Journalisation (logging), checkpoints, rollback.
+
+AXIOME 20 : PRINCIPE DU MOINDRE ETONNEMENT (Principle of Least Surprise)
+"A component of a system should behave in a way that most users
+will expect it to behave; the behavior should not astonish or
+surprise users."
+— Bertrand Meyer
+
+Principe : Les interfaces et comportements doivent être intuitifs et
+            correspondre aux attentes des utilisateurs et développeurs.
+
+Application : API, commandes système, comportement des fichiers.
+
+================================================================================
+PARTIE 2 : LOIS ET PRINCIPES OS-SPECIFIQUES
+================================================================================
+
+LOI 1 : LOI D'AMDAHL
+"La vitesse maximale d'accélération d'un programme parallèle est
+limitée par la partie séquentielle du programme."
+
+Formule : Speedup <= 1 / (P + (1-P)/N)
+où P = proportion séquentielle, N = nombre de processeurs.
+
+Application : Paralélisation, conception de systèmes multiprocesseurs.
+
+LOI 2 : LOI DE LITTLE (Théorie des files d'attente)
+"Le nombre moyen de clients dans un système stable est égal au
+taux d'arrivée moyen multiplié par le temps de séjour moyen."
+
+Formule : L = λ * W
+où L = nombre moyen de clients, λ = taux d'arrivée, W = temps de séjour.
+
+Application : Planification de processus, gestion de files d'attente,
+              performances du système.
+
+LOI 3 : LOI DE WIRTH
+"La complexité du logiciel augmente plus vite que la puissance
+des ordinateurs."
+
+Principe : À mesure que les ordinateurs deviennent plus puissants,
+            les logiciels deviennent plus complexes, annulant souvent
+            les gains de performance.
+
+Application : Évolution des systèmes d'exploitation, gestion de la complexité.
+
+LOI 4 : LOI DE TANENBAUM
+"Adding more code adds more bugs."
+
+Principe : Chaque ligne de code ajoutée augmente le risque d'introduire
+            des erreurs.
+
+Application : Conception minimaliste, revue de code, tests.
+
+LOI 5 : LOI DE LINUS (Linus's Law)
+"Donnez assez de yeux à un programme, et tous les bugs deviennent
+évidents."
+
+Principe : Avec suffisamment de développeurs, les erreurs sont rapidement
+            découvertes et corrigées.
+
+Application : Développement open source, Linux.
+
+LOI 6 : LOI DE CONSERVATION DE LA COMPLEXITE (Tesler's Law)
+"La complexité totale d'un système est constante. Elle ne peut que
+être déplacée ou masquée, jamais éliminée."
+
+Application : Choix entre complexité pour l'utilisateur ou pour le développeur.
+
+LOI 7 : LOI DE HYRUM (Loi des interfaces implicites)
+"Toute interface suffisamment utilisée deviendra une interface
+publique, quelle que soit l'intention des concepteurs."
+
+Application : Maintenance d'interfaces, compatibilité.
+
+LOI 8 : LOI DE KERNIGHAN
+"Le débogage prend deux fois plus de temps que prévu."
+
+Application : Planification du développement, tests.
+
+LOI 9 : LOI DE CONWAY
+"La structure du logiciel reflète la structure de l'équipe qui l'a
+développé."
+
+Application : Organisation des équipes de développement.
+
+LOI 10 : THEOREME CAP (Brewer)
+"Un système distribué ne peut pas simultanément garantir la
+Consistency, la Availability et la Partition tolerance."
+
+Application : Conception de systèmes distribués.
+
+================================================================================
+PARTIE 3 : FALLACIES OF DISTRIBUTED COMPUTING (Erreurs courantes)
+================================================================================
+
+FALLACY 1 : LA LATENCE EST NULLE
+(The network is reliable)
+
+Erreur : Supposer que les communications réseau sont immédiates et
+         sans erreur.
+
+Conséquence : Nécessité de gérer les retards, les pertes de paquets,
+               les timeouts.
+
+FALLACY 2 : LA BANDE PASSANTE EST INFINIE
+(The bandwidth is infinite)
+
+Erreur : Supposer que la capacité de transmission est illimitée.
+
+Conséquence : Optimisation de la taille des données, compression,
+               streaming.
+
+FALLACY 3 : LE RESEAU EST SECURISE
+(The network is secure)
+
+Erreur : Supposer que le réseau est protégé contre les attaques.
+
+Conséquence : Chiffrement, authentification, contrôle d'accès.
+
+FALLACY 4 : LE TOPOLOGIE EST CONSTANTE
+(The topology is constant)
+
+Erreur : Supposer que la structure du réseau ne change pas.
+
+Conséquence : Routage dynamique, découverte de voisins.
+
+FALLACY 5 : IL Y A UN SEUL ADMINISTRATEUR
+(There is one administrator)
+
+Erreur : Supposer que le système est géré par une seule entité.
+
+Conséquence : Gestion des politiques multiples, autorisations distribuées.
+
+FALLACY 6 : LE COUT DE TRANSPORT EST NUL
+(Transport cost is zero)
+
+Erreur : Supposer que le transfert de données est gratuit.
+
+Conséquence : Optimisation de la localisation des données, réplication.
+
+FALLACY 7 : LE RESEAU EST HOMOGENE
+(The network is homogeneous)
+
+Erreur : Supposer que tous les éléments du réseau sont identiques.
+
+Conséquence : Gestion de l'hétérogénéité, protocoles adaptatifs.
+
+================================================================================
+PARTIE 4 : PRINCIPES DE LA PHILOSOPHIE UNIX
+================================================================================
+
+PRINCIPE 1 : MODULARITE
+"Use simple interfaces to combine simple components."
+
+PRINCIPE 2 : CLARTE
+"Clarity is better than cleverness."
+
+PRINCIPE 3 : COMPOSITION
+"Design for concatenation."
+
+PRINCIPE 4 : SEPARATION
+"Separate policy from mechanism. Separate interface from engine."
+
+PRINCIPE 5 : SIMPLICITE
+"Design for simplicity. The complexity should be as low as possible."
+
+PRINCIPE 6 : ECONOMIE
+"Unless there is no other way, do not write large programs."
+
+PRINCIPE 7 : TRANSPARENCE
+"Design for visibility, for review and debugging."
+
+PRINCIPE 8 : ROBUSTESSE
+"Robustness comes from transparency and simplicity."
+
+PRINCIPE 9 : REPRESENTATION
+"Put knowledge into data to make logic simple and robust."
+
+PRINCIPE 10 : POPULARITE
+"Design interfaces to avoid novelty."
+
+PRINCIPE 11 : SILENCE
+"If a program has nothing to say, it should say nothing."
+
+PRINCIPE 12 : REPARATION
+"When an exception occurs, exit immediately and give enough
+information."
+
+PRINCIPE 13 : EFFICACITE
+"Make programs efficient, even if it means sacrificing portability."
+
+PRINCIPE 14 : GENERATION
+"Programs that generate programs are the most powerful programs."
+
+PRINCIPE 15 : OPTIMISATION
+"Profiling before optimization."
+
+PRINCIPE 16 : DIVERSITE
+"Do not reject a tool just because it is not portable."
+
+PRINCIPE 17 : EXTENSIBILITE
+"Design for the future, because it will be here sooner than you think."
+
+--- PRINCIPES ADDITIONNELS DE ROB PIKE ---
+
+PRINCIPE PIKE 1 : "You cannot determine where a program spends its time.
+                   Bottlenecks often appear in unexpected places."
+
+PRINCIPE PIKE 2 : "Measure. Do not optimize speed until you have measured,
+                   especially not until you have found the most time-consuming part."
+
+PRINCIPE PIKE 3 : "Fancy algorithms are usually slow for small n, and n is
+                   usually small."
+
+PRINCIPE PIKE 4 : "Fancy algorithms are more prone to bugs and harder to
+                   implement. Use simple algorithms with simple data structures."
+
+PRINCIPE PIKE 5 : "Data dominates. If you have chosen the right data structures
+                   and organized everything properly, the right algorithm is
+                   usually obvious."
+
+--- PRINCIPE DE KEN THOMPSON ---
+
+PRINCIPE THOMPSON : "When in doubt, use brute force."
+
+--- PRINCIPES DE DOUG MCILROY ---
+
+PRINCIPE MCILROY 1 : "Make each program do one thing well. If you need a new
+                      function, write a new program, do not add new functionality
+                      to an existing program."
+
+PRINCIPE MCILROY 2 : "Assume that the output of one program will become the
+                      input of another, even if it is unknown. Do not include
+                      unnecessary information in the output."
+
+PRINCIPE MCILROY 3 : "Design and implement software as soon as possible,
+                      even operating systems. Ideally, within a few weeks.
+                      Do not hesitate to throw away bad code and rewrite it."
+
+PRINCIPE MCILROY 4 : "Use tools rather than bad helpers to reduce programming
+                      tasks. A craftsman must sharpen his tools first."
+
+================================================================================
+PARTIE 5 : PRINCIPES DE CONCEPTION DE TANENBAUM
+================================================================================
+
+PRINCIPE TANENBAUM 1 : SIMPLICITE
+"Simplicity is the ultimate sophistication."
+
+PRINCIPE TANENBAUM 2 : COMPLETUDE
+"The OS should do what is needed, but no more."
+
+PRINCIPE TANENBAUM 3 : EFFICACITE DES APPELS SYSTEME
+"The efficiency costs of system calls should be intuitive."
+
+PRINCIPE TANENBAUM 4 : MINIMUM DE MECHANISME
+"Provide the minimum mechanism to achieve the maximum flexibility."
+
+PRINCIPE TANENBAUM 5 : CLARTE
+"Maximum clarity."
+
+================================================================================
+PARTIE 6 : PRINCIPES DE LAMPSON (STEADY BY AID)
+================================================================================
+
+--- OBJECTIFS : STEADY ---
+
+S = Simple (Simplicité)
+T = Timely (Opportun)
+E = Efficient (Efficace)
+A = Adaptable (Adaptable)
+D = Dependable (Fiable)
+Y = Yummy (Agreable à utiliser)
+
+--- TECHNIQUES : AID ---
+
+A = Approximate (Approximatif)
+I = Incremental (Incremental)
+D = Divide & Conquer (Diviser pour régner)
+
+--- PROCESSUS : ART ---
+
+A = Architecture (Architecture)
+R = Review (Revue)
+T = Test (Test)
+
+--- PRINCIPES CLEFS DE LAMPSON ---
+
+PRINCIPE LAMPSON 1 : "Keep it simple."
+
+PRINCIPE LAMPSON 2 : "Write a specification."
+
+PRINCIPE LAMPSON 3 : "Design with independent modules."
+
+PRINCIPE LAMPSON 4 : "Exploit the ABCs of efficiency:
+                      - Avoid work (Éviter le travail)
+                      - Batch work (Regrouper le travail)
+                      - Cache results (Mémoriser les résultats)"
+
+PRINCIPE LAMPSON 5 : "Treat state as both being and becoming."
+
+PRINCIPE LAMPSON 6 : "Use eventual consistency to keep data local."
+
+PRINCIPE LAMPSON 7 : "Abstraction is the most important idea in computing."
+
+PRINCIPE LAMPSON 8 : "Without a specification, a system cannot be wrong,
+                      it can only be surprising."
+
+================================================================================
+PARTIE 7 : PRINCIPES DE PARNAS (CRITERE DE DECOMPOSITION)
+================================================================================
+
+PRINCIPE PARNAS 1 : INFORMATION HIDING
+"Modules should be designed so that all the information that affects
+the behavior of the module is hidden within the module."
+
+PRINCIPE PARNAS 2 : COHESION
+"Each module should be a cohesive unit of functionality."
+
+PRINCIPE PARNAS 3 : COUPLAGE
+"Modules should be as independent as possible from each other."
+
+PRINCIPE PARNAS 4 : SEPARATION DES CONCERNES
+"Separate different concerns into different modules."
+
+PRINCIPE PARNAS 5 : DECISION DE CONCEPTION
+"Each design decision should be hidden in exactly one module."
+
+================================================================================
+PARTIE 8 : PRINCIPES DE CONCEPTION DE SILBERSCHATZ
+================================================================================
+
+PRINCIPE SILBERSCHATZ 1 : DEFINE ABSTRACTIONS
+"Define abstractions that simplify the use of resources."
+
+PRINCIPE SILBERSCHATZ 2 : PROVIDE PRIMITIVE OPERATIONS
+"Provide a set of primitive operations that allow users to manipulate
+the abstractions."
+
+PRINCIPE SILBERSCHATZ 3 : ENSURE ISOLATION
+"Ensure that processes are isolated from each other to prevent
+interference."
+
+PRINCIPE SILBERSCHATZ 4 : MANAGE THE HARDWARE
+"Manage the hardware resources efficiently and fairly."
+
+PRINCIPE SILBERSCHATZ 5 : PROVIDE A USER INTERFACE
+"Provide a user-friendly interface for interacting with the system."
+
+PRINCIPE SILBERSCHATZ 6 : ENSURE FAIRNESS
+"Ensure fairness in resource allocation among competing processes."
+
+PRINCIPE SILBERSCHATZ 7 : MAXIMIZE THROUGHPUT
+"Maximize system throughput by keeping the CPU and I/O devices busy."
+
+PRINCIPE SILBERSCHATZ 8 : MINIMIZE RESPONSE TIME
+"Minimize the response time for interactive users."
+
+================================================================================
+PARTIE 9 : AXIOMES SUR LES RESOURCES
+================================================================================
+
+AXIOME R1 : LES RESOURCES SONT LIMITEES
+"Computer resources (CPU, memory, I/O) are finite and must be
+allocated efficiently."
+
+AXIOME R2 : PARTAGE DES RESOURCES
+"Resources must be shared among multiple processes fairly and
+efficiently."
+
+AXIOME R3 : CONTROLE D'ACCES
+"Access to resources must be controlled to prevent unauthorized use."
+
+AXIOME R4 : ALLOCATION DINAMIQUE
+"Resources should be allocated dynamically as needed."
+
+AXIOME R5 : LIBERATION AUTOMATIQUE
+"Resources should be automatically released when no longer needed."
+
+================================================================================
+PARTIE 10 : AXIOMES SUR LA CONCURRENCE
+================================================================================
+
+AXIOME C1 : CONCURRENCE INHERENTE
+"Multiple processes can execute concurrently and share resources."
+
+AXIOME C2 : EXCLUSION MUTUELLE
+"Only one process can access a critical section at a time."
+
+AXIOME C3 : CONDITIONS DE COFFMAN (Deadlock)
+"Pour qu'un deadlock se produise, quatre conditions doivent être
+simultanément remplies :
+1. Exclusion mutuelle
+2. Tenue et attente (Hold and Wait)
+3. Non préemption
+4. Attente circulaire (Circular Wait)"
+
+AXIOME C4 : CONCURRENCE VS PARALLELISME
+"Concurrency is about dealing with multiple tasks; parallelism is
+about executing multiple tasks simultaneously."
+
+AXIOME C5 : RACE CONDITIONS
+"Race conditions occur when multiple processes access shared data
+without proper synchronization."
+
+================================================================================
+PARTIE 11 : AXIOMES SUR LA MEMOIRE
+================================================================================
+
+AXIOME M1 : MEMOIRE HIERARCHIQUE
+"Memory is organized in a hierarchy from fast, small registers to
+slow, large storage."
+
+AXIOME M2 : LOCALITE SPATIALE
+"A program tends to access memory locations near the ones it has
+recently accessed."
+
+AXIOME M3 : LOCALITE TEMPORELLE
+"A program tends to access the same memory locations repeatedly
+over a short period."
+
+AXIOME M4 : MEMOIRE VIRTUELLE
+"Virtual memory provides an illusion of unlimited memory by using
+disk storage."
+
+AXIOME M5 : PAGE FAULT
+"A page fault occurs when a needed page is not in physical memory."
+
+AXIOME M6 : THRASHING
+"Thrashing occurs when the system spends more time swapping pages
+than executing instructions."
+
+================================================================================
+PARTIE 12 : AXIOMES SUR LE SYSTEME DE FICHIERS
+================================================================================
+
+AXIOME F1 : ABSTRACTION FICHIER
+"A file is an abstract representation of a collection of data."
+
+AXIOME F2 : NOMMAGE HIERARCHIQUE
+"Files are organized in a hierarchical directory structure."
+
+AXIOME F3 : PERMISSIONS
+"Access to files must be controlled through permissions."
+
+AXIOME F4 : PERSISTENCE
+"Files must persist across system reboots."
+
+AXIOME F5 : INTEGRITE
+"File system integrity must be maintained even after crashes."
+
+================================================================================
+PARTIE 13 : AXIOMES SUR LA SECURITE
+================================================================================
+
+AXIOME S1 : PRINCIPE DU MINIMUM DE PRIVILEGE
+"Each process should have the minimum privileges necessary to
+perform its task."
+
+AXIOME S2 : DEFENSE EN PROFONDEUR
+"Multiple layers of security are better than a single layer."
+
+AXIOME S3 : NON REPUDIATION
+"Actions should be traceable to their originators."
+
+AXIOME S4 : CONFIDENTIALITE
+"Sensitive data must be protected from unauthorized access."
+
+AXIOME S5 : INTEGRITE DES DONNEES
+"Data must be protected from unauthorized modification."
+
+AXIOME S6 : DISPONIBILITE
+"System resources must be available when needed."
+
+================================================================================
+PARTIE 14 : AXIOMES SUR LES SYSTEMES DISTRIBUES
+================================================================================
+
+AXIOME D1 : HETEROGENEITE
+"Distributed systems consist of heterogeneous components."
+
+AXIOME D2 : CONCURRENCE
+"Multiple processes execute concurrently in different locations."
+
+AXIOME D3 : FAUTES INEVITABLES
+"Failures are inevitable in distributed systems."
+
+AXIOME D4 : PAS DE HORLOGE GLOBALE
+"There is no global clock in distributed systems."
+
+AXIOME D5 : LATENCE VARIABLE
+"Network latency is variable and unpredictable."
+
+AXIOME D6 : CONSENSUS NON TRIVIAL
+"Reaching consensus in a distributed system is non-trivial."
+
+================================================================================
+PARTIE 15 : AXIOMES SUR LES SYSTEMES TEMPS REEL
+================================================================================
+
+AXIOME RT1 : PREVISIBILITE
+"Real-time systems must be predictable in their response time."
+
+AXIOME RT2 : TEMPS REEL DUR (Hard Real-Time)
+"Hard real-time systems must meet deadlines without exception."
+
+AXIOME RT3 : TEMPS REEL MOU (Soft Real-Time)
+"Soft real-time systems can tolerate occasional deadline misses."
+
+AXIOME RT4 : SCHEDULING PREEMPTIF
+"Real-time systems require preemptive scheduling."
+
+AXIOME RT5 : GESTION DE MEMOIRE STATIQUE
+"Real-time systems often use static memory allocation."
+
+================================================================================
+PARTIE 16 : AXIOMES SUR LA PORTABILITE
+================================================================================
+
+AXIOME PORT1 : INDEPENDANCE DE L'ARCHITECTURE
+"The OS should be independent of the underlying hardware architecture."
+
+AXIOME PORT2 : COUCHE D'ABSTRACTION MATERIELLE (HAL)
+"A hardware abstraction layer should separate hardware-specific
+code from the rest of the OS."
+
+AXIOME PORT3 : STANDARDISATION
+"Use standard interfaces and protocols to ensure portability."
+
+================================================================================
+PARTIE 17 : AXIOMES SUR LA MAINTENABILITE
+================================================================================
+
+AXIOME MNT1 : DOCUMENTATION
+"All code must be well documented."
+
+AXIOME MNT2 : TESTABILITE
+"The system should be designed to be easily testable."
+
+AXIOME MNT3 : DEBUGGABILITE
+"The system should provide debugging support."
+
+AXIOME MNT4 : EVOLUTIVITE
+"The system should be designed to evolve over time."
+
+================================================================================
+FIN DU DOCUMENT
+================================================================================

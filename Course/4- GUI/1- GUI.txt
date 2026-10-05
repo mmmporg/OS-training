@@ -1,0 +1,666 @@
+================================================================================
+                    COURS : GRAPHICAL USER INTERFACE (GUI)
+================================================================================
+
+================================================================================
+1. INTRODUCTION AUX GUI
+================================================================================
+
+Définition (ACM Computing Curricula 2001 - Human-Computer Interaction) :
+- Une GUI (Graphical User Interface) est une interface utilisateur graphique
+  qui permet aux utilisateurs d'interagir avec des dispositifs électroniques
+  via des indicateurs graphiques et des icônes visuels
+- Elle utilise des métaphores visuelles (fenêtres, menus, boutons, icônes)
+- Elle facilite l'interaction homme-machine par rapport aux interfaces CLI
+
+Historique (The Design of Everyday Things - Don Norman) :
+- 1963 : Ivan Sutherland crée Sketchpad, premier système graphique interactif
+- 1968 : Doug Engelbart démontre le système NLS avec souris et interface graphique
+- 1973 : Xerox PARC développe le Xerox Alto avec WIMP (Windows, Icons, Menus, Pointer)
+- 1984 : Apple Macintosh popularise la GUI grand public
+- 1985 : Microsoft Windows 1.0
+- 1990s : Développement des toolkits (Motif, GTK+, Qt)
+
+Rôles principaux (Human-Computer Interaction - Alan Dix) :
+- Visualisation de l'information
+- Manipulation directe des objets
+- Feedback immédiat des actions
+- Réduction de la charge cognitive
+- Facilitation de l'apprentissage
+
+Référence : ACM SIGCHI, IEEE Computer Society
+
+================================================================================
+2. ARCHITECTURE DES GUI
+================================================================================
+
+2.1 MODÈLE ARCHITECTURAL
+-------------------------
+Modèle Client-Serveur (X11 Protocol Specification) :
+- Serveur X : Gère l'affichage et les périphériques d'entrée
+- Client X : Application qui demande des services d'affichage
+- Communication via protocole réseau (TCP/IP ou socket local)
+
+Modèle Direct (Wayland Protocol) :
+- Compositor : Gère le composting et l'affichage
+- Clients : Applications qui communiquent directement avec le compositor
+- Communication via Wayland protocol
+
+Référence : X11 Protocol Specification, Wayland Protocol
+
+2.2 SYSTÈMES DE FENÊTRAGE
+--------------------------
+X11 (X Window System) :
+- Système de fenêtrage réseau transparent
+- Architecture client-serveur
+- Indépendant du matériel et de l'OS
+- Extensions : XRender, XInput, XRandR
+
+Wayland :
+- Successeur moderne de X11
+- Architecture plus simple et sécurisée
+- Meilleure gestion des animations et effets
+- Communication directe client-compositor
+
+Mir :
+- Système de display server développé par Canonical
+- Architecture similaire à Wayland
+- Abandonné en faveur de Wayland
+
+Référence : X.Org Foundation, Wayland Project
+
+2.3 COMPOSITORS
+----------------
+Compositors Wayland :
+- Weston : Compositor de référence Wayland
+- Mutter : Compositor GNOME
+- KWin : Compositor KDE
+- Sway : Compositor compatible i3
+
+Window Managers X11 :
+- Tiling : i3, dwm, bspwm
+- Stacking : Openbox, Fluxbox
+- Compositing : Compiz, Picom
+
+Référence : freedesktop.org specifications
+
+================================================================================
+3. CONCEPTS FONDAMENTAUX
+================================================================================
+
+3.1 WIMP PARADIGM
+------------------
+Windows (Fenêtres) :
+- Zones rectangulaires d'affichage
+- Gestion du focus et du z-order
+- Décoration (title bar, borders, buttons)
+
+Icons (Icônes) :
+- Représentation visuelle d'objets
+- Métaphores du monde réel
+- Drag and drop
+
+Menus :
+- Listes de commandes organisées
+- Menu bar, context menus, popup menus
+- Accelerators et shortcuts
+
+Pointer (Pointeur) :
+- Souris ou dispositif de pointage
+- Gestion des événements de mouvement
+- Curseurs contextuels
+
+Référence : The GUI Style Guide - Sun Microsystems
+
+3.2 ÉVÉNEMENTS
+--------------
+Types d'événements (X11 Protocol) :
+- Key events : KeyPress, KeyRelease
+- Button events : ButtonPress, ButtonRelease
+- Motion events : MotionNotify
+- Window events : MapNotify, UnmapNotify, ConfigureNotify
+- Focus events : FocusIn, FocusOut
+
+Boucle d'événements (Event Loop Pattern - GoF) :
+while running:
+    event = get_next_event()
+    process_event(event)
+    update_display()
+
+Référence : X11 Protocol Specification, Design Patterns - GoF
+
+3.3 WIDGETS ET COMPOSANTS
+-------------------------
+Widgets de base (GTK+ / Qt documentation) :
+- Label : Affichage de texte
+- Button : Bouton cliquable
+- Entry : Champ de saisie de texte
+- Checkbox : Case à cocher
+- Radio : Bouton radio
+- Slider : Curseur
+- Scrollbar : Barre de défilement
+
+Containers :
+- Window : Fenêtre principale
+- Box : Conteneur horizontal/vertical
+- Grid : Grille de widgets
+- Notebook : Onglets
+- Paned : Panneaux redimensionnables
+
+Référence : GTK+ 3 Reference Manual, Qt 5 Documentation
+
+3.4 LAYOUT ET GÉOMÉTRIE
+-----------------------
+Layout managers (Design Patterns - GoF) :
+- Box layout : Alignement horizontal/vertical
+- Grid layout : Grille avec contraintes
+- Absolute layout : Positionnement absolu
+- Flow layout : Flux automatique
+
+Contraintes géométriques :
+- Minimum/maximum size
+- Expand and fill
+- Padding et margin
+- Alignment
+
+Référence : GTK+ CSS Theming Guide, Qt Layout System
+
+================================================================================
+4. TOOLKITS ET FRAMEWORKS
+================================================================================
+
+4.1 TOOLKITS NATIFS
+-------------------
+GTK+ (GIMP Toolkit) :
+- Toolkit multi-plateforme (Linux, Windows, macOS)
+- Langage C avec bindings pour d'autres langages
+- Thématisation via CSS
+- Architecture orientée objet (GObject)
+
+Qt :
+- Framework C++ multi-plateforme
+- Signal-slot mechanism
+- Rich widget set
+- Qt Quick pour interfaces modernes
+
+wxWidgets :
+- Toolkit natif pour chaque plateforme
+- Look and feel natif
+- C++ avec bindings
+
+Référence : GTK+ Documentation, Qt Documentation
+
+4.2 TOOLKITS WEB
+----------------
+Electron :
+- Applications desktop basées sur web technologies
+- Chromium + Node.js
+- Cross-platform
+- Exemples : VS Code, Slack, Discord
+
+Tauri :
+- Alternative légère à Electron
+- WebView du système
+- Rust backend
+- Taille d'application réduite
+
+Référence : Electron Documentation, Tauri Documentation
+
+4.3 TOOLKITS SPÉCIALISÉS
+-------------------------
+FLTK (Fast Light Toolkit) :
+- Toolkit léger en C++
+- Static linking possible
+- Applications embedded
+
+ImGui (Immediate Mode GUI) :
+- Mode immédiat
+- C++ avec bindings
+- Popularité dans le développement de jeux
+
+Dear ImGui :
+- Mode immédiat
+- Hautement personnalisable
+- Popularité dans les outils de développement
+
+Référence : FLTK Documentation, ImGui Documentation
+
+================================================================================
+5. DESSIN ET RENDU
+================================================================================
+
+5.1 SYSTÈMES GRAPHIQUES
+-------------------------
+2D Graphics :
+- Cairo : Bibliothèque graphique 2D vectorielle
+- Skia : Bibliothèque graphique 2D (Chrome, Android)
+- Anti-aliasing et sub-pixel rendering
+
+3D Graphics :
+- OpenGL : API graphique 3D multiplateforme
+- Vulkan : API graphique moderne et bas niveau
+- DirectX : API graphique Windows
+- Metal : API graphique Apple
+
+Référence : Cairo Documentation, OpenGL Specification
+
+5.2 ACCELERATION MATÉRIELLE
+----------------------------
+GPU Acceleration :
+- Offloading des calculs graphiques sur GPU
+- Shaders (vertex, fragment, geometry)
+- Framebuffers et textures
+
+Compositing GPU :
+- Composition des fenêtres sur GPU
+- Effets et transitions
+- VSync et tearing prevention
+
+Référence : GPU Gems, OpenGL Shading Language
+
+5.3 TEXT RENDERING
+-------------------
+Font rendering :
+- Freetype : Rendu de polices vectorielles
+- HarfBuzz : Moteur de mise en forme de texte
+- Fontconfig : Configuration et correspondance de polices
+
+Text layout :
+- Bidirectional text (Bidi)
+- Complex scripts (Arabe, Hindi)
+- Ligatures et kerning
+- Line breaking et justification
+
+Référence : Freetype Documentation, Unicode Standard
+
+================================================================================
+6. ACCESSIBILITÉ
+================================================================================
+
+6.1 PRINCIPES D'ACCESSIBILITÉ
+------------------------------
+WCAG 2.1 (Web Content Accessibility Guidelines) :
+- Perceivable : Information présentée de manière perceptible
+- Operable : Interface utilisable par tous
+- Understandable : Information et interface compréhensibles
+- Robust : Contenu compatible avec technologies d'assistance
+
+AT-SPI (Assistive Technology Service Provider Interface) :
+- Standard Linux pour l'accessibilité
+- Communication entre applications et technologies d'assistance
+- Screen readers, magnifiers, braille displays
+
+Référence : W3C WCAG 2.1, GNOME Accessibility
+
+6.2 TECHNOLOGIES D'ASSISTANCE
+------------------------------
+Screen Readers :
+- Orca : Screen reader Linux/GNOME
+- NVDA : Screen reader Windows
+- VoiceOver : Screen reader macOS
+
+Magnifiers :
+- ZoomText : Loupe screen magnifier
+- KMagnifier : Loupe KDE
+
+Input alternatives :
+- On-screen keyboards
+- Voice recognition
+- Eye tracking
+
+Référence : GNOME Accessibility Documentation
+
+================================================================================
+7. INTERNATIONALISATION
+================================================================================
+
+7.1 LOCALE ET LOCALISATION
+---------------------------
+Locale (POSIX.1-2017) :
+- Language code (en, fr, de)
+- Territory code (US, FR, DE)
+- Encoding (UTF-8, ISO-8859-1)
+- Exemple : fr_FR.UTF-8
+
+gettext :
+- Système d'internationalisation GNU
+- Extraction des chaînes traduisibles
+- Fichiers .po et .mo
+- Pluriels et contextes
+
+Référence : POSIX Locale, gettext Documentation
+
+7.2 UNICODE ET TEXT
+--------------------
+Unicode Standard :
+- Encodage universel des caractères
+- UTF-8, UTF-16, UTF-32
+- Normalization (NFC, NFD)
+- Bidirectional algorithm
+
+Pango :
+- Moteur de rendu de texte international
+- Support des écritures complexes
+- Font fallback
+
+Référence : Unicode Standard, Pango Documentation
+
+7.3 DIRECTION ET MISE EN PAGE
+------------------------------
+LTR (Left-to-Right) :
+- Langues : Anglais, Français, Espagnol
+- Direction de lecture gauche à droite
+
+RTL (Right-to-Left) :
+- Langues : Arabe, Hébreu, Persan
+- Direction de lecture droite à gauche
+
+Mixed direction :
+- Texte bidirectionnel
+- Algorithmes de mise en page complexes
+
+Référence : Unicode Bidirectional Algorithm
+
+================================================================================
+8. DESIGN PATTERNS POUR GUI
+================================================================================
+
+8.1 PATTERONS ARCHITECTURAUX
+-----------------------------
+Model-View-Controller (MVC) :
+- Model : Données et logique métier
+- View : Affichage et présentation
+- Controller : Gestion des entrées utilisateur
+
+Model-View-ViewModel (MVVM) :
+- Variant de MVC avec data binding
+- Populaire dans les frameworks modernes
+
+Model-View-Presenter (MVP) :
+- Variant de MVC avec presenter passif
+
+Référence : Design Patterns - GoF, Patterns of Enterprise Application Architecture
+
+8.2 PATTERONS DE COMPORTEMENT
+------------------------------
+Observer Pattern :
+- Notification des changements d'état
+- Signal-slot mechanism (Qt)
+- Event-driven programming
+
+Command Pattern :
+- Encapsulation des actions utilisateur
+- Undo/redo functionality
+- Menu items et buttons
+
+Strategy Pattern :
+- Algorithmes interchangeables
+- Layout managers
+- Rendering strategies
+
+Référence : Design Patterns - GoF
+
+8.3 PATTERONS DE STRUCTURE
+-----------------------------
+Composite Pattern :
+- Hiérarchie de widgets
+- Containers et leaf widgets
+- Opérations récursives
+
+Decorator Pattern :
+- Ajout de fonctionnalités dynamiques
+- Scrollbars et borders
+- Thèmes et styles
+
+Factory Pattern :
+- Création de widgets
+- Abstract factories pour multi-plateforme
+
+Référence : Design Patterns - GoF
+
+================================================================================
+9. HUMAN INTERFACE GUIDELINES
+================================================================================
+
+9.1 GUIDELINES APPLE
+--------------------
+Human Interface Guidelines (Apple) :
+- Clarté : Interface claire et compréhensible
+- Déférence : Contenu avant interface
+- Profondeur : Hiérarchie visuelle claire
+
+Principes macOS :
+- Menu bar en haut
+- Command key shortcuts
+- Drag and drop
+- Spotlight search
+
+Référence : Apple Human Interface Guidelines
+
+9.2 GUIDELINES MICROSOFT
+--------------------------
+Windows Design Guidelines :
+- Fluent Design System
+- Acrylic materials
+- Connected animations
+- Reveal highlight
+
+Principes Windows :
+- Ribbon interface
+- Taskbar et Start menu
+- Snap et virtual desktops
+- Touch interactions
+
+Référence : Microsoft Fluent Design
+
+9.3 GUIDELINES GNOME
+---------------------
+GNOME Human Interface Guidelines :
+- Clarté et simplicité
+- Feedback immédiat
+- Consistance
+- Accessibility
+
+Principes GNOME :
+- Header bar
+- Application menu
+- Search everywhere
+- Gesture support
+
+Référence : GNOME HIG
+
+9.4 GUIDELINES KDE
+------------------
+KDE Human Interface Guidelines :
+- Consistance
+- Simplicité
+- Efficacité
+- Feedback
+
+Principes KDE :
+- System tray
+- Global menu
+- KRunner
+- Activities
+
+Référence : KDE HIG
+
+================================================================================
+10. BONNES PRATIQUES
+================================================================================
+
+10.1 PERFORMANCE
+-----------------
+Optimisations :
+- Double buffering
+- Dirty rectangle rendering
+- Lazy loading
+- Virtual scrolling
+
+Mesures :
+- FPS (Frames Per Second)
+- Latency des événements
+- Memory usage
+- Startup time
+
+Référence : High Performance GUI Programming
+
+10.2 SÉCURITÉ
+-------------
+Input validation :
+- Validation des entrées utilisateur
+- Sanitization des données
+- Protection contre injection
+
+Permissions :
+- Principle of least privilege
+- Sandbox des applications
+- Secure communication
+
+Référence : OWASP Secure Coding Practices
+
+10.3 TESTS
+----------
+Types de tests :
+- Unit tests : Composants individuels
+- Integration tests : Interaction entre composants
+- UI tests : Automatisation des interactions utilisateur
+- Accessibility tests : Technologies d'assistance
+
+Outils :
+- Selenium : Web UI testing
+- Appium : Mobile/desktop UI testing
+- LDTP : Linux Desktop Testing Project
+- Dogtail : GNOME GUI testing
+
+Référence : GUI Testing Best Practices
+
+================================================================================
+11. RESSOURCES POUR L'APPRENTISSAGE
+================================================================================
+
+Standards et spécifications :
+-----------------------------
+X11 Protocol Specification :
+- https://www.x.org/releases/current/doc/
+
+Wayland Protocol :
+- https://wayland.freedesktop.org/
+
+Unicode Standard :
+- https://www.unicode.org/standard/
+
+WCAG 2.1 :
+- https://www.w3.org/WAI/WCAG21/quickref/
+
+Livres académiques :
+-------------------
+"Human-Computer Interaction" - Alan Dix, Janet Finlay, Gregory Abowd :
+- Référence fondamentale en HCI
+- Pearson Education, 3rd edition
+
+"The Design of Everyday Things" - Don Norman :
+- Principes de design centrés utilisateur
+- Basic Books, Revised Edition
+
+"Design Patterns: Elements of Reusable Object-Oriented Software" - GoF :
+- Patterns de conception logicielle
+- Addison-Wesley
+
+"About Face: The Essentials of Interaction Design" - Alan Cooper :
+- Design d'interface utilisateur
+- Wiley, 4th edition
+
+Documentation officielle :
+--------------------------
+GTK+ Documentation :
+- https://docs.gtk.org/
+
+Qt Documentation :
+- https://doc.qt.io/
+
+Wayland Documentation :
+- https://wayland.freedesktop.org/docs/
+
+Cairo Documentation :
+- https://www.cairographics.org/documentation/
+
+Outils et communautés :
+-----------------------
+freedesktop.org :
+- https://www.freedesktop.org/
+- Standards pour desktop Linux
+
+GNOME Developer Documentation :
+- https://developer.gnome.org/
+
+KDE TechBase :
+- https://techbase.kde.org/
+
+================================================================================
+12. EXERCICES PRATIQUES
+================================================================================
+
+Exercice 1 : Hello World GUI
+------------------------------
+Créer une application GUI simple qui :
+- Affiche une fenêtre avec un bouton
+- Affiche "Hello, World!" quand le bouton est cliqué
+- Utilise un toolkit de votre choix (GTK+, Qt, etc.)
+
+Exercice 2 : Layout Manager
+-----------------------------
+Créer une application avec :
+- Une fenêtre principale
+- Un layout complexe (grid ou box)
+- Plusieurs widgets (labels, buttons, entries)
+- Redimensionnement correct
+
+Exercice 3 : Event Handling
+----------------------------
+Créer une application qui :
+- Répond aux événements clavier
+- Répond aux événements souris
+- Affiche les événements dans une zone de texte
+- Implémente un menu contextuel
+
+Exercice 4 : Drawing
+---------------------
+Créer une application qui :
+- Dessine des formes géométriques
+- Répond aux événements de dessin
+- Implémente le drag and drop
+- Utilise un système de dessin (Cairo, OpenGL)
+
+Exercice 5 : Internationalisation
+----------------------------------
+Créer une application qui :
+- Supporte plusieurs langues
+- Utilise gettext pour la traduction
+- Gère les textes bidirectionnels
+- Change de langue dynamiquement
+
+================================================================================
+CONCLUSION
+================================================================================
+
+Les GUI sont un élément essentiel de l'informatique moderne qui :
+- Facilitent l'interaction homme-machine
+- Réduisent la barrière à l'entrée
+- Permettent une manipulation directe
+- Nécessitent une conception centrée utilisateur
+
+La maîtrise des GUI nécessite :
+- Compréhension des architectures (X11, Wayland)
+- Connaissance des toolkits (GTK+, Qt)
+- Sensibilité au design et à l'UX
+- Attention à l'accessibilité et l'internationalisation
+- Respect des guidelines et standards
+
+Commencez par les bases, pratiquez régulièrement, et progressez vers des
+applications plus complexes. L'accessibilité et l'internationalisation sont
+essentielles pour des applications utilisables par tous.
+
+================================================================================
+FIN DU COURS
+================================================================================

@@ -1,0 +1,854 @@
+================================================================================
+                    COURS : LE SHELL UNIX
+================================================================================
+
+================================================================================
+1. INTRODUCTION AU SHELL
+================================================================================
+
+Définition (POSIX Shell standard - IEEE Std 1003.1) :
+- Le shell est un interpréteur de commandes qui fournit une interface entre
+  l'utilisateur et le système d'exploitation
+- Il lit les commandes entrées par l'utilisateur, les interprète et les exécute
+- Il fournit un langage de programmation pour l'automatisation des tâches
+- Il gère les processus, les redirections, les pipes et les variables
+
+Rôles principaux (Kernighan & Pike - The UNIX Programming Environment) :
+- Interprétation des commandes utilisateur
+- Gestion des processus (création, synchronisation)
+- Redirection des entrées/sorties
+- Communication entre processus (pipes)
+- Programmation de scripts (variables, structures de contrôle)
+- Gestion de l'environnement utilisateur
+
+Historique (The Art of Unix Programming - Eric S. Raymond) :
+- 1969 : Thompson shell (sh) - premier shell UNIX
+- 1978 : Bourne shell (sh) - shell standard UNIX System V
+- 1979 : C shell (csh) - syntaxe inspirée du langage C
+- 1989 : Korn shell (ksh) - améliorations du Bourne shell
+- 1989 : Bourne Again shell (bash) - GNU Project, compatible POSIX
+- 1990 : Z shell (zsh) - extensions avancées
+- 1990 : Almquist shell (ash) - shell léger, base de dash
+
+================================================================================
+2. TYPES DE SHELLS
+================================================================================
+
+2.1 SHELLS POSIX (POSIX-compliant shells)
+------------------------------------------
+Caractéristiques (IEEE Std 1003.1-2017) :
+- Conformité au standard POSIX
+- Portabilité entre systèmes UNIX
+- Syntaxe et comportement définis par le standard
+
+Exemples :
+- dash (Debian Almquist shell) - shell POSIX pur, très rapide
+- bash (Bourne Again shell) - POSIX-compliant avec extensions
+- ksh (Korn shell) - POSIX-compliant avec extensions
+- zsh (Z shell) - POSIX-compliant avec nombreuses extensions
+
+Référence : POSIX Shell and Utilities specification
+
+2.2 SHELLS NON-POSIX
+--------------------
+Caractéristiques :
+- Syntaxe et fonctionnalités spécifiques
+- Non portables entre systèmes
+- Fonctionnalités avancées mais non standardisées
+
+Exemples :
+- csh (C shell) - syntaxe inspirée du C, non POSIX
+- tcsh (TENEX C shell) - améliorations du csh
+- fish (Friendly Interactive Shell) - syntaxe moderne, non POSIX
+- PowerShell - shell Microsoft, orienté objets
+
+2.3 SHELLS MODERNES
+------------------
+Caractéristiques :
+- Fonctionnalités avancées (auto-complétion, thèmes, plugins)
+- Meilleure expérience utilisateur
+- Souvent non POSIX-compliant
+
+Exemples :
+- zsh - très configurable, framework Oh My Zsh
+- fish - auto-complétion intelligente, syntaxe colorée
+- nushell - données structurées, cross-platform
+
+================================================================================
+3. CONCEPTS FONDAMENTAUX
+================================================================================
+
+3.1 COMMANDES ET ARGUMENTS
+---------------------------
+Structure (Learning the bash Shell - Cameron Newham) :
+commande [options] [arguments]
+
+Exemple :
+ls -l /home/user
+
+- ls : commande
+- -l : option (long format)
+- /home/user : argument (chemin)
+
+Types de commandes :
+- Commandes intégrées (builtins) : cd, echo, exit, export (exécutées par le shell)
+- Commandes externes : ls, grep, awk (exécutées comme processus séparés)
+- Fonctions shell : définies par l'utilisateur
+- Alias : raccourcis de commandes
+
+Référence : GNU Bash Manual - 3.1 Shell Syntax
+
+3.2 VARIABLES D'ENVIRONNEMENT
+------------------------------
+Définition (POSIX.1-2017 Section 8.1) :
+- Variables stockées dans l'environnement du processus
+- Héritées par les processus fils
+- Accessibles via la commande env ou printenv
+
+Variables courantes :
+- PATH : liste des répertoires de recherche des commandes
+- HOME : répertoire personnel de l'utilisateur
+- USER : nom de l'utilisateur
+- SHELL : chemin du shell actuel
+- PWD : répertoire de travail actuel
+- TERM : type de terminal
+
+Manipulation :
+export VAR=value    # Définition et exportation
+echo $VAR           # Lecture
+unset VAR           # Suppression
+
+Référence : POSIX Environment Variables
+
+3.3 REDIRECTIONS
+---------------
+Types (Advanced Bash-Scripting Guide - Mendel Cooper) :
+- > : redirection de la sortie (écrase)
+- >> : redirection de la sortie (ajoute)
+- < : redirection de l'entrée
+- 2> : redirection de la sortie d'erreur
+- 2>&1 : redirection de l'erreur vers la sortie standard
+- &> : redirection de la sortie et de l'erreur (bash)
+
+Exemples :
+ls > fichier.txt          # Sortie vers fichier
+ls >> fichier.txt         # Ajoute au fichier
+sort < fichier.txt        # Entrée depuis fichier
+commande 2> erreur.log    # Erreur vers fichier
+commande &> tout.log      # Tout vers fichier
+
+Référence : POSIX Redirection
+
+3.4 PIPES (TUBES)
+-----------------
+Définition (The UNIX Programming Environment) :
+- Mécanisme de communication entre processus
+- La sortie d'une commande devient l'entrée de la suivante
+- Permet la composition de commandes
+
+Syntaxe :
+commande1 | commande2 | commande3
+
+Exemples :
+ps aux | grep nginx          # Recherche de processus
+cat fichier.txt | sort | uniq # Tri et déduplication
+ls -l | wc -l                # Compte les fichiers
+
+Référence : POSIX Pipeline
+
+3.5 SUBSTITUTION DE COMMANDES
+-----------------------------
+Syntaxe POSIX :
+$(commande)    # Forme moderne et portable
+`commande`     # Forme historique (déconseillée)
+
+Exemples :
+fichiers=$(ls *.txt)
+nombre=$(wc -l < fichier.txt)
+date_actuelle=$(date)
+
+Référence : POSIX Command Substitution
+
+3.6 SUBSTITUTION DE VARIABLES
+-----------------------------
+Syntaxe :
+$VAR           # Substitution simple
+${VAR}         # Substitution explicite
+${VAR:-default} # Valeur par défaut
+${VAR:=default} # Valeur par défaut et assignation
+${VAR:+value}   # Si VAR est définie, utilise value
+${VAR:?message} # Erreur si VAR non définie
+
+Exemples :
+echo ${HOME}
+echo ${PATH:-/usr/bin}
+echo ${USER:?Utilisateur non défini}
+
+Référence : POSIX Parameter Expansion
+
+================================================================================
+4. STRUCTURES DE CONTRÔLE
+================================================================================
+
+4.1 CONDITIONS (TEST)
+----------------------
+Commande test (POSIX.1-2017 Section 2.6) :
+test condition
+[ condition ]    # Équivalent à test
+
+Opérateurs de comparaison fichiers :
+- -f fichier : fichier existe et est régulier
+- -d répertoire : répertoire existe
+- -e fichier : fichier existe
+- -r fichier : fichier lisible
+- -w fichier : fichier inscriptible
+- -x fichier : fichier exécutable
+
+Opérateurs de comparaison chaînes :
+- string1 = string2 : égalité
+- string1 != string2 : différence
+- -n string : non vide
+- -z string : vide
+
+Opérateurs de comparaison numériques :
+- -eq : égal
+- -ne : différent
+- -lt : inférieur
+- -le : inférieur ou égal
+- -gt : supérieur
+- -ge : supérieur ou égal
+
+Opérateurs logiques :
+- -a : ET (and)
+- -o : OU (or)
+- ! : NON (not)
+
+Exemples :
+[ -f fichier.txt ]
+[ $count -gt 10 ]
+[ -d "$HOME" -a -r "$HOME" ]
+
+Référence : POSIX test utility
+
+4.2 IF/THEN/ELSE/FI
+--------------------
+Syntaxe POSIX :
+if condition; then
+    commandes
+elif condition; then
+    commandes
+else
+    commandes
+fi
+
+Exemple :
+if [ -f fichier.txt ]; then
+    echo "Fichier existe"
+elif [ -d fichier.txt ]; then
+    echo "C'est un répertoire"
+else
+    echo "Fichier inexistant"
+fi
+
+Référence : POSIX Conditional Construct
+
+4.3 CASE/ESAC
+-------------
+Syntaxe POSIX :
+case $variable in
+    motif1)
+        commandes
+        ;;
+    motif2)
+        commandes
+        ;;
+    *)
+        commandes_par_défaut
+        ;;
+esac
+
+Exemple :
+case $reponse in
+    oui|o|O)
+        echo "Oui"
+        ;;
+    non|n|N)
+        echo "Non"
+        ;;
+    *)
+        echo "Réponse invalide"
+        ;;
+esac
+
+Référence : POSIX Case Construct
+
+4.4 BOUCLES
+-----------
+For loop (POSIX) :
+for variable in liste; do
+    commandes
+done
+
+Exemple :
+for fichier in *.txt; do
+    echo "Traitement de $fichier"
+done
+
+While loop (POSIX) :
+while condition; do
+    commandes
+done
+
+Exemple :
+count=0
+while [ $count -lt 10 ]; do
+    echo $count
+    count=$((count + 1))
+done
+
+Until loop (POSIX) :
+until condition; do
+    commandes
+done
+
+Référence : POSIX Looping Constructs
+
+4.5 FONCTIONS
+-------------
+Syntaxe POSIX :
+nom_fonction() {
+    commandes
+    return valeur
+}
+
+Appel :
+nom_fonction
+
+Exemple :
+afficher_message() {
+    echo "Message: $1"
+    return 0
+}
+
+afficher_message "Bonjour"
+
+Référence : POSIX Function Definition Command
+
+================================================================================
+5. GESTION DES PROCESSUS
+================================================================================
+
+5.1 CRÉATION DE PROCESSUS
+---------------------------
+Commandes (POSIX.1-2017) :
+- commande & : exécution en arrière-plan
+- nohup commande & : exécution insensible à la déconnexion
+- disown : détache le processus du shell
+
+Exemples :
+longue_commande &
+nohup ./script.sh &
+
+Référence : POSIX Job Control
+
+5.2 GESTION DES PROCESSUS
+--------------------------
+Commandes :
+- jobs : liste les processus du shell
+- fg %n : met en avant-plan le job n
+- bg %n : met en arrière-plan le job n
+- kill %n : termine le job n
+- wait : attend la fin des processus fils
+
+Exemples :
+sleep 10 &
+jobs
+fg %1
+kill %1
+
+Référence : POSIX Job Control Commands
+
+5.3 SIGNAUX
+-----------
+Signaux POSIX (POSIX.1-2017 Chapter 2) :
+- SIGINT (2) : interruption (Ctrl+C)
+- SIGTERM (15) : terminaison
+- SIGKILL (9) : terminaison forcée
+- SIGHUP (1) : déconnexion
+- SIGSTOP (19) : suspension
+- SIGCONT (18) : reprise
+
+Commande kill :
+kill -SIGTERM PID
+kill -9 PID
+
+Référence : POSIX Signal Concepts
+
+================================================================================
+6. SCRIPTING AVANCÉ
+================================================================================
+
+6.1 TABLEAUX (BASH EXTENSION)
+------------------------------
+Définition (GNU Bash Manual) :
+tableau=(valeur1 valeur2 valeur3)
+
+Accès :
+${tableau[0]}      # Premier élément
+${tableau[@]}      # Tous les éléments
+${#tableau[@]}     # Nombre d'éléments
+
+Itération :
+for element in "${tableau[@]}"; do
+    echo $element
+done
+
+Référence : GNU Bash Arrays
+
+6.2 ARITHMÉTIQUE
+----------------
+Syntaxe POSIX :
+$((expression))
+
+Opérateurs :
+- +, -, *, /, % : opérations arithmétiques
+- ** : puissance (bash)
+- <<, >> : décalages de bits
+- &, |, ^ : opérations bit à bit
+
+Exemples :
+result=$((1 + 2))
+count=$((count + 1))
+modulo=$((10 % 3))
+
+Référence : POSIX Arithmetic Expansion
+
+6.3 TRAITEMENT DE TEXTE
+-----------------------
+Commandes POSIX :
+- grep : recherche de motifs
+- sed : éditeur de flux
+- awk : traitement de texte structuré
+- cut : extraction de champs
+- tr : transformation de caractères
+- sort : tri
+- uniq : déduplication
+
+Exemples :
+grep "motif" fichier.txt
+sed 's/ancien/nouveau/g' fichier.txt
+awk '{print $1}' fichier.txt
+cut -d: -f1 /etc/passwd
+tr 'a-z' 'A-Z' < fichier.txt
+
+Référence : POSIX Utilities
+
+6.4 GESTION DES ERREURS
+-----------------------
+Codes de retour (POSIX.1-2017) :
+- 0 : succès
+- 1-255 : erreur (valeurs spécifiques selon la commande)
+
+Vérification :
+if commande; then
+    echo "Succès"
+else
+    echo "Erreur: $?"
+fi
+
+set -e : arrête le script en cas d'erreur
+set -u : erreur si variable non définie
+set -x : affiche les commandes avant exécution (debug)
+
+Référence : POSIX Exit Status for Commands
+
+================================================================================
+7. SHELL ET RÉSEAU
+================================================================================
+
+7.1 COMMANDES RÉSEAU DE BASE
+-----------------------------
+Commandes de diagnostic (POSIX.1-2017, RFC standards) :
+- ping : teste la connectivité avec un hôte (ICMP echo request)
+- traceroute : trace la route vers un hôte
+- nslookup/dig : requêtes DNS (Domain Name System)
+- hostname : affiche ou définit le nom d'hôte
+- whois : informations sur les domaines
+
+Exemples :
+ping google.com
+traceroute 8.8.8.8
+nslookup example.com
+dig example.com
+hostname -f
+
+Référence : RFC 792 (ICMP), RFC 1035 (DNS)
+
+7.2 TRANSFERT DE FICHIERS
+--------------------------
+Commandes de transfert (OpenSSH, curl documentation) :
+- scp : copie sécurisée de fichiers via SSH
+- sftp : FTP sécurisé via SSH
+- curl : transfert de données avec URL (supporte HTTP, HTTPS, FTP, etc.)
+- wget : téléchargement de fichiers depuis le web
+- rsync : synchronisation de fichiers distants
+
+Exemples :
+scp fichier.txt user@host:/path/
+scp user@host:/path/fichier.txt .
+sftp user@host
+curl -O https://example.com/file.txt
+wget https://example.com/file.txt
+rsync -avz source/ user@host:dest/
+
+Référence : OpenSSH Manual, curl Documentation
+
+7.3 CONNEXIONS DISTANTES
+-------------------------
+Commandes de connexion (OpenSSH, POSIX.1-2017) :
+- ssh : connexion sécurisée à distance (Secure Shell)
+- telnet : connexion non sécurisée (déconseillé)
+- rsh/rlogin : commandes distantes historiques (déconseillées)
+
+SSH (Secure Shell) :
+ssh user@host
+ssh -p port user@host
+ssh -i key.pem user@host
+ssh user@host "commande"
+
+Gestion des clés SSH :
+ssh-keygen -t ed25519  # Génération de clé
+ssh-copy-id user@host  # Copie de clé publique
+
+Référence : RFC 4251-4254 (SSH Protocol), OpenSSH Manual
+
+7.4 CONFIGURATION RÉSEAU
+-------------------------
+Commandes de configuration (iproute2 documentation) :
+- ifconfig : configuration d'interface (obsolète, utiliser ip)
+- ip : configuration réseau moderne (iproute2)
+- route : table de routage (obsolète, utiliser ip route)
+- netstat : statistiques réseau (obsolète, utiliser ss)
+- ss : statistiques de sockets (moderne)
+
+Commandes ip :
+ip addr show              # Affiche les adresses IP
+ip link set eth0 up      # Active une interface
+ip route show            # Affiche la table de routage
+ip route add default via 192.168.1.1
+
+Commandes ss :
+ss -tulpn                # TCP/UDP listening avec processus
+ss -s                    # Statistiques résumées
+
+Référence : iproute2 Documentation, Linux Network Documentation
+
+7.5 PORTS ET SOCKETS
+--------------------
+Commandes de ports (POSIX.1-2017, nmap documentation) :
+- netcat (nc) : utilitaire réseau (lecture/écriture sur ports)
+- nmap : scanner de ports réseau
+- lsof : liste des fichiers ouverts (inclut les sockets)
+
+Netcat (nc) :
+nc -l 1234               # Écoute sur le port 1234
+nc host 1234             # Connexion à host:1234
+echo "message" | nc host 1234
+
+Nmap :
+nmap localhost           # Scan des ports locaux
+nmap -p 22,80 host       # Scan de ports spécifiques
+nmap -sV host            # Détection de versions
+
+Référence : nmap Documentation, netcat Manual
+
+7.6 SCRIPTING RÉSEAU
+--------------------
+Exemple 1 : Vérification de connectivité
+#!/bin/sh
+# Script de vérification réseau
+
+check_host() {
+    if ping -c 1 -W 2 "$1" > /dev/null 2>&1; then
+        echo "$1 est accessible"
+    else
+        echo "$1 est inaccessible"
+    fi
+}
+
+check_host "google.com"
+check_host "8.8.8.8"
+
+Exemple 2 : Téléchargement avec curl
+#!/bin/sh
+# Téléchargement avec vérification
+
+download_file() {
+    url="$1"
+    output="$2"
+    
+    if curl -f -o "$output" "$url"; then
+        echo "Téléchargement réussi: $output"
+    else
+        echo "Erreur de téléchargement"
+        return 1
+    fi
+}
+
+download_file "https://example.com/file.txt" "file.txt"
+
+Exemple 3 : Scan de ports avec nc
+#!/bin/sh
+# Scan de ports simples
+
+scan_port() {
+    host="$1"
+    port="$2"
+    
+    if nc -z -w 2 "$host" "$port"; then
+        echo "Port $port ouvert sur $host"
+    else
+        echo "Port $port fermé sur $host"
+    fi
+}
+
+for port in 22 80 443; do
+    scan_port "localhost" "$port"
+done
+
+Référence : POSIX Shell Scripting, curl Manual
+
+7.7 SÉCURITÉ RÉSEAU
+-------------------
+Bonnes pratiques (OWASP, NIST guidelines) :
+- Toujours utiliser SSH au lieu de telnet/rsh
+- Utiliser des clés SSH plutôt que des mots de passe
+- Désactiver l'authentification par mot de passe SSH si possible
+- Utiliser HTTPS au lieu de HTTP
+- Valider les certificats SSL/TLS
+- Ne jamais transmettre des mots de passe en clair
+- Utiliser des tunnels SSH pour les services non sécurisés
+
+Exemple sécurisé :
+# Utilisation de curl avec vérification SSL
+curl --cacert /path/to/cert.pem https://example.com
+
+# Tunnel SSH
+ssh -L 8080:localhost:80 user@remotehost
+
+Référence : OWASP Network Security, NIST SP 800-52
+
+================================================================================
+8. SÉCURITÉ ET BONNES PRATIQUES
+================================================================================
+
+8.1 PRATIQUES DE SÉCURITÉ
+--------------------------
+Secure Shell Scripting (OWASP Shell Scripting Guidelines) :
+- Toujours utiliser des guillemets autour des variables : "$VAR"
+- Valider les entrées utilisateur
+- Éviter eval sur des données non fiables
+- Utiliser set -e pour détecter les erreurs
+- Utiliser set -u pour éviter les variables non définies
+- Limiter les permissions des scripts (chmod 700)
+
+Exemple sécurisé :
+if [ -n "$1" ]; then
+    echo "Argument: $1"
+fi
+
+Référence : OWASP Shell Scripting Guidelines
+
+8.2 PORTABILITÉ
+---------------
+Principes (POSIX.1-2017) :
+- Utiliser les fonctionnalités POSIX
+- Éviter les extensions spécifiques (bashisms)
+- Tester sur différents systèmes
+- Utiliser #!/bin/sh pour la portabilité
+- Spécifier #!/bin/bash si nécessaire
+
+Exemples de bashisms à éviter :
+- [[ ]] : utiliser [ ]
+- == : utiliser =
+- (( )) : utiliser $(( ))
+- arrays : utiliser des alternatives POSIX
+
+Référence : POSIX Shell Command Language
+
+8.3 DOCUMENTATION
+-----------------
+Shebang :
+#!/bin/sh          # Shell POSIX portable
+#!/bin/bash        # Bash spécifique
+#!/usr/bin/env bash # Portable via env
+
+Commentaires :
+# Commentaire sur une ligne
+
+Documentation de fonctions :
+# Fonction: nom_fonction
+# Description: description de la fonction
+# Arguments: $1 - premier argument
+# Returns: code de retour
+
+Référence : POSIX Shebang
+
+================================================================================
+9. OUTILS ET UTILITAIRES
+================================================================================
+
+9.1 ÉDITEURS DE TEXTE
+---------------------
+Éditeurs courants :
+- vim/vi : éditeur standard UNIX
+- nano : éditeur simple
+- emacs : éditeur puissant et extensible
+- ed : éditeur standard POSIX
+
+Référence : POSIX ed Utility
+
+9.2 DEBUGGING
+-------------
+Outils :
+- bash -x script.sh : exécution avec trace
+- set -x : activation du mode trace
+- set +x : désactivation du mode trace
+- trap : capture de signaux pour debugging
+
+Exemple :
+trap 'echo "Ligne: $LINENO"' DEBUG
+
+Référence : GNU Bash Debugging
+
+9.3 LINTING
+-----------
+Outils :
+- shellcheck : analyse statique de scripts shell
+- shfmt : formateur de scripts shell
+
+Exemple :
+shellcheck script.sh
+shfmt script.sh
+
+Référence : ShellCheck Documentation
+
+================================================================================
+10. RESSOURCES POUR L'APPRENTISSAGE
+================================================================================
+
+Standards et spécifications :
+-----------------------------
+POSIX.1-2017 (IEEE Std 1003.1-2017) :
+- https://pubs.opengroup.org/onlinepubs/9699919799/
+- Shell and Utilities volume
+- Shell Command Language
+
+Livres académiques :
+-------------------
+"The UNIX Programming Environment" - Brian Kernighan & Rob Pike :
+- Référence classique sur UNIX
+- Couvre le shell, les pipes, les filtres
+- Addison-Wesley, 1984
+
+"Learning the bash Shell" - Cameron Newham & O'Reilly :
+- Introduction complète à bash
+- O'Reilly Media, 3rd edition
+
+"Advanced Bash-Scripting Guide" - Mendel Cooper :
+- Guide avancé de scripting bash
+- Disponible en ligne : https://tldp.org/LDP/abs/html/
+
+"The Art of UNIX Programming" - Eric S. Raymond :
+- Philosophie et pratiques UNIX
+- Addison-Wesley, 2003
+
+Documentation officielle :
+--------------------------
+GNU Bash Manual :
+- https://www.gnu.org/software/bash/manual/
+- Référence complète de bash
+- Extensions et fonctionnalités
+
+Dash (Debian Almquist Shell) :
+- https://gitlab.com/dash/dash
+- Shell POSIX pur
+- Documentation man pages
+
+Outils et communautés :
+-----------------------
+ShellCheck :
+- https://www.shellcheck.net/
+- Analyseur statique de scripts shell
+- Détecte les erreurs et les anti-patterns
+
+Arch Linux Wiki - Shell :
+- https://wiki.archlinux.org/title/Command-line_shell
+- Guide complet sur les shells
+
+TLDP (The Linux Documentation Project) :
+- https://tldp.org/
+- Guides et howtos sur Linux et le shell
+
+================================================================================
+10. EXERCICES PRATIQUES
+================================================================================
+
+Exercice 1 : Script de base
+----------------------------
+Créer un script qui :
+- Affiche "Bonjour, monde !"
+- Accepte un argument nom
+- Affiche "Bonjour, nom !"
+
+Exercice 2 : Gestion de fichiers
+---------------------------------
+Créer un script qui :
+- Liste tous les fichiers .txt du répertoire courant
+- Compte le nombre de lignes de chaque fichier
+- Affiche le total
+
+Exercice 3 : Traitement de texte
+---------------------------------
+Créer un script qui :
+- Lit un fichier ligne par ligne
+- Compte le nombre de mots
+- Affiche les 10 mots les plus fréquents
+
+Exercice 4 : Script interactif
+-------------------------------
+Créer un script qui :
+- Demande à l'utilisateur un nom de fichier
+- Vérifie si le fichier existe
+- Affiche des informations sur le fichier (taille, permissions)
+
+Exercice 5 : Script avec arguments
+----------------------------------
+Créer un script qui :
+- Accepte plusieurs arguments
+- Traite chaque argument comme un fichier
+- Affiche le contenu de chaque fichier avec son nom
+
+================================================================================
+CONCLUSION
+================================================================================
+
+Le shell UNIX est un outil puissant et flexible qui combine :
+- Une interface interactive pour l'utilisateur
+- Un langage de programmation pour l'automatisation
+- Des mécanismes de communication entre processus
+- Des capacités de traitement de texte
+
+La maîtrise du shell est essentielle pour :
+- L'administration système
+- Le développement logiciel
+- L'automatisation de tâches
+- La compréhension profonde de UNIX/Linux
+
+Commencez par les bases, pratiquez régulièrement, et progressez vers des
+scripts plus complexes. La portabilité POSIX garantit que vos compétences
+seront utiles sur tous les systèmes UNIX.
+
+================================================================================
+FIN DU COURS
+================================================================================

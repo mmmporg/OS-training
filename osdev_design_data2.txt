@@ -1,0 +1,427 @@
+================================================================================
+            OSDEV DESIGN DATA - TABLEAU PAR CATEGORIE
+================================================================================
+
+FORMAT : CATEGORIE | DONNEE
+
+================================================================================
+PRINCIPES_CONCEPTION
+================================================================================
+PRINCIPES_CONCEPTION | Modularité
+PRINCIPES_CONCEPTION | Abstraction
+PRINCIPES_CONCEPTION | Stratification
+PRINCIPES_CONCEPTION | Layering
+PRINCIPES_CONCEPTION | Efficacité
+PRINCIPES_CONCEPTION | Fiabilité
+PRINCIPES_CONCEPTION | Extensibilité
+PRINCIPES_CONCEPTION | Sécurité
+
+================================================================================
+CRITERES_EVALUATION
+================================================================================
+CRITERES_EVALUATION | Performance
+CRITERES_EVALUATION | Temps de réponse
+CRITERES_EVALUATION | Débit
+CRITERES_EVALUATION | Utilisation CPU
+CRITERES_EVALUATION | Utilisation mémoire
+CRITERES_EVALUATION | Fiabilité
+CRITERES_EVALUATION | Temps entre pannes
+CRITERES_EVALUATION | Récupération automatique
+CRITERES_EVALUATION | Sécurité
+CRITERES_EVALUATION | Protection contre attaques
+CRITERES_EVALUATION | Isolation des processus
+CRITERES_EVALUATION | Extensibilité
+CRITERES_EVALUATION | Facilité d'ajout de fonctionnalités
+CRITERES_EVALUATION | Portabilité
+CRITERES_EVALUATION | Capacité à fonctionner sur différentes architectures
+CRITERES_EVALUATION | Maintainabilité
+CRITERES_EVALUATION | Facilité de modification et de débogage
+
+================================================================================
+ARCHITECTURES_NOYAU
+================================================================================
+ARCHITECTURES_NOYAU | Architecture Monolithique
+ARCHITECTURES_NOYAU | Architecture en Couches
+ARCHITECTURES_NOYAU | Architecture Microkernel
+ARCHITECTURES_NOYAU | Architecture Hybride
+ARCHITECTURES_NOYAU | Architecture Exokernel
+ARCHITECTURES_NOYAU | Architecture Modulaire
+
+================================================================================
+GESTION_PROCESSUS
+================================================================================
+GESTION_PROCESSUS | Processus
+GESTION_PROCESSUS | Thread
+GESTION_PROCESSUS | PCB
+GESTION_PROCESSUS | Process Control Block
+GESTION_PROCESSUS | PID
+GESTION_PROCESSUS | Process ID
+GESTION_PROCESSUS | Nouveau
+GESTION_PROCESSUS | Prêt
+GESTION_PROCESSUS | En cours d'exécution
+GESTION_PROCESSUS | Bloqué
+GESTION_PROCESSUS | Terminé
+
+================================================================================
+ALGORITHMES_PLANIFICATION
+================================================================================
+ALGORITHMES_PLANIFICATION | First-Come First-Served
+ALGORITHMES_PLANIFICATION | FCFS
+ALGORITHMES_PLANIFICATION | Shortest Job First
+ALGORITHMES_PLANIFICATION | SJF
+ALGORITHMES_PLANIFICATION | Shortest Remaining Time First
+ALGORITHMES_PLANIFICATION | SRTF
+ALGORITHMES_PLANIFICATION | Round Robin
+ALGORITHMES_PLANIFICATION | RR
+ALGORITHMES_PLANIFICATION | Scheduling par Priorité
+ALGORITHMES_PLANIFICATION | Vîllesse
+ALGORITHMES_PLANIFICATION | Aging
+ALGORITHMES_PLANIFICATION | File d'attente à plusieurs niveaux
+ALGORITHMES_PLANIFICATION | Multilevel Queue
+ALGORITHMES_PLANIFICATION | File d'attente à plusieurs niveaux avec feedback
+ALGORITHMES_PLANIFICATION | Multilevel Feedback Queue
+ALGORITHMES_PLANIFICATION | Rate Monotonic Scheduling
+ALGORITHMES_PLANIFICATION | RMS
+ALGORITHMES_PLANIFICATION | Earliest Deadline First
+ALGORITHMES_PLANIFICATION | EDF
+ALGORITHMES_PLANIFICATION | Least Laxity First
+ALGORITHMES_PLANIFICATION | LLF
+
+================================================================================
+SYNCHRONISATION
+================================================================================
+SYNCHRONISATION | Mutex
+SYNCHRONISATION | Mutual Exclusion
+SYNCHRONISATION | Sémaphore
+SYNCHRONISATION | P()
+SYNCHRONISATION | V()
+SYNCHRONISATION | Moniteur
+SYNCHRONISATION | Spinlock
+SYNCHRONISATION | Barrière
+SYNCHRONISATION | Race Conditions
+SYNCHRONISATION | Deadlock
+SYNCHRONISATION | Interblocage
+SYNCHRONISATION | Priority Inversion
+SYNCHRONISATION | Inversion de priorité
+SYNCHRONISATION | Producteur-Consommateur
+SYNCHRONISATION | Readers-Writers
+SYNCHRONISATION | Dîner des philosophes
+
+================================================================================
+IPC
+================================================================================
+IPC | Communication Inter-Processus
+IPC | Mémoire partagée
+IPC | Shared Memory
+IPC | Passage de messages
+IPC | Message Passing
+IPC | Pipes
+IPC | Files de messages
+IPC | Message Queues
+IPC | Tampons
+IPC | Buffers
+IPC | Sockets
+IPC | Signaux
+IPC | Signals
+IPC | SIGINT
+IPC | SIGTERM
+IPC | SIGKILL
+
+================================================================================
+GESTION_MEMOIRE
+================================================================================
+GESTION_MEMOIRE | RAM
+GESTION_MEMOIRE | Cache
+GESTION_MEMOIRE | L1
+GESTION_MEMOIRE | L2
+GESTION_MEMOIRE | L3
+GESTION_MEMOIRE | Registres CPU
+GESTION_MEMOIRE | Disque dur
+GESTION_MEMOIRE | Stockage secondaire
+GESTION_MEMOIRE | Localité temporelle
+GESTION_MEMOIRE | Localité spatiale
+GESTION_MEMOIRE | Page
+GESTION_MEMOIRE | Frame
+GESTION_MEMOIRE | Table de pages
+GESTION_MEMOIRE | Page Table
+GESTION_MEMOIRE | Virtuelle mémoire
+GESTION_MEMOIRE | Virtual Memory
+GESTION_MEMOIRE | Swap
+GESTION_MEMOIRE | Défaut de page
+GESTION_MEMOIRE | Page Fault
+GESTION_MEMOIRE | Thrashing
+
+================================================================================
+ALGORITHMES_ALLOCATION_MEMOIRE
+================================================================================
+ALGORITHMES_ALLOCATION_MEMOIRE | Allocation continue
+ALGORITHMES_ALLOCATION_MEMOIRE | Premier ajustement
+ALGORITHMES_ALLOCATION_MEMOIRE | First Fit
+ALGORITHMES_ALLOCATION_MEMOIRE | Meilleur ajustement
+ALGORITHMES_ALLOCATION_MEMOIRE | Best Fit
+ALGORITHMES_ALLOCATION_MEMOIRE | Pire ajustement
+ALGORITHMES_ALLOCATION_MEMOIRE | Worst Fit
+ALGORITHMES_ALLOCATION_MEMOIRE | Suivant ajustement
+ALGORITHMES_ALLOCATION_MEMOIRE | Next Fit
+ALGORITHMES_ALLOCATION_MEMOIRE | Défragmentation
+ALGORITHMES_ALLOCATION_MEMOIRE | Compaction
+ALGORITHMES_ALLOCATION_MEMOIRE | Paging
+ALGORITHMES_ALLOCATION_MEMOIRE | Segmentation
+ALGORITHMES_ALLOCATION_MEMOIRE | Buddy System
+ALGORITHMES_ALLOCATION_MEMOIRE | Bitmap
+ALGORITHMES_ALLOCATION_MEMOIRE | Liste chaînée
+ALGORITHMES_ALLOCATION_MEMOIRE | Slab Allocation
+
+================================================================================
+ALGORITHMES_REMPLACEMENT_PAGES
+================================================================================
+ALGORITHMES_REMPLACEMENT_PAGES | LRU
+ALGORITHMES_REMPLACEMENT_PAGES | Least Recently Used
+ALGORITHMES_REMPLACEMENT_PAGES | FIFO
+ALGORITHMES_REMPLACEMENT_PAGES | First-In First-Out
+ALGORITHMES_REMPLACEMENT_PAGES | Optimal
+ALGORITHMES_REMPLACEMENT_PAGES | OPT
+ALGORITHMES_REMPLACEMENT_PAGES | MRU
+ALGORITHMES_REMPLACEMENT_PAGES | Most Recently Used
+ALGORITHMES_REMPLACEMENT_PAGES | Clock
+ALGORITHMES_REMPLACEMENT_PAGES | Second Chance
+ALGORITHMES_REMPLACEMENT_PAGES | Enhanced Clock
+
+================================================================================
+SYSTEME_FICHIERS
+================================================================================
+SYSTEME_FICHIERS | File System
+SYSTEME_FICHIERS | Fichier
+SYSTEME_FICHIERS | Répertoire
+SYSTEME_FICHIERS | Inode
+SYSTEME_FICHIERS | Index Node
+SYSTEME_FICHIERS | FAT
+SYSTEME_FICHIERS | File Allocation Table
+SYSTEME_FICHIERS | ext2
+SYSTEME_FICHIERS | ext3
+SYSTEME_FICHIERS | ext4
+SYSTEME_FICHIERS | UFS
+SYSTEME_FICHIERS | Unix File System
+
+================================================================================
+ALGORITHMES_ALLOCATION_FICHIERS
+================================================================================
+ALGORITHMES_ALLOCATION_FICHIERS | Allocation continue
+ALGORITHMES_ALLOCATION_FICHIERS | Allocation chaînée
+ALGORITHMES_ALLOCATION_FICHIERS | Allocation indexée
+
+================================================================================
+ALGORITHMES_SCHEDULING_DISQUE
+================================================================================
+ALGORITHMES_SCHEDULING_DISQUE | SSTF
+ALGORITHMES_SCHEDULING_DISQUE | Shortest Seek Time First
+ALGORITHMES_SCHEDULING_DISQUE | SCAN
+ALGORITHMES_SCHEDULING_DISQUE | Elevator Algorithm
+ALGORITHMES_SCHEDULING_DISQUE | C-SCAN
+ALGORITHMES_SCHEDULING_DISQUE | C-LOOK
+
+================================================================================
+SECURITE_FICHIERS
+================================================================================
+SECURITE_FICHIERS | Cache de disque
+SECURITE_FICHIERS | Write-back
+SECURITE_FICHIERS | Write-through
+SECURITE_FICHIERS | Permissions Unix
+SECURITE_FICHIERS | rwx
+SECURITE_FICHIERS | Chmod
+SECURITE_FICHIERS | ACLs
+SECURITE_FICHIERS | Access Control Lists
+SECURITE_FICHIERS | Chiffrement de fichiers
+
+================================================================================
+GESTION_IO
+================================================================================
+GESTION_IO | Périphériques
+GESTION_IO | Polling
+GESTION_IO | Interrupts
+GESTION_IO | DMA
+GESTION_IO | Direct Memory Access
+GESTION_IO | PIO
+GESTION_IO | Programmed I/O
+GESTION_IO | Pilotes de périphériques
+GESTION_IO | Device Drivers
+GESTION_IO | Pilotes de caractères
+GESTION_IO | Pilotes de blocs
+GESTION_IO | Pilotes réseau
+GESTION_IO | Buffering
+GESTION_IO | Buffer simple
+GESTION_IO | Double buffering
+GESTION_IO | Circular buffering
+GESTION_IO | Spooling
+
+================================================================================
+INTERBLOCAGE
+================================================================================
+INTERBLOCAGE | Deadlock
+INTERBLOCAGE | Interblocage
+INTERBLOCAGE | Coffman conditions
+INTERBLOCAGE | Mutual Exclusion
+INTERBLOCAGE | Hold and Wait
+INTERBLOCAGE | No Preemption
+INTERBLOCAGE | Circular Wait
+INTERBLOCAGE | Graph d'allocation de ressources
+INTERBLOCAGE | Algorithme du banquier
+INTERBLOCAGE | Banker's Algorithm
+INTERBLOCAGE | État courant
+INTERBLOCAGE | État sûr
+INTERBLOCAGE | Prévention d'interblocage
+INTERBLOCAGE | Évitement d'interblocage
+INTERBLOCAGE | Détection d'interblocage
+INTERBLOCAGE | Récupération d'interblocage
+
+================================================================================
+SECURITE
+================================================================================
+SECURITE | Protection
+SECURITE | Mode noyau
+SECURITE | Kernel mode
+SECURITE | Mode utilisateur
+SECURITE | User mode
+SECURITE | Anneaux de protection
+SECURITE | GDT
+SECURITE | Global Descriptor Table
+SECURITE | LDT
+SECURITE | Local Descriptor Table
+SECURITE | U/S
+SECURITE | User/Supervisor
+SECURITE | R/W
+SECURITE | Read/Write
+SECURITE | XD
+SECURITE | Execute Disable
+
+================================================================================
+CONTROLE_ACCES
+================================================================================
+CONTROLE_ACCES | DAC
+CONTROLE_ACCES | Discretionary Access Control
+CONTROLE_ACCES | MAC
+CONTROLE_ACCES | Mandatory Access Control
+CONTROLE_ACCES | RBAC
+CONTROLE_ACCES | Role-Based Access Control
+CONTROLE_ACCES | ABAC
+CONTROLE_ACCES | Attribute-Based Access Control
+
+================================================================================
+AUTHENTIFICATION
+================================================================================
+AUTHENTIFICATION | Mot de passe
+AUTHENTIFICATION | Hashage
+AUTHENTIFICATION | Sel
+AUTHENTIFICATION | Salt
+AUTHENTIFICATION | bcrypt
+AUTHENTIFICATION | scrypt
+AUTHENTIFICATION | Argon2
+AUTHENTIFICATION | Clés publiques
+AUTHENTIFICATION | Clés privées
+AUTHENTIFICATION | Certificats numériques
+AUTHENTIFICATION | Biométrie
+AUTHENTIFICATION | Tokens
+
+================================================================================
+VULNERABILITES
+================================================================================
+VULNERABILITES | Buffer overflow
+VULNERABILITES | Race conditions
+VULNERABILITES | SQL injection
+VULNERABILITES | XSS
+VULNERABILITES | Cross-site scripting
+VULNERABILITES | Privilege escalation
+
+================================================================================
+VIRTUALISATION
+================================================================================
+VIRTUALISATION | Machines virtuelles
+VIRTUALISATION | VM
+VIRTUALISATION | Hyperviseur
+VIRTUALISATION | Type 1
+VIRTUALISATION | Bare-metal
+VIRTUALISATION | Type 2
+VIRTUALISATION | Hosted
+VIRTUALISATION | Paravirtualisation
+VIRTUALISATION | Intel VT-x
+VIRTUALISATION | AMD-V
+VIRTUALISATION | Conteneur
+VIRTUALISATION | Docker
+VIRTUALISATION | LXC
+
+================================================================================
+SYSTEMES_DISTRIBUES
+================================================================================
+SYSTEMES_DISTRIBUES | Hétérogénéité
+SYSTEMES_DISTRIBUES | Tolérance aux fautes
+SYSTEMES_DISTRIBUES | Concurrence
+SYSTEMES_DISTRIBUES | Latence
+SYSTEMES_DISTRIBUES | Client-serveur
+SYSTEMES_DISTRIBUES | Pair-à-pair
+SYSTEMES_DISTRIBUES | P2P
+SYSTEMES_DISTRIBUES | DNS
+SYSTEMES_DISTRIBUES | LDAP
+SYSTEMES_DISTRIBUES | NTP
+SYSTEMES_DISTRIBUES | Réplication
+SYSTEMES_DISTRIBUES | Consensus
+SYSTEMES_DISTRIBUES | Paxos
+SYSTEMES_DISTRIBUES | Raft
+SYSTEMES_DISTRIBUES | Faute de crash
+SYSTEMES_DISTRIBUES | Faute omissive
+SYSTEMES_DISTRIBUES | Faute byzantine
+
+================================================================================
+SYSTEMES_TEMPS_REEL
+================================================================================
+SYSTEMES_TEMPS_REEL | RTOS
+SYSTEMES_TEMPS_REEL | Temps réel dur
+SYSTEMES_TEMPS_REEL | Hard RT
+SYSTEMES_TEMPS_REEL | Temps réel mou
+SYSTEMES_TEMPS_REEL | Soft RT
+SYSTEMES_TEMPS_REEL | Prévisibilité
+SYSTEMES_TEMPS_REEL | Basse latence
+SYSTEMES_TEMPS_REEL | Scheduling préemptif
+SYSTEMES_TEMPS_REEL | Gestion de mémoire statique
+SYSTEMES_TEMPS_REEL | FreeRTOS
+SYSTEMES_TEMPS_REEL | QNX
+SYSTEMES_TEMPS_REEL | VxWorks
+SYSTEMES_TEMPS_REEL | RT-Linux
+SYSTEMES_TEMPS_REEL | μC/OS
+
+================================================================================
+TESTS_VALIDATION
+================================================================================
+TESTS_VALIDATION | Tests unitaires
+TESTS_VALIDATION | Tests d'intégration
+TESTS_VALIDATION | Tests de performance
+TESTS_VALIDATION | Tests de stress
+TESTS_VALIDATION | Tests de sécurité
+
+================================================================================
+DOCUMENTATION
+================================================================================
+DOCUMENTATION | Documentation technique
+DOCUMENTATION | Documentation utilisateur
+DOCUMENTATION | Documentation API
+
+================================================================================
+LICENCE
+================================================================================
+LICENCE | GPL
+LICENCE | MIT
+LICENCE | BSD
+
+================================================================================
+DEVELOPPEMENT
+================================================================================
+DEVELOPPEMENT | Bootloader
+DEVELOPPEMENT | Gestion bas niveau
+DEVELOPPEMENT | Gestion de mémoire
+DEVELOPPEMENT | Gestion de processus
+DEVELOPPEMENT | Interface utilisateur
+DEVELOPPEMENT | Shell
+DEVELOPPEMENT | GUI
+
+================================================================================
+FIN DU DOCUMENT
+================================================================================

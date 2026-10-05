@@ -1,0 +1,483 @@
+================================================================================
+COURS : GESTION DE MÉMOIRE
+================================================================================
+
+1. INTRODUCTION
+================================================================================
+
+La gestion de mémoire est un concept fondamental en programmation et en
+développement de systèmes d'exploitation. Elle concerne l'allocation,
+l'utilisation et la libération de la mémoire RAM par les programmes et le
+système.
+
+Une mauvaise gestion de mémoire peut entraîner :
+- Fuites de mémoire (memory leaks)
+- Segmentation faults
+- Corruption de données
+- Performance dégradée
+- Épuisement des ressources système
+
+================================================================================
+2. HIÉRARCHIE DE MÉMOIRE
+================================================================================
+
+2.1. REGISTRES
+--------------
+- Mémoire la plus rapide (1 cycle CPU)
+- Taille très limitée (quelques octets)
+- Gérés directement par le processeur
+- Exemples : EAX, EBX, ECX, EDX (x86)
+
+2.2. CACHE (L1, L2, L3)
+----------------------
+- Mémoire très rapide (quelques cycles)
+- Taille limitée (Ko à Mo)
+- Gérée automatiquement par le CPU
+- L1 : 32-64 Ko, L2 : 256-512 Ko, L3 : 1-8 Mo
+
+2.3. RAM (MÉMOIRE VIVE)
+-----------------------
+- Mémoire principale (quelques nanosecondes)
+- Taille : Go
+- Volatile (perdue sans alimentation)
+- Accès direct par le CPU
+
+2.4. DISQUE (STOCKAGE)
+---------------------
+- Mémoire la plus lente (millisecondes)
+- Taille : To
+- Non volatile
+- Accès indirect (via I/O)
+
+================================================================================
+3. STACK VS HEAP
+================================================================================
+
+3.1. STACK (PILE)
+----------------
+Caractéristiques :
+- Allocation automatique
+- LIFO (Last In, First Out)
+- Taille fixe (généralement 1-8 Mo)
+- Très rapide
+- Gérée par le compilateur
+
+Utilisation :
+- Variables locales
+- Paramètres de fonction
+- Adresses de retour
+- Allocation de petite taille
+
+La stack est gérée automatiquement par le compilateur ou l'environnement d'exécution : les variables locales sont allouées à l'entrée de la fonction et libérées automatiquement à sa sortie.
+
+3.2. HEAP (TAS)
+--------------
+Caractéristiques :
+- Allocation manuelle
+- Taille dynamique
+- Plus lent que la stack
+- Gérée par le programmeur
+- Peut fragmenter
+
+Utilisation :
+- Données de taille inconnue à la compilation
+- Structures de données dynamiques
+- Données qui doivent survivre à la fonction
+
+Le heap nécessite une gestion explicite : le programme doit allouer et libérer la mémoire. Si la libération est oubliée, cela crée une fuite de mémoire, sauf en présence de garbage collection.
+
+================================================================================
+4. MÉCANISMES D'ALLOCATION DE MÉMOIRE
+================================================================================
+
+4.1. ALLOCATION DYNAMIQUE
+-------------------------
+L'allocation dynamique permet de demander de la mémoire au système pendant l'exécution du programme. Contrairement à l'allocation statique (connue à la compilation), la taille peut être déterminée dynamiquement.
+
+Les fonctions d'allocation typiques permettent :
+- D'allouer un bloc de mémoire non initialisé
+- D'allouer un bloc de mémoire initialisé à zéro
+- De redimensionner un bloc existant
+- De libérer un bloc précédemment alloué
+
+Il est impératif de vérifier que l'allocation a réussi avant d'utiliser la mémoire, et de libérer la mémoire après utilisation pour éviter les fuites.
+
+================================================================================
+5. GESTION AUTOMATIQUE DE MÉMOIRE
+================================================================================
+
+5.1. GESTION AUTOMATIQUE
+-----------------------
+Certains langages et environnements offrent une gestion automatique de la mémoire, où le système libère automatiquement la mémoire qui n'est plus utilisée.
+
+Mécanismes de gestion automatique :
+- Garbage collection : Le système détecte automatiquement la mémoire inaccessible et la libère
+- Comptage de références : Chaque bloc de mémoire compte combien de références pointent vers lui et est libéré quand le compteur atteint zéro
+- RAII (Resource Acquisition Is Initialization) : Les ressources sont libérées automatiquement à la fin de la portée
+
+5.2. POINTEURS INTELLIGENTS
+---------------------------
+Les pointeurs intelligents sont des abstractions qui encapsulent la gestion de la durée de vie de la mémoire.
+
+Types courants :
+- Possession exclusive : Un seul propriétaire, libération automatique à la destruction
+- Possession partagée : Plusieurs propriétaires avec comptage de références
+- Référence faible : Ne possède pas la mémoire, utilisé pour éviter les références circulaires
+
+================================================================================
+6. ERREURS COURANTES DE GESTION DE MÉMOIRE
+================================================================================
+
+6.1. MEMORY LEAK (FUITE DE MÉMOIRE)
+------------------------------------
+Mémoire allouée mais jamais libérée.
+
+Une fuite de mémoire se produit lorsqu'un programme alloue de la mémoire dynamique mais ne la libère jamais. La mémoire reste occupée jusqu'à la fin du programme, ce qui peut épuiser les ressources système.
+
+Conséquences :
+- Épuisement progressif de la mémoire
+- Ralentissement du système
+- Crash éventuel
+
+6.2. DANGLING POINTER
+---------------------
+Pointeur vers une mémoire déjà libérée.
+
+Un dangling pointer est un pointeur qui fait référence à une zone de mémoire qui a été libérée. L'accès à cette mémoire provoque un comportement indéfini (crash, corruption de données).
+
+6.3. DOUBLE FREE
+---------------
+Libération de la même mémoire deux fois.
+
+Le double free se produit lorsque la même zone de mémoire est libérée deux fois. Cela corrompt l'allocateur de mémoire et provoque généralement un crash.
+
+6.4. BUFFER OVERFLOW
+--------------------
+Écriture au-delà des limites d'un buffer.
+
+Un buffer overflow se produit lorsqu'on écrit des données au-delà de la limite d'un buffer alloué. Cela peut corrompre des données adjacentes ou permettre des attaques de sécurité.
+
+6.5. USE AFTER FREE
+-------------------
+Utilisation de la mémoire après libération.
+
+Le use after free se produit lorsqu'on accède à une zone de mémoire après l'avoir libérée. C'est une forme de dangling pointer qui provoque un comportement indéfini.
+
+================================================================================
+7. GESTION DE MÉMOIRE DANS LES SYSTÈMES D'EXPLOITATION
+================================================================================
+
+7.1. MÉMOIRE VIRTUELLE
+----------------------
+Abstraction qui donne à chaque processus l'illusion d'avoir toute la mémoire.
+
+Avantages :
+- Isolation des processus
+- Plus de mémoire disponible que la RAM physique
+- Protection entre processus
+
+Fonctionnement :
+- Pages de mémoire (généralement 4 Ko)
+- Table des pages (page table)
+- MMU (Memory Management Unit) traduit les adresses
+
+7.2. PAGING (PAGINATION)
+-------------------------
+Division de la mémoire en pages de taille fixe.
+
+Processus :
+1. Le CPU accède à une adresse virtuelle
+2. La MMU consulte la table des pages
+3. Si la page est en RAM : accès direct
+4. Si la page n'est pas en RAM : page fault
+
+Page Fault :
+- Le processeur interrompt le processus
+- L'OS charge la page depuis le disque
+- Le processus reprend
+
+7.3. SWAPPING
+-------------
+Déplacement de pages entre RAM et disque.
+
+Avantages :
+- Permet d'exécuter plus de processus que la RAM ne le permet
+- Utilisation optimale de la mémoire
+
+Inconvénients :
+- Lent (accès disque)
+- Thrashing si trop de swapping
+
+7.4. DEMAND PAGING
+------------------
+Chargement des pages uniquement lorsqu'elles sont nécessaires.
+
+Avantages :
+- Chargement plus rapide des programmes
+- Moins de mémoire utilisée
+
+7.5. SEGMENTATION
+-----------------
+Division de la mémoire en segments de taille variable.
+
+Segments typiques :
+- Code (text)
+- Données (data)
+- Pile (stack)
+- Tas (heap)
+
+================================================================================
+8. ALGORITHMES D'ALLOCATION DE MÉMOIRE
+================================================================================
+
+8.1. FIRST-FIT
+-------------
+Alloue le premier bloc libre suffisamment grand.
+
+Avantages :
+- Simple à implémenter
+- Rapide
+
+Inconvénients :
+- Fragmentation externe
+- Peut laisser de petits blocs inutilisables
+
+8.2. BEST-FIT
+------------
+Alloue le plus petit bloc libre suffisamment grand.
+
+Avantages :
+- Meilleure utilisation de la mémoire
+- Moins de gaspillage
+
+Inconvénients :
+- Plus lent (parcours de tous les blocs)
+- Fragmentation externe
+
+8.3. WORST-FIT
+-------------
+Alloue le plus grand bloc libre.
+
+Avantages :
+- Laisse de grands blocs disponibles
+- Moins de fragmentation
+
+Inconvénients :
+- Gaspage de mémoire
+- Peut ne pas laisser de grands blocs
+
+8.4. BUDDY SYSTEM
+-----------------
+Division des blocs en puissances de 2.
+
+Avantages :
+- Fusion facile des blocs adjacents
+- Fragmentation minimale
+
+Inconvénients :
+- Peut gaspiller de la mémoire
+- Allocation uniquement en puissances de 2
+
+================================================================================
+9. OUTILS DE DÉBOGAGE MÉMOIRE
+================================================================================
+
+9.1. VALGRIND
+-------------
+Outil de détection de fuites de mémoire et erreurs.
+
+Installation :
+sudo apt install valgrind  # Debian/Ubuntu
+sudo pacman -S valgrind    # Arch Linux
+
+Utilisation :
+valgrind --leak-check=full ./programme
+
+Options utiles :
+- --leak-check=full : Détection complète des fuites
+- --show-leak-kinds=all : Tous les types de fuites
+- --track-origins=yes : Origine des valeurs non initialisées
+
+9.2. ADDRESSSANITIZER (ASAN)
+---------------------------
+Outil de détection intégré à certains compilateurs.
+
+Compilation :
+gcc -fsanitize=address -g programme.c -o programme
+
+Fonctionnalités :
+- Détection des buffer overflows
+- Détection des use after free
+- Détection des memory leaks
+- Détection des double frees
+- Identification de l'origine des valeurs non initialisées
+
+9.3. GDB
+-------
+Débogueur pour inspecter la mémoire.
+
+Commandes utiles :
+- print variable : Afficher une variable
+- x/10x address : Afficher 10 mots en hexadécimal
+- info proc mappings : Afficher la carte mémoire
+
+9.4. DMESG
+---------
+Logs du noyau pour les erreurs mémoire.
+
+Utilisation :
+dmesg | grep -i memory
+
+9.5. /PROC/MEMINFO
+-----------------
+Informations sur la mémoire système.
+
+Utilisation :
+cat /proc/meminfo
+
+================================================================================
+10. BONNES PRATIQUES
+================================================================================
+
+10.1. GESTION MANUELLE
+----------------------
+- Toujours vérifier le succès de l'allocation avant utilisation
+- Libérer toute la mémoire allouée après utilisation
+- Mettre les références à NULL après libération pour éviter les dangling pointers
+- Utiliser l'initialisation à zéro pour éviter les valeurs non définies
+- Éviter les allocations dans les boucles serrées
+
+10.2. GESTION AUTOMATIQUE
+------------------------
+- Préférer les mécanismes automatiques aux allocations manuelles
+- Utiliser des conteneurs de haut niveau au lieu des tableaux de bas niveau
+- Éviter les allocations/libérations explicites quand possible
+- Exploiter les patterns de gestion automatique (RAII, garbage collection)
+
+10.3. PRINCIPES GÉNÉRAUX
+-------------------------
+- Minimiser les allocations/désallocations fréquentes
+- Réutiliser les mémoires tampons
+- Utiliser des pools de mémoire pour les objets fréquents
+- Profiler régulièrement pour détecter les fuites
+
+================================================================================
+11. OPTIMISATION DE LA MÉMOIRE
+================================================================================
+
+11.1. DATA LOCALITY
+-------------------
+Regrouper les données accédées ensemble pour améliorer le cache hit rate.
+
+Pour améliorer la data locality, il faut regrouper les données accédées ensemble dans la structure. Cela maximise l'utilisation du cache en minimisant les lignes de cache chargées.
+
+11.2. MEMORY POOLS
+-----------------
+Pré-allouer des blocs de mémoire pour réutilisation.
+
+Un memory pool pré-alloue un grand bloc de mémoire divisé en blocs de taille fixe. Les allocations sont très rapides car elles consistent simplement à prendre un bloc du pool. La libération remet le bloc dans le pool.
+
+11.3. STACK ALLOCATION
+----------------------
+Préférer l'allocation sur la stack quand possible.
+
+Il faut préférer l'allocation sur la stack quand la taille est connue et que les données n'ont pas besoin de survivre à la fonction. L'allocation sur la stack est instantanée et ne nécessite pas de libération explicite.
+
+11.4. LAZY ALLOCATION
+---------------------
+Allouer la mémoire uniquement quand nécessaire.
+
+La lazy allocation consiste à retarder l'allocation de mémoire jusqu'au moment où elle est réellement nécessaire. Cela permet d'économiser de la mémoire si la ressource n'est jamais utilisée.
+
+================================================================================
+12. MÉMOIRE PARTAGÉE
+================================================================================
+
+12.1. POSIX SHARED MEMORY
+-------------------------
+Création de mémoire partagée entre processus.
+
+La mémoire partagée permet à plusieurs processus de partager une zone de mémoire commune. Les mécanismes typiques incluent la création d'objets de mémoire partagée, la définition de leur taille, et leur projection dans l'espace d'adressage du processus.
+
+12.2. MMAP
+---------
+Projection de fichiers en mémoire.
+
+La projection de fichiers en mémoire permet de mapper un fichier ou un périphérique dans l'espace d'adressage du processus. Cela permet d'accéder au fichier comme s'il s'agissait de mémoire, avec le système de pagination qui gère le chargement des pages depuis le disque.
+
+================================================================================
+13. THREAD SAFETY ET MÉMOIRE
+================================================================================
+
+13.1. RACE CONDITIONS
+---------------------
+Accès concurrent à la même mémoire.
+
+Une race condition se produit lorsque plusieurs threads accèdent simultanément à la même mémoire sans synchronisation. Le résultat dépend de l'ordre d'exécution des threads, ce qui est imprévisible. Les opérations atomiques ou les mutex sont nécessaires pour éviter ce problème.
+
+13.2. MEMORY BARRIERS
+---------------------
+Ordre des accès mémoire.
+
+Les memory barriers (barrières de mémoire) garantissent un ordre spécifique des accès mémoire. Elles sont nécessaires sur les architectures avec réordonnement des instructions pour assurer la cohérence entre threads.
+
+13.3. FALSE SHARING
+------------------
+Lignes de cache partagées inutilement.
+
+Le false sharing se produit lorsque deux threads accèdent à des variables différentes situées sur la même ligne de cache. Chaque thread invalide la ligne de cache de l'autre, dégradant les performances. L'ajout de padding entre les variables évite ce problème.
+
+================================================================================
+14. PROFILING MÉMOIRE
+================================================================================
+
+14.1. MASSIF
+-----------
+Profileur de mémoire de Valgrind.
+
+Utilisation :
+valgrind --tool=massif ./programme
+
+Visualisation :
+ms_print massif.out.12345
+
+14.2. HEAPTRACK
+--------------
+Outil de profiling mémoire pour Linux.
+
+Installation :
+sudo apt install heaptrack
+
+Utilisation :
+heaptrack ./programme
+
+14.3. PERF
+------
+Outil de profiling Linux.
+
+Utilisation :
+perf record -e mem:* ./programme
+perf report
+
+================================================================================
+15. CONCLUSION
+================================================================================
+
+La gestion de mémoire est un aspect critique de la programmation et du
+développement système. Une bonne compréhension des concepts de stack,
+heap, allocation dynamique et mémoire virtuelle est essentielle pour :
+
+- Écrire des programmes performants
+- Éviter les fuites de mémoire
+- Comprendre le comportement du système
+- Développer des systèmes d'exploitation
+
+Points clés à retenir :
+- Préférer l'allocation automatique (stack) quand possible
+- Toujours libérer la mémoire allouée manuellement
+- Utiliser des outils de détection et de profiling
+- Profiler régulièrement pour détecter les problèmes
+- Préférer les mécanismes de gestion automatique quand disponibles
+
+La maîtrise de la gestion de mémoire est essentielle pour le développement
+de systèmes fiables et performants.

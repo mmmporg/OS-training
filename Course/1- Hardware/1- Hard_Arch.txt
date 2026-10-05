@@ -1,0 +1,1123 @@
+================================================================================
+COURS ARCHITECTURE HARDWARE : DU PC A L'EMBARQUE
+================================================================================
+
+Ce cours couvre l'architecture matérielle sous toutes ses formes, depuis
+l'ordinateur de bureau x86 jusqu'aux microcontrôleurs, en passant par les
+appareils IoT, les véhicules, les GPU et les accélérateurs AI. Il met en évidence
+comment chaque matériel implémente les concepts de système d'exploitation
+(interruptions, scheduling, mémoire, protection).
+
+================================================================================
+PARTIE 1 : FONDAMENTAUX DE L'ARCHITECTURE
+================================================================================
+
+1.1 Qu'est-ce que l'architecture hardware ?
+--------------------------------------------
+L'architecture hardware est l'organisation des composants physiques d'un système
+informatique et des relations entre eux. Elle définit :
+- Le processeur (CPU) et son jeu d'instructions (ISA)
+- La mémoire (RAM, ROM, cache)
+- Les interfaces d'entrée/sortie (I/O)
+- Les buses de communication
+- Les mécanismes de synchronisation et d'interruption
+
+1.2 Modèle de von Neumann
+--------------------------
+La plupart des systèmes informatiques suivent le modèle de von Neumann :
+- Un seul espace d'adressage pour données et instructions
+- Un bus unique pour accéder à la mémoire
+- Un processeur avec ALU, contrôleur et registres
+
+┌─────────────────────────────────────────────────────────┐
+│                      Processeur                         │
+│  ┌─────────┐  ┌──────────┐  ┌─────────────────────┐   │
+│  │   ALU   │  │ Registres│  │   Unité de Contrôle │   │
+│  └────┬────┘  └────┬─────┘  └──────────┬──────────┘   │
+│       │            │                   │               │
+│       └────────────┴───────────────────┘               │
+└───────────────────────────┬─────────────────────────────┘
+                            │ Bus
+┌───────────────────────────┴─────────────────────────────┐
+│                      Mémoire                            │
+│  ┌──────────────────┐  ┌────────────────────────────┐  │
+│  │  Instructions    │  │          Données           │  │
+│  └──────────────────┘  └────────────────────────────┘  │
+└─────────────────────────────────────────────────────────┘
+
+1.3 Modèle de Harvard
+----------------------
+Utilisé dans les microcontrôleurs et DSP :
+- Deux espaces d'adressage séparés (programme et données)
+- Deux buses parallèles pour une exécution plus rapide
+
+┌─────────────────────────────────────────────────────────────────┐
+│                      Processeur                                  │
+│  ┌─────────┐  ┌──────────┐  ┌─────────────────────┐            │
+│  │   ALU   │  │ Registres│  │   Unité de Contrôle │            │
+│  └────┬────┘  └────┬─────┘  └──────────┬──────────┘            │
+│       │            │                   │                        │
+│       └────────────┴───────────────────┘                        │
+└───────────────────┬───────────────────┬─────────────────────────┘
+                    │ Bus Instructions  │ Bus Données
+┌───────────────────┴───────────────────┴─────────────────────────┐
+│                      Mémoire                                    │
+│  ┌──────────────────┐              ┌────────────────────────┐  │
+│  │  Programme (ROM) │              │    Données (RAM)       │  │
+│  └──────────────────┘              └────────────────────────┘  │
+└─────────────────────────────────────────────────────────────────┘
+
+1.4 Concepts communs à tous les hardware
+-----------------------------------------
+- Registres CPU : espace de stockage rapide (EAX, EBX, R0, R1, etc.)
+- Interruptions : signal pour interrompre le flux d'exécution
+- Timer : pour la planification et les mesures de temps
+- Mémoire volatile (RAM) vs non volatile (ROM, Flash)
+- Ports d'E/S : communication avec les périphériques
+- Bus : chemin de communication entre composants
+
+================================================================================
+PARTIE 2 : ARCHITECTURE X86 (PC TRADITIONNEL)
+================================================================================
+
+2.1 Historique et évolutions
+-----------------------------
+- 8086 (1978) : 16-bit, 1 MiB d'adressage
+- 80286 (1982) : Mode protégé, 16-bit
+- 80386 (1985) : 32-bit, paging, mode utilisateur/noyau
+- Pentium (1993) : Superscalar, MMX
+- x86-64 (2003) : 64-bit, mode long, 16 registres généraux
+
+2.2 Modes d'exécution
+----------------------
+AXIOME 6 (OS.txt) : SEPARATION DES NIVEAUX DE PRIVILEGE
+"Utilisation de modes d'exécution (kernel mode / user mode) pour protéger le noyau."
+
+- Real Mode (16-bit) : Boot, 1 MiB, pas de protection
+- Protected Mode (32-bit) : Mode principal, segmentation, paging
+- Virtual 8086 Mode : Pour exécuter des programmes 16-bit
+- Long Mode (64-bit) : x86-64, adressage étendu, registres supplémentaires
+
+2.3 Registres x86
+------------------
+Registres généraux (32-bit) :
+- EAX : Accumulateur (calculs, retour de fonctions)
+- EBX : Base (pointeur de données)
+- ECX : Compteur (boucles)
+- EDX : Données (entrée/sortie)
+- ESI : Index source (copie de données)
+- EDI : Index destination (copie de données)
+- EBP : Pointeur de base (pile)
+- ESP : Pointeur de pile
+
+Registres de segment :
+- CS : Code Segment
+- DS : Data Segment
+- SS : Stack Segment
+- ES, FS, GS : Segments supplémentaires
+
+Registres de contrôle :
+- CR0 : Bit PE (Protected Mode Enable), PG (Paging)
+- CR2 : Adresse de la page fautive
+- CR3 : Adresse de la Page Directory
+- CR4 : Extensions (PAE, etc.)
+
+2.4 Mémoire x86
+----------------
+- Adressage physique : 4 GiB (32-bit) à 256 TiB (64-bit)
+- Paging : traduction adresse virtuelle → physique
+- TLB : Cache pour les traductions de pages
+
+Exemple de mapping VGA (0xB8000) :
+volatile uint16_t *vga_buffer = (volatile uint16_t *)0xB8000;
+
+2.5 Contrôleurs d'interruptions
+--------------------------------
+- PIC (Programmable Interrupt Controller) : 8259A, 2 PICs en cascade (IRQ 0-15)
+- APIC (Advanced Programmable Interrupt Controller) : Multiprocesseur
+
+IRQ assignments :
+- IRQ 0 : PIT (Timer)
+- IRQ 1 : Clavier PS/2
+- IRQ 14 : Disque dur ATA
+- IRQ 15 : Disque dur ATA secondaire
+
+2.6 Boot process x86
+---------------------
+1. POST (Power-On Self Test) : Vérification matérielle
+2. Chargement du bootloader depuis MBR (512 octets)
+3. Bootloader charge le noyau en mémoire
+4. Passage en Protected Mode (lgdt, CR0.PE=1)
+5. Initialisation du noyau (GDT, IDT, paging)
+6. Lancement du processus init
+
+2.7 Programmation du matériel x86
+----------------------------------
+Accès aux ports :
+static inline uint8_t inb(uint16_t port) {
+    uint8_t ret;
+    asm volatile ("inb %1, %0" : "=a"(ret) : "Nd"(port));
+    return ret;
+}
+
+static inline void outb(uint16_t port, uint8_t val) {
+    asm volatile ("outb %0, %1" : : "a"(val), "Nd"(port));
+}
+
+Accès aux registres de contrôle :
+static inline uint32_t read_cr0(void) {
+    uint32_t val;
+    asm volatile ("mov %%cr0, %0" : "=r"(val));
+    return val;
+}
+
+2.8 Contrôleurs et Bus x86
+---------------------------
+2.8.1 A20 Line
+--------------
+Ligne A20 qui permet d'accéder à plus de 1 MiB de mémoire.
+void enable_a20(void) {
+    while (inb(0x64) & 0x2);
+    outb(0x64, 0xD1);
+    while (inb(0x64) & 0x2);
+    outb(0x60, 0xDF);
+}
+
+2.8.2 PIT (Programmable Interval Timer)
+----------------------------------------
+Timer à 1.19318 MHz pour la planification.
+void pit_init(uint32_t freq) {
+    uint16_t divisor = 1193182 / freq;
+    outb(0x43, 0x36);
+    outb(0x40, divisor & 0xFF);
+    outb(0x40, divisor >> 8);
+}
+
+2.8.3 HPET (High Precision Event Timer)
+-----------------------------------------
+Timer plus précis que le PIT.
+typedef struct hpet {
+    uint64_t capabilities;
+    uint64_t reserved0;
+    uint64_t config;
+    uint64_t reserved1;
+    uint64_t isr;
+    // ...
+} hpet_t;
+
+2.8.4 CMOS/RTC
+--------------
+Horloge temps réel et configuration du BIOS.
+uint8_t cmos_read(uint8_t reg) {
+    outb(0x70, reg);
+    return inb(0x71);
+}
+
+2.8.5 VGA/VBE
+-------------
+Affichage vidéo.
+#define VGA_MEMORY 0xB8000
+#define VGA_WIDTH 80
+#define VGA_HEIGHT 25
+
+// VESA BIOS Extensions pour modes graphiques
+typedef struct vbe_mode_info {
+    uint16_t attributes;
+    uint8_t window_a_attributes;
+    uint8_t window_b_attributes;
+    uint16_t window_granularity;
+    uint16_t window_size;
+    // ...
+} vbe_mode_info_t;
+
+2.8.6 PCI/PCIe
+--------------
+Bus pour les périphériques.
+void pci_scan_bus(void) {
+    for (int bus = 0; bus < 256; bus++) {
+        for (int slot = 0; slot < 32; slot++) {
+            uint32_t addr = (bus << 16) | (slot << 11) | 0x80000000;
+            uint32_t vendor = inl(addr);
+            if (vendor != 0xFFFFFFFF) {
+                // Trouvé un périphérique PCI
+            }
+        }
+    }
+}
+
+2.8.7 AHCI/NVMe
+---------------
+Contrôleurs de stockage.
+- AHCI : SATA (Advanced Host Controller Interface)
+- NVMe : SSD PCIe (Non-Volatile Memory Express)
+
+2.8.8 USB
+---------
+Bus universel pour les périphériques.
+- USB 1.1 : 12 Mbps
+- USB 2.0 : 480 Mbps
+- USB 3.0 : 5 Gbps
+- USB 4 : 40 Gbps
+
+2.8.9 ACPI
+----------
+Advanced Configuration and Power Interface.
+Gère la gestion de l'alimentation, les interruptions, la mémoire.
+- RSDP : Root System Description Pointer
+- AML : ACPI Machine Language
+
+2.9 BIOS vs UEFI
+-----------------
+- BIOS : Legacy, 16-bit, 1 MiB limite
+- UEFI : Moderne, 32/64-bit, accès complet à la mémoire
+- Secure Boot : Vérification des bootloaders
+
+================================================================================
+PARTIE 3 : MICROCONTROLEURS
+================================================================================
+
+3.1 Qu'est-ce qu'un microcontrôleur ?
+--------------------------------------
+Un microcontrôleur (MCU) est un système sur puce (SoC) qui intègre :
+- CPU (généralement RISC : ARM Cortex-M, AVR, PIC, RISC-V)
+- Mémoire (RAM, Flash, EEPROM)
+- Périphériques intégrés (UART, I2C, SPI, ADC, PWM, GPIO)
+- Contrôleurs de puissance
+
+3.2 Architecture ARM Cortex-M
+------------------------------
+ARM est l'architecture la plus utilisée dans les microcontrôleurs.
+
+Modes d'exécution :
+- Thread Mode : Mode utilisateur
+- Handler Mode : Mode gestionnaire d'exceptions
+
+Niveaux de privilège :
+- Privileged : Accès complet
+- Unprivileged : Accès restreint
+
+Interruptions :
+- NVIC (Nested Vectored Interrupt Controller)
+- Priorités configurables
+- Nesting des interruptions
+
+Exemple : Initialisation d'une interruption sur Cortex-M
+void USART1_IRQHandler(void) {
+    if (USART1->SR & USART_SR_RXNE) {
+        char c = USART1->DR;
+        // Traiter le caractère reçu
+    }
+}
+
+3.3 Architecture AVR (Atmel)
+-----------------------------
+Utilisée dans les Arduino.
+
+Caractéristiques :
+- 8-bit ou 32-bit
+- Harvard architecture
+- Mémoire Flash pour le programme
+- Mémoire SRAM pour les données
+- Registres généraux (32 pour ATmega)
+
+Exemple : Blink sur AVR
+#define PORTB (*((volatile uint8_t *)0x25))
+#define DDRB  (*((volatile uint8_t *)0x24))
+
+int main(void) {
+    DDRB |= (1 << 5); // PB5 en sortie
+    while (1) {
+        PORTB ^= (1 << 5); // Toggle PB5
+        _delay_ms(500);
+    }
+}
+
+3.4 Architecture RISC-V
+------------------------
+Architecture ouverte (BSD license), très utilisée aujourd'hui.
+
+Caractéristiques :
+- Modulaire : ISA de base + extensions (M, A, F, D, C)
+- 32-bit ou 64-bit
+- Harvard ou von Neumann
+- Support pour les microcontrôleurs (RV32IMC) et les processeurs de haute performance (RV64GC)
+
+Exemple : Initialisation UART sur RISC-V
+void uart_init(void) {
+    volatile uint32_t *uart_regs = (uint32_t *)0x10013000;
+    uart_regs[1] = 0x1; // Enable TX
+    uart_regs[0] = 0x1; // Enable RX
+}
+
+3.5 Firmware et RTOS
+---------------------
+Programmes exécutés sur les microcontrôleurs :
+
+Firmware :
+- Programme minimaliste, souvent écrit en assembler ou C
+- Pas de système d'exploitation
+- Exécution séquentielle ou basée sur interruptions
+
+RTOS (Real-Time Operating System) :
+- Système temps réel
+- Gestion de tâches (scheduling prédéfini)
+- Gestion de mémoire
+- Synchronisation (semaphores, mutex)
+
+Exemples de RTOS :
+- FreeRTOS
+- Zephyr
+- RT-Thread
+- μC/OS
+
+3.6 Applications
+-----------------
+- Contrôleurs industriels
+- IoT (capteurs, actionneurs)
+- Appliances ménagères (lave-linge, réfrigérateur)
+- Véhicules (ECU)
+- Appareils médicaux
+
+================================================================================
+PARTIE 4 : DSP (Digital Signal Processor)
+================================================================================
+
+4.1 Qu'est-ce qu'un DSP ?
+---------------------------
+Un DSP est un processeur spécialisé dans le traitement du signal numérique :
+- FFT (Transformée de Fourier)
+- Filtrages numériques
+- Modulation/demodulation
+- Compression audio/vidéo
+
+4.2 Architectures DSP
+----------------------
+- Texas Instruments TMS320C6000
+- Analog Devices ADSP-BF5xx
+- ARM Cortex-A avec NEON
+
+Caractéristiques :
+- Multiply-Accumulate (MAC) : Instructions dédiées
+- Pipeline profond
+- Architecture Harvard
+- Mémoire séparée pour données et instructions
+
+4.3 Programme DSP
+------------------
+Généralement des algorithmes de traitement du signal :
+
+Exemple : Filtre numérique
+void fir_filter(int16_t *input, int16_t *output, int16_t *coeffs,
+                int32_t n_samples, int32_t n_taps) {
+    int32_t i, j;
+    int32_t sum;
+    
+    for (i = n_taps - 1; i < n_samples; i++) {
+        sum = 0;
+        for (j = 0; j < n_taps; j++) {
+            sum += (int32_t)input[i - j] * (int32_t)coeffs[j];
+        }
+        output[i - n_taps + 1] = (int16_t)(sum >> 15);
+    }
+}
+
+4.4 Applications
+-----------------
+- Télécommunications (modems, routers)
+- Audio (amplificateurs, effets)
+- Vidéo (codecs)
+- Radar/sonde
+- Imagerie médicale (MRI, CT)
+
+================================================================================
+PARTIE 5 : FPGA ET SOC
+================================================================================
+
+5.1 Qu'est-ce qu'un FPGA ?
+---------------------------
+FPGA (Field-Programmable Gate Array) : Puce programmable après fabrication.
+Contient des blocs logiques configurables (LUT), des flip-flops et des interconnexions.
+
+5.2 Architectures FPGA
+-----------------------
+- Xilinx : Series 7, UltraScale, Versal
+- Intel/Altera : Cyclone, Arria, Stratix
+
+5.3 Programmation FPGA
+-----------------------
+Langages :
+- VHDL
+- Verilog
+- SystemVerilog
+- Chisel (pour RISC-V)
+- High-Level Synthesis (HLS)
+
+Exemple : Additionneur en Verilog
+module adder(
+    input [31:0] a,
+    input [31:0] b,
+    output [31:0] sum
+);
+    assign sum = a + b;
+endmodule
+
+5.4 Soft-processors
+--------------------
+Un soft-processeur est un processeur implémenté dans la logique programmable :
+
+Exemples :
+- MicroBlaze (Xilinx)
+- Nios II (Intel)
+- RISC-V (open source)
+
+Avantages :
+- Personnalisation du CPU
+- Ajout de peripheriques spécifiques
+- Adaptation à l'application
+
+5.5 SoC (System on Chip)
+-------------------------
+SoC : Intègre CPU, mémoire, périphériques sur une seule puce.
+
+Exemples :
+- Raspberry Pi (ARM Cortex-A53)
+- ESP32 (Xtensa LX6)
+- Jetson Nano (NVIDIA Tegra)
+
+5.6 Applications
+-----------------
+- Accélération matérielle (cryptographie, AI)
+- Prototype de circuits
+- Systèmes embarqués haute performance
+- Datacenter (accélérateurs)
+
+================================================================================
+PARTIE 6 : ROUTEURS ET EQUIPEMENTS RESEAU
+================================================================================
+
+6.1 Architecture des routeurs
+------------------------------
+Composants :
+- CPU (généralement MIPS ou ARM)
+- Mémoire (RAM, Flash pour le firmware)
+- Ports Ethernet (switch intégré)
+- Interface WAN (ADSL, fibre, 4G/5G)
+- FPGA pour le traitement réseau
+
+6.2 Logiciels embarqués
+------------------------
+- RouterOS (MikroTik)
+- OpenWrt (basé sur Linux)
+- DD-WRT
+- Firmware propriétaire
+
+6.3 Concepts OS dans les routeurs
+---------------------------------
+- Table de routage (abstraction réseau)
+- Firewall (sécurité)
+- NAT (Network Address Translation)
+- QoS (Quality of Service)
+
+6.4 Exemple : Configuration d'un port Ethernet
+----------------------------------------------
+struct eth_port {
+    uint32_t mac_address;
+    uint32_t ip_address;
+    uint32_t netmask;
+    uint32_t gateway;
+    int speed;
+    int duplex;
+};
+
+void eth_port_init(struct eth_port *port, uint32_t ip, uint32_t mask) {
+    port->ip_address = ip;
+    port->netmask = mask;
+    port->speed = 1000; // 1Gbps
+    port->duplex = 1; // Full duplex
+}
+
+================================================================================
+PARTIE 7 : VEHICULES AUTOMOBILES
+================================================================================
+
+7.1 ECU (Electronic Control Unit)
+----------------------------------
+Une ECU est un microcontrôleur qui gère un système spécifique du véhicule :
+
+Exemples d'ECU :
+- ECM (Engine Control Module) : Moteur
+- TCU (Transmission Control Unit) : Boîte de vitesse
+- ABS : Freins antiblocage
+- ESP : Stabilité
+- Airbag : Sécurité
+- Infotainment : Système de divertissement
+
+7.2 Architecture automobile
+----------------------------
+Bus de communication :
+- CAN (Controller Area Network) : Communication entre ECU
+- LIN (Local Interconnect Network) : Peripheriques low-speed
+- FlexRay : Temps réel
+- Ethernet : Haute vitesse (ADAS, infotainment)
+
+7.3 Logiciels
+--------------
+- AUTOSAR (Automotive Open System Architecture)
+- OSEK/VDX (système temps réel)
+- Linux pour l'infotainment
+
+7.4 Concepts OS dans l'automobile
+----------------------------------
+- Scheduling temps réel (ISO 26262)
+- Redondance pour la sécurité
+- Diagnostic (OBD-II)
+- Mise à jour OTA (Over-The-Air)
+
+7.5 Exemple : Contrôle moteur
+------------------------------
+typedef struct {
+    int rpm;
+    int throttle;
+    int fuel_pressure;
+    int temperature;
+    int ignition_timing;
+} engine_data_t;
+
+void engine_control(engine_data_t *data) {
+    if (data->rpm < 1000) {
+        data->throttle = 20;
+    } else {
+        data->throttle = calculate_throttle(data->rpm, data->temperature);
+    }
+}
+
+================================================================================
+PARTIE 8 : APPAREILS MEDICAUX
+================================================================================
+
+8.1 Types d'appareils
+----------------------
+- Implants (pacemaker, neurostimulateurs)
+- Diagnostics (ECG, EEG, MRI, CT)
+- Thérapeutiques (pompes à insuline, laser)
+- Moniteurs (vital signs)
+
+8.2 Contraintes médicales
+---------------------------
+- Sécurité (ISO 14971)
+- Fiabilité (MTBF élevé)
+- Temps réel (pour les implants)
+- Cybersécurité (protection des données patients)
+
+8.3 Architectures
+------------------
+- Microcontrôleurs pour les implants (basse consommation)
+- DSP pour le traitement signal (ECG, EEG)
+- GPU pour l'imagerie (MRI, CT)
+
+8.4 Exemple : Pacemaker
+------------------------
+typedef struct {
+    int heart_rate;
+    int pacing_rate;
+    int battery_level;
+    int mode; // VVI, DDD, etc.
+} pacemaker_data_t;
+
+void pacemaker_run(pacemaker_data_t *data) {
+    if (data->heart_rate < data->pacing_rate) {
+        deliver_pulse();
+    }
+}
+
+================================================================================
+PARTIE 9 : SMARTPHONES ET TABLETTES
+================================================================================
+
+9.1 Architecture SoC
+---------------------
+Composants principaux :
+- CPU (ARM Cortex-A)
+- GPU (Adreno, Mali, PowerVR)
+- NPU (Neural Processing Unit)
+- MPU (Motion Processing Unit)
+- Modems (4G/5G)
+- GPS
+- Caméras
+- Mémoire (RAM, Flash)
+
+9.2 Logiciels
+--------------
+- Android (basé sur Linux)
+- iOS (basé sur Darwin)
+- Firmware pour les peripheriques
+
+9.3 Concepts OS dans les smartphones
+------------------------------------
+- Gestion de batterie
+- Multitâches
+- Gestion de mémoire (zram, compression)
+- Sécurité (sandboxing, SELinux)
+- Appels système (JNI pour Android)
+
+9.4 Exemple : Accès à la caméra
+--------------------------------
+typedef struct {
+    void *buffer;
+    int width;
+    int height;
+    int format;
+    int fps;
+} camera_frame_t;
+
+int camera_capture(camera_frame_t *frame) {
+    // Demander une capture au noyau via ioctl
+    return ioctl(camera_fd, CAMERA_IOCTL_CAPTURE, frame);
+}
+
+================================================================================
+PARTIE 10 : CONSOLES DE JEU
+================================================================================
+
+10.1 Architectures
+-------------------
+- PlayStation 5 : AMD Zen 2 + RDNA 2
+- Xbox Series X : AMD Zen 2 + RDNA 2
+- Nintendo Switch : NVIDIA Tegra X1
+
+10.2 Caractéristiques spécifiques
+----------------------------------
+- GPU puissant pour le rendu graphique
+- SSD rapide pour les chargements
+- Controllers haptiques
+- Ray tracing matériel
+
+10.3 Logiciels
+---------------
+- Système d'exploitation propriétaire
+- API graphiques (DirectX, Vulkan, OpenGL)
+- Moteurs de jeu (Unreal Engine, Unity)
+
+10.4 Concepts OS dans les consoles
+----------------------------------
+- Gestion mémoire graphique (VRAM)
+- Scheduling GPU
+- DRM (Digital Rights Management)
+- Multimédia (lecture Blu-ray)
+
+================================================================================
+PARTIE 11 : GPU (GRAPHICS PROCESSING UNIT)
+================================================================================
+
+11.1 Architecture GPU
+----------------------
+Une GPU est un processeur parallèle composé de plusieurs blocs :
+
+NVIDIA :
+- GPC (Graphics Processing Cluster) : Groupes de SM
+- SM (Streaming Multiprocessor) : Unité de calcul principale
+  - CUDA cores : Calculs généralistes
+  - Tensor cores : Calculs matriciels (AI)
+  - RT cores : Ray tracing
+- Memory Controller : Gestion de la VRAM
+- NVLink : Interface haute vitesse entre GPU
+
+AMD :
+- Compute Unit : Équivalent des SM
+- Stream Processors : Coeurs de calcul
+- Ray Accelerators : Ray tracing
+- Infinity Fabric : Communication entre GPU
+
+Intel :
+- Xe Core : Unités de calcul
+- EU (Execution Unit) : Coeurs SIMD
+- Thread Execution Manager
+
+11.2 Hierarchie de la mémoire GPU
+----------------------------------
+- Registers : Mémoire la plus rapide (par thread)
+- Shared Memory : Mémoire partagée entre threads d'un bloc
+- L1 Cache : Cache par SM
+- L2 Cache : Cache partagé entre tous les SM
+- VRAM : Mémoire principale (GDDR6, HBM)
+
+11.3 Interface avec le CPU
+---------------------------
+- PCIe : Interface standard (x16, 16 GT/s)
+- NVLink : NVIDIA, plus rapide que PCIe
+- CXL : Compute Express Link (standard open)
+
+11.4 Concepts OS dans les GPU
+------------------------------
+- Kernels : Programmes exécutés en parallèle
+- Thread blocks : Groupes de threads
+- Warp/Wavefront : Unités d'exécution SIMD
+- Synchronisation (barriers)
+- Memory coalescing : Optimisation de l'accès mémoire
+
+================================================================================
+PARTIE 12 : ACCELERATEURS AI (TPU, NPU)
+================================================================================
+
+12.1 TPU (Tensor Processing Unit)
+----------------------------------
+Développé par Google pour l'inférence et l'entraînement de modèles AI.
+
+Caractéristiques :
+- Matrice Multiply-Accumulate (MMA)
+- Systolic array
+- Haute bande passante mémoire
+
+12.2 NPU (Neural Processing Unit)
+----------------------------------
+Intégré dans les smartphones et les SoC :
+- Apple Neural Engine
+- Qualcomm Hexagon NPU
+- MediaTek APU
+
+12.3 Exemple : Inférence AI
+----------------------------
+typedef struct {
+    float *input;
+    float *weights;
+    float *output;
+    int input_size;
+    int output_size;
+} neural_network_t;
+
+void npu_inference(neural_network_t *nn) {
+    // Envoyer les données au NPU
+    npu_load_input(nn->input, nn->input_size);
+    npu_load_weights(nn->weights);
+    npu_execute();
+    npu_get_output(nn->output, nn->output_size);
+}
+
+12.4 Applications
+------------------
+- Reconnaissance d'images
+- Reconnaissance vocale
+- Traduction automatique
+- Recommandations
+
+================================================================================
+PARTIE 13 : IoT (INTERNET OF THINGS)
+================================================================================
+
+13.1 Types d'appareils IoT
+---------------------------
+- Capteurs (température, humidité, mouvement)
+- Actionneurs (relais, moteurs)
+- Gateways
+- Wearables (montres connectées)
+
+13.2 Architectures
+-------------------
+- ESP32 (WiFi + Bluetooth)
+- Raspberry Pi Pico (RISC-V)
+- Arduino
+- Zigbee, Z-Wave, LoRaWAN
+
+13.3 Logiciels
+---------------
+- Firmware minimaliste
+- MQTT pour la communication
+- CoAP (Constrained Application Protocol)
+
+13.4 Concepts OS dans l'IoT
+----------------------------
+- Basse consommation énergétique
+- Communication sans fil
+- Sécurité (TLS, DTLS)
+- Mise à jour OTA
+
+13.5 Exemple : Capteur de température
+--------------------------------------
+void sensor_read(float *temperature) {
+    int raw = adc_read(0);
+    *temperature = (raw * 3.3 / 4096) * 100;
+}
+
+void mqtt_publish(const char *topic, float value) {
+    char payload[32];
+    sprintf(payload, "%.2f", value);
+    mqtt_send(topic, payload, strlen(payload));
+}
+
+================================================================================
+PARTIE 14 : TABLEAU COMPARATIF DES ARCHITECTURES
+================================================================================
+
+┌─────────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+│    Critère      │     x86      │   ARM Cortex │    AVR       │    RISC-V    │
+├─────────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+│ Bits            │ 32/64        │ 32           │ 8/32         │ 32/64        │
+│ Architecture    │ von Neumann  │ von Neumann  │ Harvard      │ configurable │
+│ Registres       │ 8/16         │ 16           │ 32           │ 32           │
+│ Protection      │ Oui (rings)  │ Oui (M/P)    │ Non          │ Oui (M/S/U)  │
+│ Paging          │ Oui          │ MMU optionnel│ Non          │ MMU optionnel│
+│ OS typique      │ Linux/Win    │ Linux/RTOS   │ Firmware     │ Linux/RTOS   │
+└─────────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+
+┌─────────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+│    Critère      │     DSP      │     FPGA     │     GPU      │     TPU      │
+├─────────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+│ Bits            │ 16/32/64     │ configurable │ 32/64        │ 16/32        │
+│ Architecture    │ Harvard      │ configurable │ MIMD         │ Systolic     │
+│ Registres       │ DSP specific │ N/A          │ CUDA cores   │ MAC units    │
+│ Protection      │ Non          │ Non          │ Non          │ Non          │
+│ Paging          │ Non          │ Non          │ VRAM         │ Non          │
+│ OS typique      │ Firmware/RTOS│ Custom       │ Driver       │ Driver       │
+└─────────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+
+┌─────────────────┬──────────────┬──────────────┬──────────────┬──────────────┐
+│    Critère      │   Routeur    │   ECU Auto   │  Smartphone  │    IoT       │
+├─────────────────┼──────────────┼──────────────┼──────────────┼──────────────┤
+│ CPU             │ MIPS/ARM     │ ARM Cortex-M │ ARM Cortex-A │ ESP32/RISC-V│
+│ Mémoire         │ MBs          │ KBs          │ GBs          │ KBs/MBs      │
+│ OS              │ Linux        │ RTOS/OSEK    │ Android/iOS  │ Firmware     │
+│ Connectivité    │ Ethernet     │ CAN/LIN      │ 4G/5G/WiFi   │ WiFi/BLE     │
+│ Sécurité        │ Firewall     │ ISO 26262    │ SELinux      │ TLS/DTLS     │
+│ Temps réel      │ Non          │ Oui          │ Non          │ Oui          │
+└─────────────────┴──────────────┴──────────────┴──────────────┴──────────────┘
+
+================================================================================
+PARTIE 15 : CONCEPTS OS APPLIQUES AUX DIFFERENTS HARDWARE
+================================================================================
+
+15.1 Interruptions
+-------------------
+- x86 : PIC/APIC, IDT, ISR
+- ARM Cortex-M : NVIC, vectored interrupts
+- ARM Cortex-A : GIC (Generic Interrupt Controller), VBAR
+- RISC-V : PLIC/CLIC, stvec
+- AVR : Interrupt vectors table
+- DSP : DMA interrupts
+
+15.2 Scheduling
+----------------
+- x86 : Round Robin, CFS (Linux)
+- RTOS : Priority-based, Rate Monotonic
+- DSP : Static scheduling (algorithmes prédéfinis)
+- GPU : Warp scheduling
+
+15.3 Mémoire
+-------------
+- x86 : Paging, mémoire virtuelle
+- ARM : MMU, TTBR0/TTBR1, MAIR
+- RISC-V : satp, Sv39/Sv48
+- Microcontrôleurs : Mémoire physique, stack limitée
+- GPU : VRAM, shared memory
+- IoT : Flash pour le programme, RAM limitée
+
+15.4 Protection
+----------------
+- x86 : Rings (0-3), MMU
+- ARM : EL0/EL1/EL2/EL3, MPU/MMU
+- RISC-V : U/S/M modes, PMP
+- RTOS : Task isolation
+- IoT : Sandboxing minimal
+
+15.5 Communication
+-------------------
+- x86 : PCIe, USB, SATA
+- Microcontrôleurs : I2C, SPI, UART
+- Automotive : CAN, LIN
+- IoT : MQTT, CoAP
+
+================================================================================
+PARTIE 16 : COMPARAISON DES MECHANISMES CPU
+================================================================================
+
+16.1 Registres de contrôle
+---------------------------
+┌────────────────┬────────────────────────┬────────────────────────┬──────────────────────┐
+│   Fonction     │          x86           │          ARM          │        RISC-V        │
+├────────────────┼────────────────────────┼────────────────────────┼──────────────────────┤
+│ Mode protégé   │ CR0.PE                │ SCTLR.M               │ satp.MODE            │
+│ Paging         │ CR0.PG, CR3           │ SCTLR.M, TTBR0/1      │ satp.PPN             │
+│ Page fault     │ CR2                   │ FAR                   │ scause, stval        │
+│ Interrupts     │ IDTR, IDT             │ VBAR, GIC             │ stvec, PLIC          │
+│ Segmentation   │ GDT, LDTR             │ PAS                   │ PAS                  │
+│ Cache          │ CR0.CD, NW            │ CTR, L2CTLR           │ ZICACHE              │
+└────────────────┴────────────────────────┴────────────────────────┴──────────────────────┘
+
+16.2 Modes d'exécution
+-----------------------
+x86 :
+- Ring 0 : Kernel mode
+- Ring 1 : Device drivers
+- Ring 2 : Reserved
+- Ring 3 : User mode
+
+ARM :
+- EL0 : User mode
+- EL1 : Kernel mode
+- EL2 : Hypervisor mode
+- EL3 : Secure monitor (TrustZone)
+
+RISC-V :
+- U mode : User mode
+- S mode : Supervisor mode (kernel)
+- M mode : Machine mode (firmware)
+
+16.3 Tables de traduction
+--------------------------
+x86 :
+- Page Directory (CR3)
+- Page Table
+- Niveaux : 2 (32-bit), 4 (64-bit avec PAE)
+
+ARM :
+- Translation Table Base Register (TTBR0/TTBR1)
+- Niveaux : 2 ou 3
+- MAIR (Memory Attribute Indirection Register)
+
+RISC-V :
+- satp (Supervisor Address Translation and Protection)
+- Sv39 : 39-bit, 3 niveaux
+- Sv48 : 48-bit, 4 niveaux
+
+16.4 Interruptions
+-------------------
+x86 :
+- IDT (Interrupt Descriptor Table)
+- PIC/APIC
+- IRET pour retour
+
+ARM :
+- VBAR (Vector Base Address Register)
+- GIC (Generic Interrupt Controller)
+- ERET pour retour
+
+RISC-V :
+- stvec (Supervisor Trap Vector)
+- PLIC (Platform Level Interrupt Controller)
+- sret/mret pour retour
+
+16.5 Boot Process
+------------------
+x86 :
+1. POST
+2. MBR/UEFI
+3. Bootloader (GRUB)
+4. Kernel
+
+ARM :
+1. ROM code
+2. Bootloader (U-Boot)
+3. Kernel
+4. Device Tree
+
+RISC-V :
+1. ROM/Firmware
+2. OpenSBI (Supervisor Binary Interface)
+3. Bootloader (U-Boot)
+4. Kernel
+
+================================================================================
+PARTIE 17 : SECURITE HARDWARE
+================================================================================
+
+17.1 TPM (Trusted Platform Module)
+-----------------------------------
+Module de sécurité matérielle pour :
+- Stockage sécurisé de clés
+- Mesure d'intégrité (PCR)
+- Cryptographie (RSA, AES)
+- Secure Boot
+
+17.2 ARM TrustZone
+-------------------
+Extension de sécurité qui divise le système en :
+- Secure World : Code sécurisé (firmware, DRM)
+- Normal World : OS et applications
+
+Modes :
+- EL3 : Secure Monitor (passage entre mondes)
+- Secure EL1 : Code sécurisé
+- Normal EL1 : Kernel
+- Normal EL0 : Applications
+
+17.3 RISC-V PMP (Physical Memory Protection)
+---------------------------------------------
+Protection de la mémoire physique par zones configurables.
+Chaque zone peut avoir les permissions :
+- Read (R)
+- Write (W)
+- Execute (X)
+
+17.4 Secure Boot
+-----------------
+Vérification de l'intégrité du firmware et du kernel avant l'exécution.
+
+Chain of Trust :
+1. ROM (Immutable)
+2. Secure Bootloader
+3. Kernel
+4. Applications
+
+17.5 Anti-tampering
+--------------------
+Mécanismes pour détecter les modifications :
+- CRC de code
+- Détection de débugging
+- Protection contre la lecture de mémoire
+
+17.6 Cryptographie matérielle
+------------------------------
+- AES accelerator
+- SHA engine
+- RSA/ECC coprocessor
+
+================================================================================
+PARTIE 18 : OUTILS DE DEVELOPPEMENT
+================================================================================
+
+18.1 Compilation
+-----------------
+- GCC/G++ : x86, ARM, RISC-V
+- Keil : ARM Cortex
+- XC32 : PIC32
+- CUDA Toolkit : NVIDIA GPU
+- Xilinx Vivado : FPGA
+
+18.2 Debugging
+---------------
+- GDB : Debugger général
+- JTAG/SWD : Debugging microcontrôleurs
+- OpenOCD : Interface JTAG
+- NVIDIA Nsight : GPU debugging
+- Logic Analyzer : Analyse de signaux
+
+18.3 Simulation
+----------------
+- QEMU : Emulation x86/ARM
+- SimulIDE : Simulation AVR/Arduino
+- ModelSim : Simulation VHDL/Verilog
+- NVIDIA GPU Simulator
+
+18.4 Outils spécifiques
+------------------------
+- Oscilloscope : Mesure de signaux analogiques
+- Multimètre : Mesure de tension/courant
+- Programmer : Flasher de microcontrôleurs
+
+================================================================================
+PARTIE 19 : BIBLIOGRAPHIE
+================================================================================
+
+1. Intel Software Developer Manuals
+2. ARM Architecture Reference Manual
+3. RISC-V Instruction Set Manual
+4. "Computer Organization and Design" - Patterson & Hennessy
+5. "Embedded Systems Design" - Wolf
+6. "Real-Time Systems" - Liu & Layland
+7. NVIDIA CUDA Programming Guide
+8. Xilinx FPGA Documentation
+9. AUTOSAR Specification
+10. OSDev Wiki - https://wiki.osdev.org/
+
+================================================================================
+FIN
+================================================================================
