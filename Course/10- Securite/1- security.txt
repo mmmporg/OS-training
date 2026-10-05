@@ -1,0 +1,536 @@
+================================================================================
+COURS : SÉCURITÉ SYSTÈME
+================================================================================
+
+1. INTRODUCTION
+================================================================================
+
+La sécurité système est l'ensemble des pratiques et technologies visant à
+protéger les systèmes informatiques contre les menaces, les attaques et
+les accès non autorisés. Une bonne sécurité est essentielle pour garantir
+la confidentialité, l'intégrité et la disponibilité des données et services.
+
+Les principes fondamentaux de la sécurité (triade CIA) :
+- Confidentialité : protection contre l'accès non autorisé
+- Intégrité : protection contre la modification non autorisée
+- Disponibilité : assurance de l'accès aux services autorisés
+
+================================================================================
+2. AUTHENTIFICATION ET AUTORISATION
+================================================================================
+
+2.1. AUTHENTIFICATION
+---------------------
+L'authentification vérifie l'identité d'un utilisateur ou d'un système.
+
+Méthodes d'authentification :
+- Mot de passe : secret partagé
+- Clé publique/cryptographique : paire de clés asymétriques
+- Jeton (token) : credential temporaire
+- Biométrie : caractéristiques physiques
+- Authentification multi-facteurs (MFA) : combinaison de méthodes
+
+2.2. AUTORISATION
+------------------
+L'autorisation détermine les droits d'accès après authentification.
+
+Modèles d'autorisation :
+- DAC (Discretionary Access Control) : le propriétaire définit les droits
+- MAC (Mandatory Access Control) : le système définit les droits
+- RBAC (Role-Based Access Control) : droits basés sur les rôles
+- ABAC (Attribute-Based Access Control) : droits basés sur des attributs
+
+2.3. GESTION DES IDENTITÉS
+--------------------------
+- Comptes utilisateurs : identifiants uniques
+- Groupes : regroupement d'utilisateurs
+- Profils : configurations par rôle
+- Audit : traçabilité des actions
+
+================================================================================
+3. PERMISSIONS ET DROITS D'ACCÈS
+================================================================================
+
+3.1. PERMISSIONS DE FICHIERS
+-----------------------------
+Les permissions contrôlent l'accès aux fichiers et répertoires.
+
+Types de permissions :
+- Lecture (r) : accès en lecture
+- Écriture (w) : accès en écriture
+- Exécution (x) : exécution ou navigation
+
+Catégories d'utilisateurs :
+- Propriétaire (user) : créateur du fichier
+- Groupe (group) : membres du groupe propriétaire
+- Autres (others) : tous les autres utilisateurs
+
+3.2. PERMISSIONS SPÉCIALES
+---------------------------
+- Setuid : exécution avec les droits du propriétaire
+- Setgid : exécution avec les droits du groupe
+- Sticky bit : restriction de suppression dans les répertoires
+
+3.3. ACL (LISTES DE CONTRÔLE D'ACCÈS)
+-------------------------------------
+Les ACL permettent des permissions plus granulaires que le modèle standard.
+
+Avantages :
+- Permissions spécifiques par utilisateur
+- Permissions multiples par utilisateur/groupe
+- Héritage des permissions
+- Flexibilité accrue
+
+================================================================================
+4. CHIFFREMENT ET CRYPTOGRAPHIE
+================================================================================
+
+4.1. CHIFFREMENT SYMÉTRIQUE
+---------------------------
+Utilise la même clé pour chiffrer et déchiffrer.
+
+Caractéristiques :
+- Rapide pour les grandes quantités de données
+- Nécessite un échange sécurisé de la clé
+- Algorithmes : AES, DES, 3DES
+
+4.2. CHIFFREMENT ASYMÉTRIQUE
+----------------------------
+Utilise une paire de clés (publique et privée).
+
+Caractéristiques :
+- Clé publique pour chiffrer, clé privée pour déchiffrer
+- Échange sécurisé sans partage de secret
+- Plus lent que le chiffrement symétrique
+- Algorithmes : RSA, ECC, DSA
+
+4.3. FONCTIONS DE HACHAGE
+-------------------------
+Génèrent une empreinte unique de taille fixe.
+
+Utilisations :
+- Vérification d'intégrité
+- Stockage sécurisé de mots de passe
+- Signatures numériques
+- Algorithmes : SHA-256, SHA-3, MD5 (déconseillé)
+
+4.4. SIGNATURES NUMÉRIQUES
+---------------------------
+Permettent de vérifier l'authenticité et l'intégrité.
+
+Fonctionnement :
+- Signature avec la clé privée
+- Vérification avec la clé publique
+- Garantit l'identité du signataire
+- Détecte toute modification
+
+================================================================================
+5. SÉCURITÉ RÉSEAU
+================================================================================
+
+5.1. FIREWALLS
+--------------
+Les firewalls filtrent le trafic réseau basé sur des règles.
+
+Types de firewalls :
+- Pare-feu à paquets : filtrage basé sur les paquets
+- Pare-feu avec état : suivi des connexions
+- Pare-feu applicatif : filtrage au niveau application
+- Pare-feu nouvelle génération : inspection profonde
+
+5.2. VPN (RÉSEAU PRIVÉ VIRTUEL)
+--------------------------------
+Les VPN créent des tunnels chiffrés sur des réseaux publics.
+
+Avantages :
+- Confidentialité des communications
+- Accès sécurisé aux réseaux distants
+- Contournement des restrictions géographiques
+- Protection sur les réseaux Wi-Fi publics
+
+5.3. SÉCURITÉ DES PROTOCOLES
+----------------------------
+Protocoles sécurisés :
+- HTTPS : HTTP chiffré avec TLS/SSL
+- SSH : accès shell sécurisé
+- SFTP : transfert de fichiers sécurisé
+- TLS/SSL : chiffrement des communications
+
+5.4. DDoS (DISTRIBUTED DENIAL OF SERVICE)
+------------------------------------------
+Attaques par déni de service distribué.
+
+Protection :
+- Filtrage du trafic
+- Limitation du taux
+- Services de mitigation
+- Redondance des serveurs
+
+================================================================================
+6. VULNÉRABILITÉS ET EXPLOITS
+================================================================================
+
+6.1. TYPES DE VULNÉRABILITÉS
+-----------------------------
+- Buffer overflow : dépassement de tampon
+- Injection SQL : injection de code SQL malveillant
+- XSS (Cross-Site Scripting) : injection de script dans les pages web
+- CSRF (Cross-Site Request Forgery) : requêtes forgées
+- Race conditions : conditions de concurrence
+- Misconfiguration : configuration incorrecte
+
+6.2. EXPLOITS
+-------------
+Un exploit est un code qui tire parti d'une vulnérabilité.
+
+Phases d'une attaque :
+- Reconnaissance : collecte d'informations
+- Exploitation : utilisation de la vulnérabilité
+- Élévation de privilèges : obtention de droits supérieurs
+- Maintien de l'accès : persistance sur le système
+- Couverture : effacement des traces
+
+6.3. ZERO-DAY
+-------------
+Une vulnérabilité zero-day est inconnue du public et sans correctif.
+
+Risques :
+- Pas de protection disponible
+- Difficile à détecter
+- Potentiellement très dangereuse
+- Nécessite une vigilance accrue
+
+================================================================================
+7. SÉCURITÉ DES APPLICATIONS
+================================================================================
+
+7.1. VALIDATION DES ENTRÉES
+---------------------------
+Toutes les entrées utilisateur doivent être validées et nettoyées.
+
+Principes :
+- Ne jamais faire confiance aux entrées
+- Valider le type, la longueur, le format
+- Échapper les caractères spéciaux
+- Utiliser des requêtes paramétrées
+
+7.2. GESTION DES ERREURS
+------------------------
+Les messages d'erreur ne doivent pas révéler d'informations sensibles.
+
+Bonnes pratiques :
+- Messages d'erreur génériques
+- Logging détaillé côté serveur
+- Pas d'informations système dans les erreurs
+- Gestion centralisée des erreurs
+
+7.3. AUTHENTIFICATION SÉCURISÉE
+--------------------------------
+- Utiliser des algorithmes de hachage robustes
+- Ne jamais stocker les mots de passe en clair
+- Implémenter le verrouillage après échecs
+- Utiliser HTTPS pour les authentifications
+
+================================================================================
+8. SÉCURITÉ DU SYSTÈME
+================================================================================
+
+8.1. MISE À JOUR ET PATCHS
+---------------------------
+Les mises à jour corrigent les vulnérabilités connues.
+
+Bonnes pratiques :
+- Appliquer régulièrement les mises à jour
+- Prioriser les correctifs de sécurité
+- Tester les mises à jour avant déploiement
+- Maintenir un inventaire des systèmes
+
+8.2. CONFIGURATION SÉCURISÉE
+----------------------------
+- Désactiver les services inutiles
+- Utiliser des configurations minimales
+- Appliquer les principes de moindre privilège
+- Auditer régulièrement les configurations
+
+8.3. LOGGING ET SURVEILLANCE
+-----------------------------
+- Activer les logs système
+- Centraliser les logs
+- Surveiller les activités suspectes
+- Configurer des alertes automatiques
+
+================================================================================
+9. OUTILS DE SÉCURITÉ
+================================================================================
+
+9.1. OUTILS D'ANALYSE DE VULNÉRABILITÉS
+---------------------------------------
+- Nessus : scanner de vulnérabilités
+- OpenVAS : scanner open source
+- Nmap : découverte réseau et scan de ports
+- Nikto : scanner de serveurs web
+
+9.2. OUTILS DE TEST D'INTRUSION
+--------------------------------
+- Metasploit : framework d'exploitation
+- Burp Suite : tests de sécurité web
+- Wireshark : analyseur de protocoles réseau
+- John the Ripper : cassage de mots de passe
+
+9.3. OUTILS DE SÉCURITÉ SYSTÈME
+---------------------------------
+Commandes de sécurité :
+
+Gestion des utilisateurs :
+useradd - Ajouter un utilisateur
+usermod - Modifier un utilisateur
+userdel - Supprimer un utilisateur
+passwd - Gérer les mots de passe
+
+Gestion des groupes :
+groupadd - Ajouter un groupe
+groupmod - Modifier un groupe
+groupdel - Supprimer un groupe
+
+Gestion des permissions :
+chmod - Modifier les permissions
+chown - Modifier le propriétaire
+chgrp - Modifier le groupe
+getfacl/setfacl - Gérer les ACL
+
+Surveillance :
+last - Afficher les connexions récentes
+who - Utilisateurs connectés
+w - Informations sur les utilisateurs connectés
+lastlog - Dernière connexion de chaque utilisateur
+
+Firewall :
+iptables - Gestion du firewall (IPv4)
+ip6tables - Gestion du firewall (IPv6)
+ufw - Firewall simplifié (Ubuntu)
+firewalld - Gestion dynamique du firewall
+
+================================================================================
+10. MÉCANISMES DE CONFINEMENT
+================================================================================
+
+10.1. CHROOT
+------------
+Change le répertoire racine d'un processus.
+
+Utilisation :
+- Isolation des processus
+- Limitation de l'accès au système de fichiers
+- Création d'environnements restreints
+
+10.2. CONTAINERS
+----------------
+Les conteneurs isolent les applications du système hôte.
+
+Avantages :
+- Isolation des processus
+- Limitation des ressources
+- Portabilité des applications
+- Sécurité renforcée
+
+10.3. SELINUX (SECURITY-ENHANCED LINUX)
+----------------------------------------
+SELinux impose une politique de sécurité stricte.
+
+Fonctionnalités :
+- Contrôle d'accès obligatoire (MAC)
+- Politiques de sécurité flexibles
+- Contextes de sécurité
+- Audit détaillé
+
+10.4. APPARMOR
+--------------
+AppArmor confine les applications par profil.
+
+Caractéristiques :
+- Basé sur les chemins de fichiers
+- Profils par application
+- Mode d'apprentissage
+- Plus simple que SELinux
+
+================================================================================
+11. AUDIT ET CONFORMITÉ
+================================================================================
+
+11.1. AUDIT DE SÉCURITÉ
+------------------------
+L'audit évalue la posture de sécurité du système.
+
+Éléments audités :
+- Configuration système
+- Permissions et droits
+- Logs et événements
+- Vulnérabilités connues
+
+11.2. CONFORMITÉ RÉGLEMENTAIRE
+-------------------------------
+Normes et réglementations :
+- GDPR : protection des données personnelles
+- HIPAA : protection des données de santé
+- PCI-DSS : sécurité des données de paiement
+- ISO 27001 : management de la sécurité
+
+11.3. RAPPORTS D'AUDIT
+----------------------
+Les rapports d'audit documentent :
+- Les vulnérabilités trouvées
+- Les recommandations
+- Les actions correctives
+- Le suivi de l'implémentation
+
+================================================================================
+12. RÉPONSE AUX INCIDENTS
+================================================================================
+
+12.1. DÉTECTION D'INCIDENTS
+----------------------------
+- Surveillance en temps réel
+- Analyse des logs
+- Alertes automatiques
+- Signalement par les utilisateurs
+
+12.2. CONTENEMENT DE L'INCIDENT
+-------------------------------
+- Isolation des systèmes affectés
+- Arrêt des services compromis
+- Blocage des adresses IP malveillantes
+- Sauvegarde des preuves
+
+12.3. ÉRADICATION ET RÉCUPÉRATION
+----------------------------------
+- Élimination de la menace
+- Correction des vulnérabilités
+- Restauration des systèmes
+- Vérification de la sécurité
+
+12.4. POST-MORTEM
+-----------------
+Analyse après incident :
+- Causes de l'incident
+- Leçons apprises
+- Améliorations à apporter
+- Mise à jour des procédures
+
+================================================================================
+13. BONNES PRATIQUES DE SÉCURITÉ
+================================================================================
+
+13.1. PRINCIPES DE SÉCURITÉ
+----------------------------
+- Principe de moindre privilège : droits minimum nécessaires
+- Défense en profondeur : plusieurs couches de protection
+- Échec sécurisé : échec dans un état sécurisé
+- Séparation des devoirs : répartition des responsabilités
+
+13.2. GESTION DES MOTS DE PASSE
+--------------------------------
+- Mots de passe forts et uniques
+- Rotation régulière des mots de passe
+- Utilisation de gestionnaires de mots de passe
+- Authentification multi-facteurs
+
+13.3. SAUVEGARDE ET RÉCUPÉRATION
+--------------------------------
+- Sauvegardes régulières
+- Tests de restauration
+- Sauvegardes hors site
+- Chiffrement des sauvegardes
+
+13.4. SENSIBILISATION ET FORMATION
+----------------------------------
+- Formation continue du personnel
+- Simulations de phishing
+- Politiques de sécurité claires
+- Communication des incidents
+
+================================================================================
+14. MENACES COURANTES
+================================================================================
+
+14.1. MALWARES
+--------------
+- Virus : programmes qui se reproduisent
+- Vers : programmes qui se propagent sur les réseaux
+- Trojans : programmes malveillants déguisés
+- Ransomware : chiffrement des données contre rançon
+- Spyware : collecte d'informations
+
+14.2. PHISHING
+--------------
+Le phishing vole des informations sensibles par tromperie.
+
+Types :
+- Phishing par email
+- Spear phishing : ciblé
+- Whaling : contre des dirigeants
+- Smishing : par SMS
+- Vishing : par téléphone
+
+14.3. INGENIERIE SOCIALE
+-------------------------
+Manipulation psychologique pour obtenir des informations.
+
+Techniques :
+- Usurpation d'identité
+- Création d'urgence
+- Exploitation de la confiance
+- Manipulation émotionnelle
+
+14.4. ATTAQUES INTERNES
+------------------------
+Attaques provenant de l'intérieur de l'organisation.
+
+Types :
+- Malveillance : intentionnel
+- Négligence : accidentel
+- Compromission : compte compromis
+- Vol d'identifiants
+
+================================================================================
+15. SÉCURITÉ PHYSIQUE
+================================================================================
+
+15.1. CONTRÔLE D'ACCÈS PHYSIQUE
+--------------------------------
+- Systèmes de badge
+- Caméras de surveillance
+- Gardes de sécurité
+- Verrouillage des serveurs
+
+15.2. PROTECTION DES ÉQUIPEMENTS
+---------------------------------
+- Protection contre le vol
+- Protection contre les dégâts
+- Maintenance régulière
+- Sécurité environnementale
+
+15.3. DESTRUCTION SÉCURISÉE
+----------------------------
+- Destruction des supports de stockage
+- Effacement sécurisé des données
+- Destruction des documents
+- Recyclage sécurisé
+
+================================================================================
+16. CONCLUSION
+================================================================================
+
+La sécurité système est un processus continu qui nécessite une vigilance
+constante et une amélioration continue. Il n'existe pas de sécurité absolue,
+mais une bonne posture de sécurité réduit considérablement les risques.
+
+Points clés à retenir :
+- La sécurité est un processus, pas un produit
+- La défense en profondeur est essentielle
+- Les utilisateurs sont souvent le maillon faible
+- La surveillance et l'audit sont indispensables
+- La formation et la sensibilisation sont cruciales
+- La réponse aux incidents doit être préparée
+
+La sécurité doit être intégrée dès la conception (security by design) et
+considérée comme une responsabilité partagée par tous les acteurs du système.

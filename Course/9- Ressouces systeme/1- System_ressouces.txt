@@ -1,0 +1,451 @@
+================================================================================
+COURS : RESSOURCES SYSTÈME
+================================================================================
+
+1. INTRODUCTION
+================================================================================
+
+Les ressources système sont les composants matériels et logiciels qu'un
+système d'exploitation gère et alloue aux processus et applications.
+Une gestion efficace de ces ressources est essentielle pour assurer des
+performances optimales et une stabilité du système.
+
+Les principales ressources système incluent :
+- CPU (processeur)
+- Mémoire vive (RAM)
+- Stockage (disques)
+- Réseau
+- Entrées/Sorties (I/O)
+- Périphériques
+
+================================================================================
+2. CPU (PROCESSEUR)
+================================================================================
+
+2.1. CARACTÉRISTIQUES DU CPU
+-----------------------------
+Le CPU est le cerveau de l'ordinateur qui exécute les instructions.
+
+Caractéristiques principales :
+- Nombre de cœurs : unités de traitement indépendantes
+- Fréquence : vitesse d'horloge en GHz
+- Cache : mémoire rapide intégrée (L1, L2, L3)
+- Architecture : jeu d'instructions (x86, ARM, etc.)
+- Hyperthreading : simulation de cœurs virtuels
+
+2.2. TEMPS CPU
+--------------
+Le temps CPU est divisé en :
+- Temps utilisateur : exécution du code utilisateur
+- Temps système : exécution du code noyau
+- Temps d'attente : processus en attente d'une ressource
+- Temps idle : CPU inactif
+
+2.3. CHARGE CPU
+---------------
+La charge CPU représente le nombre de processus en attente d'exécution.
+Une charge élevée indique que le CPU est saturé.
+
+================================================================================
+3. MÉMOIRE VIVE (RAM)
+================================================================================
+
+3.1. TYPES DE MÉMOIRE
+----------------------
+- Mémoire physique : RAM installée dans le système
+- Mémoire virtuelle : extension de la RAM sur le disque (swap)
+- Mémoire cache : tampon pour accélérer les accès
+
+3.2. UTILISATION DE LA MÉMOIRE
+-------------------------------
+L'utilisation de la mémoire comprend :
+- Mémoire utilisée : allouée aux processus
+- Mémoire libre : disponible pour allocation
+- Mémoire tampon : cache pour les fichiers
+- Mémoire partagée : utilisée par plusieurs processus
+
+3.3. GESTION DE LA MÉMOIRE
+---------------------------
+Le système d'exploitation gère la mémoire via :
+- Pagination : division en pages de taille fixe
+- Swapping : transfert de pages vers le disque
+- Allocation dynamique : attribution aux processus
+- Libération : récupération de la mémoire
+
+================================================================================
+4. STOCKAGE
+================================================================================
+
+4.1. TYPES DE STOCKAGE
+----------------------
+- Disques durs (HDD) : stockage magnétique, capacité élevée
+- Disques SSD : stockage flash, très rapide
+- Stockage externe : USB, réseau
+- Stockage cloud : services en ligne
+
+4.2. SYSTÈMES DE FICHIERS
+--------------------------
+Les systèmes de fichiers organisent le stockage :
+- Ext4 : système de fichiers standard Linux
+- XFS : système de fichiers haute performance
+- Btrfs : système de fichiers avec snapshots
+- NTFS : système de fichiers Windows
+
+4.3. MÉTRIQUES DE STOCKAGE
+---------------------------
+- Espace utilisé : données stockées
+- Espace libre : capacité disponible
+- IOPS : opérations d'entrée/sortie par seconde
+- Débit : vitesse de transfert en Mo/s
+
+================================================================================
+5. RÉSEAU
+================================================================================
+
+5.1. CONNEXIONS RÉSEAU
+-----------------------
+Les connexions réseau permettent la communication entre systèmes :
+- Ethernet : connexion filaire
+- Wi-Fi : connexion sans fil
+- VPN : réseau privé virtuel
+- Connexions mobiles
+
+5.2. PROTOCOLES RÉSEAU
+-----------------------
+- TCP : protocole fiable avec connexion
+- UDP : protocole rapide sans connexion
+- HTTP/HTTPS : protocoles web
+- SSH : connexion sécurisée
+
+5.3. MÉTRIQUES RÉSEAU
+----------------------
+- Bande passante : débit maximal
+- Latence : temps de réponse
+- Perte de paquets : pourcentage de paquets perdus
+- Débit actuel : vitesse de transfert réelle
+
+================================================================================
+6. ENTRÉES/SORTIES (I/O)
+================================================================================
+
+6.1. OPÉRATIONS I/O
+-------------------
+Les opérations d'entrée/sortie incluent :
+- Lectures : transfert de données vers la mémoire
+- Écritures : transfert de données depuis la mémoire
+- Accès aléatoires : accès à des positions arbitraires
+- Accès séquentiels : accès linéaire aux données
+
+6.2. PÉRIPHÉRIQUES I/O
+-----------------------
+- Disques : stockage de données
+- Claviers/souris : périphériques d'entrée
+- Écrans : périphériques de sortie
+- Cartes réseau : communication réseau
+- Ports série/USB : communication externe
+
+6.3. GESTION DES I/O
+--------------------
+Le système gère les I/O via :
+- Pilotes de périphériques : interface logicielle
+- Files d'attente : gestion des requêtes
+- Interruptions : notification d'événements
+- DMA : accès direct à la mémoire
+
+================================================================================
+7. GESTION DES RESSOURCES
+================================================================================
+
+7.1. ORDONNANCEMENT (SCHEDULING)
+---------------------------------
+L'ordonnanceur du noyau alloue le temps CPU aux processus :
+- Ordonnanceur préemptif : interruption des processus
+- Ordonnanceur temps réel : priorité stricte
+- Ordonnanceur équitable : partage équitable du CPU
+- Ordonnanceur interactif : optimisé pour la réactivité
+
+7.2. ALLOCATION DE MÉMOIRE
+---------------------------
+Le système alloue la mémoire aux processus :
+- Allocation statique : taille fixe à l'exécution
+- Allocation dynamique : taille variable
+- Pagination à la demande : chargement des pages nécessaires
+- Copie sur écriture : optimisation du partage
+
+7.3. GESTION DES PRIORITÉS
+--------------------------
+Les priorités déterminent l'accès aux ressources :
+- Priorités élevées : accès privilégié aux ressources
+- Priorités normales : partage équitable
+- Priorités basses : accès en dernier
+- Nice values : ajustement des priorités
+
+================================================================================
+8. MONITORING DES RESSOURCES
+================================================================================
+
+8.1. COMMANDES DE MONITORING
+-----------------------------
+Commandes pour surveiller les ressources système :
+
+CPU :
+top - Affiche les processus et l'utilisation CPU
+htop - Interface interactive pour le monitoring
+mpstat - Statistiques détaillées du CPU
+
+Mémoire :
+free - Affiche l'utilisation de la mémoire
+vmstat - Statistiques de la mémoire virtuelle
+
+Stockage :
+df - Espace disque disponible
+du - Espace utilisé par les répertoires
+iostat - Statistiques d'I/O disque
+
+Réseau :
+ifconfig - Configuration des interfaces réseau
+netstat - Statistiques réseau
+ss - Statistiques des sockets
+
+8.2. FICHIERS D'INFORMATION
+----------------------------
+Le système expose des informations via le système de fichiers :
+
+/proc/cpuinfo - Informations sur le CPU
+/proc/meminfo - Informations sur la mémoire
+/proc/loadavg - Charge moyenne du système
+/proc/diskstats - Statistiques des disques
+/proc/net/dev - Statistiques réseau
+
+================================================================================
+9. DIAGNOSTIC DES PROBLÈMES
+================================================================================
+
+9.1. CPU SATURÉ
+----------------
+Symptômes :
+- Charge CPU élevée (> 100% par cœur)
+- Processus bloqués en attente de CPU
+- Ralentissement général du système
+
+Causes :
+- Processus gourmands en CPU
+- Boucles infinies
+- Trop de processus simultanés
+
+9.2. MÉMOIRE INSUFFISANTE
+--------------------------
+Symptômes :
+- Utilisation mémoire proche de 100%
+- Utilisation intensive du swap
+- Ralentissement dû au swapping
+
+Causes :
+- Fuites de mémoire
+- Trop d'applications ouvertes
+- Processus gourmands en mémoire
+
+9.3. I/O LENT
+--------------
+Symptômes :
+- Attente I/O élevée (iowait)
+- Débit disque faible
+- Processus bloqués en attente d'I/O
+
+Causes :
+- Disque lent ou saturé
+- Fragmentation du disque
+- Trop d'opérations simultanées
+
+9.4. RÉSEAU SATURÉ
+------------------
+Symptômes :
+- Latence élevée
+- Perte de paquets
+- Débit faible
+
+Causes :
+- Bande passante insuffisante
+- Congestion du réseau
+- Configuration sous-optimale
+
+================================================================================
+10. OPTIMISATION DES RESSOURCES
+================================================================================
+
+10.1. OPTIMISATION CPU
+-----------------------
+- Prioriser les processus critiques
+- Limiter les processus gourmands
+- Utiliser plusieurs cœurs efficacement
+- Éviter les boucles inutiles
+
+10.2. OPTIMISATION MÉMOIRE
+---------------------------
+- Libérer la mémoire inutilisée
+- Utiliser des structures de données efficaces
+- Éviter les fuites de mémoire
+- Configurer le swap correctement
+
+10.3. OPTIMISATION STOCKAGE
+----------------------------
+- Utiliser des disques SSD
+- Défragmenter les disques HDD
+- Optimiser le système de fichiers
+- Nettoyer les fichiers inutiles
+
+10.4. OPTIMISATION RÉSEAU
+--------------------------
+- Optimiser la configuration réseau
+- Utiliser la compression
+- Minimiser les transferts inutiles
+- Optimiser les protocoles
+
+================================================================================
+11. OUTILS D'ANALYSE
+================================================================================
+
+11.1. OUTILS SYSTÈME
+---------------------
+- sysstat : Suite d'outils de monitoring
+- iotop : Monitoring des I/O par processus
+- nethogs : Monitoring réseau par processus
+- atop : Monitoring avancé des ressources
+
+11.2. OUTILS GRAPHIQUES
+-----------------------
+- GNOME System Monitor : Interface graphique
+- KSysGuard : Moniteur système KDE
+- Conky : Moniteur de bureau personnalisable
+- Glances : Monitoring en temps réel
+
+================================================================================
+12. LIMITES ET QUOTAS
+================================================================================
+
+12.1. LIMITES DE PROCESSUS
+---------------------------
+Les limites contrôlent l'utilisation des ressources :
+- ulimit : Limites par processus
+- cgroups : Contrôle des groupes de processus
+- quotas : Limites par utilisateur
+
+12.2. TYPES DE LIMITES
+----------------------
+- Limite CPU : temps CPU maximal
+- Limite mémoire : mémoire maximale
+- Limite fichier : nombre maximal de fichiers ouverts
+- Limite processus : nombre maximal de processus
+
+12.3. CONFIGURATION DES LIMITES
+--------------------------------
+Les limites peuvent être configurées via :
+- Fichiers de configuration système
+- Commandes d'administration
+- Interfaces de gestion
+- Scripts d'initialisation
+
+================================================================================
+13. VIRTUALISATION ET CONTENEURISATION
+================================================================================
+
+13.1. VIRTUALISATION
+---------------------
+La virtualisation permet d'exécuter plusieurs systèmes sur un même hôte :
+- Machines virtuelles : systèmes complets virtualisés
+- Hyperviseurs : logiciels de virtualisation
+- Allocation de ressources : CPU, mémoire, stockage dédiés
+
+13.2. CONTENEURISATION
+-----------------------
+Les conteneurs partagent le noyau mais isolent les applications :
+- Légèreté : moins de ressources que les VM
+- Isolation : séparation des processus
+- Portabilité : applications packagées
+- Gestion des ressources : limites par conteneur
+
+13.3. GESTION DES RESSOURCES VIRTUALISÉES
+------------------------------------------
+Les ressources virtualisées nécessitent une gestion spécifique :
+- Allocation dynamique : ajustement selon les besoins
+- Overcommit : allocation de plus de ressources que disponibles
+- Ballooning : transfert de mémoire entre VM
+- CPU pinning : attachement de cœurs à des VM
+
+================================================================================
+14. SÉCURITÉ DES RESSOURCES
+================================================================================
+
+14.1. ISOLATION DES RESSOURCES
+-------------------------------
+L'isolation protège les ressources entre processus :
+- Espaces mémoire séparés
+- Permissions d'accès
+- Isolation réseau
+- Séparation des périphériques
+
+14.2. CONTRÔLE D'ACCÈS
+----------------------
+Le contrôle d'accès régule l'utilisation des ressources :
+- Permissions : droits d'accès aux fichiers
+- ACL : listes de contrôle d'accès
+- SELinux : sécurité avancée
+- AppArmor : confinement des applications
+
+14.3. AUDIT ET LOGGING
+-----------------------
+L'audit permet de tracer l'utilisation des ressources :
+- Logs système : enregistrement des événements
+- Auditd : système d'audit avancé
+- Monitoring : surveillance en temps réel
+- Alertes : notification d'anomalies
+
+================================================================================
+15. BONNES PRATIQUES
+================================================================================
+
+15.1. MONITORING RÉGÉLIER
+--------------------------
+- Surveiller les ressources régulièrement
+- Configurer des alertes automatiques
+- Analyser les tendances
+- Planifier la capacité
+
+15.2. MAINTENANCE
+-----------------
+- Nettoyer les fichiers inutiles
+- Mettre à jour le système
+- Optimiser les configurations
+- Vérifier les erreurs
+
+15.3. DOCUMENTATION
+-------------------
+- Documenter les configurations
+- Enregistrer les problèmes et solutions
+- Maintenir un journal des changements
+- Partager les connaissances
+
+================================================================================
+16. CONCLUSION
+================================================================================
+
+La gestion efficace des ressources système est essentielle pour assurer des
+performances optimales et une stabilité du système. Une bonne compréhension
+des différentes ressources (CPU, mémoire, stockage, réseau, I/O) et de leur
+interaction permet de :
+
+- Diagnostiquer les problèmes de performance
+- Optimiser l'utilisation des ressources
+- Planifier la capacité du système
+- Assurer la stabilité et la fiabilité
+
+Points clés à retenir :
+- Surveiller régulièrement les ressources système
+- Comprendre les métriques et leurs interdépendances
+- Utiliser les outils appropriés pour le diagnostic
+- Appliquer les bonnes pratiques d'optimisation
+- Maintenir une documentation à jour
+
+La maîtrise des ressources système distingue les administrateurs système
+expérimentés des novices et est indispensable pour la gestion efficace
+des serveurs et des systèmes de production.
